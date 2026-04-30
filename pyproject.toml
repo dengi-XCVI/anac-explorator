@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "anac-explorator"
+version = "0.1.0"
+description = "CLI and Python tooling for inspecting ANAC open procurement data."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [
+  { name = "Copilot" }
+]
+dependencies = ["playwright>=1.52,<2"]
+
+[project.scripts]
+anac-explorator = "anac_explorator.cli:main"
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+
+[tool.setuptools.packages.find]
+where = ["src"]

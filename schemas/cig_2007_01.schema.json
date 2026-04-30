@@ -1,0 +1,639 @@
+{
+  "source_path": "data/raw/cig-2007/cig_csv_2007_01/extracted/cig_csv_2007_01.csv",
+  "delimiter": ";",
+  "encoding": "utf-8-sig",
+  "rows_sampled": 1126,
+  "row_length_mismatches": 0,
+  "columns": [
+    {
+      "name": "cig",
+      "inferred_type": "text",
+      "nullable": false,
+      "non_empty_samples": [
+        "2061497124",
+        "20892084FA",
+        "2089374DF4",
+        "1911675C1A",
+        "54568059EE"
+      ]
+    },
+    {
+      "name": "cig_accordo_quadro",
+      "inferred_type": "text",
+      "nullable": true,
+      "non_empty_samples": [
+        "469383425A",
+        "0012252EA7",
+        "0012252EA7",
+        "0012252EA7",
+        "0012252EA7"
+      ]
+    },
+    {
+      "name": "numero_gara",
+      "inferred_type": "integer",
+      "nullable": false,
+      "non_empty_samples": [
+        "2108882",
+        "2162492",
+        "2162654",
+        "1982518",
+        "5323747"
+      ]
+    },
+    {
+      "name": "oggetto_gara",
+      "inferred_type": "text",
+      "nullable": false,
+      "non_empty_samples": [
+        "MATERIALE SANITARIO SPECIALISTICO",
+        "PRODOTTI PER ERCP",
+        "PRODOTTI PER ERCP",
+        "PAGAMENTO RATA 1° TRIMESTRE 2011 XI CONVENZIONE CONSIP - LOTTO 3 NOLEGGIO FOTOCOPIATORI PER REPARTI DELLA GUARDIA DI FINANZA DEL PIEMONTE",
+        "ORDINATIVO PRINCIPALE DI FORNITURA BUONI PASTO PIEMONTE 2014-2015"
+      ]
+    },
+    {
+      "name": "importo_complessivo_gara",
+      "inferred_type": "decimal",
+      "nullable": true,
+      "non_empty_samples": [
+        "3155625.0",
+        "7797.0",
+        "9558.57",
+        "5373.55",
+        "1392098.0"
+      ]
+    },
+    {
+      "name": "n_lotti_componenti",
+      "inferred_type": "integer",
+      "nullable": true,
+      "non_empty_samples": [
+        "1",
+        "1",
+        "1",
+        "1",
+        "1"
+      ]
+    },
+    {
+      "name": "oggetto_lotto",
+      "inferred_type": "text",
+      "nullable": false,
+      "non_empty_samples": [
+        "MATERIALE SANITARIO DITTA MEDICAL FARMA SRL",
+        "PRODOTTI PER ERCP",
+        "PRODOTTI PER ERCP",
+        "PAGAMENTO RATA 1° TRIMESTRE 2011 XI CONVENZIONE CONSIP - LOTTO 3 NOLEGGIO FOTOCOPIATORI PER REPARTI DELLA GUARDIA DI FINANZA DEL PIEMONTE",
+        "ORDINATIVO PRINCIPALE DI FORNITURA BUONI PASTO PIEMONTE 2014-2015"
+      ]
+    },
+    {
+      "name": "importo_lotto",
+      "inferred_type": "decimal",
+      "nullable": false,
+      "non_empty_samples": [
+        "145811.6",
+        "7797.0",
+        "9558.57",
+        "5373.55",
+        "1392098.0"
+      ]
+    },
+    {
+      "name": "oggetto_principale_contratto",
+      "inferred_type": "text",
+      "nullable": false,
+      "non_empty_samples": [
+        "FORNITURE",
+        "FORNITURE",
+        "FORNITURE",
+        "SERVIZI",
+        "FORNITURE"
+      ]
+    },
+    {
+      "name": "stato",
+      "inferred_type": "text",
+      "nullable": false,
+      "non_empty_samples": [
+        "ATTIVO",
+        "ATTIVO",
+        "ATTIVO",
+        "ATTIVO",
+        "ATTIVO"
+      ]
+    },
+    {
+      "name": "settore",
+      "inferred_type": "text",
+      "nullable": false,
+      "non_empty_samples": [
+        "SETTORI ORDINARI",
+        "SETTORI ORDINARI",
+        "SETTORI ORDINARI",
+        "SETTORI SPECIALI",
+        "SETTORI ORDINARI"
+      ]
+    },
+    {
+      "name": "luogo_istat",
+      "inferred_type": "integer",
+      "nullable": true,
+      "non_empty_samples": [
+        "081021",
+        "001272",
+        "091063",
+        "043013",
+        "025021"
+      ]
+    },
+    {
+      "name": "provincia",
+      "inferred_type": "text",
+      "nullable": true,
+      "non_empty_samples": [
+        "FROSINONE",
+        "ROMA",
+        "TARANTO",
+        "LECCE",
+        "GROSSETO"
+      ]
+    },
+    {
+      "name": "data_pubblicazione",
+      "inferred_type": "date",
+      "nullable": false,
+      "non_empty_samples": [
+        "2007-01-26",
+        "2007-01-22",
+        "2007-01-22",
+        "2007-01-17",
+        "2007-01-31"
+      ]
+    },
+    {
+      "name": "data_scadenza_offerta",
+      "inferred_type": "date",
+      "nullable": true,
+      "non_empty_samples": [
+        "2007-02-27",
+        "2007-02-07",
+        "2007-02-07",
+        "2007-05-18",
+        "2007-02-14"
+      ]
+    },
+    {
+      "name": "cod_tipo_scelta_contraente",
+      "inferred_type": "integer",
+      "nullable": false,
+      "non_empty_samples": [
+        "1",
+        "4",
+        "4",
+        "8",
+        "28"
+      ]
+    },
+    {
+      "name": "tipo_scelta_contraente",
+      "inferred_type": "text",
+      "nullable": false,
+      "non_empty_samples": [
+        "PROCEDURA APERTA",
+        "PROCEDURA NEGOZIATA SENZA PREVIA PUBBLICAZIONE",
+        "PROCEDURA NEGOZIATA SENZA PREVIA PUBBLICAZIONE",
+        "AFFIDAMENTO IN ECONOMIA - COTTIMO FIDUCIARIO",
+        "CONFRONTO COMPETITIVO IN ADESIONE AD ACCORDO QUADRO/CONVENZIONE"
+      ]
+    },
+    {
+      "name": "cod_modalita_realizzazione",
+      "inferred_type": "integer",
+      "nullable": false,
+      "non_empty_samples": [
+        "1",
+        "1",
+        "1",
+        "4",
+        "2"
+      ]
+    },
+    {
+      "name": "modalita_realizzazione",
+      "inferred_type": "text",
+      "nullable": false,
+      "non_empty_samples": [
+        "CONTRATTO D'APPALTO",
+        "CONTRATTO D'APPALTO",
+        "CONTRATTO D'APPALTO",
+        "CONTRATTO DI CONCESSIONE DI SERVIZI E/O FORNITURE",
+        "CONTRATTO D'APPALTO DISCENDENTE DA ACCORDO QUADRO/CONVENZIONE CON SUCCESSIVO CONFRONTO COMPETITIVO"
+      ]
+    },
+    {
+      "name": "codice_ausa",
+      "inferred_type": "integer",
+      "nullable": true,
+      "non_empty_samples": [
+        "0000200473",
+        "0000174244",
+        "0000174244",
+        "0000244256",
+        "0000174053"
+      ]
+    },
+    {
+      "name": "cf_amministrazione_appaltante",
+      "inferred_type": "integer",
+      "nullable": false,
+      "non_empty_samples": [
+        "02363280815",
+        "01062990096",
+        "01062990096",
+        "80088310018",
+        "01165400589"
+      ]
+    },
+    {
+      "name": "denominazione_amministrazione_appaltante",
+      "inferred_type": "text",
+      "nullable": false,
+      "non_empty_samples": [
+        "AZIENDA SANITARIA PROVINCIALE",
+        "AZIENDA SANITARIA LOCALE N. 2 SAVONESE",
+        "AZIENDA SANITARIA LOCALE N. 2 SAVONESE",
+        "REPARTO T. L. A. PIEMONTE GUARDIA DI FINANZA",
+        "ISTITUTO NAZIONALE PERL ASSICURAZIONE CONTRO GLI INFORTUNI SUL LAVORO"
+      ]
+    },
+    {
+      "name": "sezione_regionale",
+      "inferred_type": "text",
+      "nullable": false,
+      "non_empty_samples": [
+        "SEZIONE REGIONALE SICILIA",
+        "SEZIONE REGIONALE LIGURIA",
+        "SEZIONE REGIONALE LIGURIA",
+        "SEZIONE REGIONALE CENTRALE",
+        "SEZIONE REGIONALE CENTRALE"
+      ]
+    },
+    {
+      "name": "id_centro_costo",
+      "inferred_type": "text",
+      "nullable": false,
+      "non_empty_samples": [
+        "5C10FA95-1FEE-417D-AC40-DA4C009EC1D2",
+        "4B7D19E5-1D40-42BD-94C5-1A3F2046C166",
+        "4B7D19E5-1D40-42BD-94C5-1A3F2046C166",
+        "78A1C933-9DFB-45D6-A249-CEE90F37DD2A",
+        "C93B0D3C-E376-4AB2-BE03-A1CCCAB4E15B"
+      ]
+    },
+    {
+      "name": "denominazione_centro_costo",
+      "inferred_type": "text",
+      "nullable": false,
+      "non_empty_samples": [
+        "PROVVEDITORATO",
+        "S.C. ECONOMATO E LOGISTICA",
+        "S.C. ECONOMATO E LOGISTICA",
+        "UFFICIO AMMINISTRAZIONE",
+        "DIREZIONE REGIONALE PER IL PIEMONTE"
+      ]
+    },
+    {
+      "name": "anno_pubblicazione",
+      "inferred_type": "integer",
+      "nullable": false,
+      "non_empty_samples": [
+        "2007",
+        "2007",
+        "2007",
+        "2007",
+        "2007"
+      ]
+    },
+    {
+      "name": "mese_pubblicazione",
+      "inferred_type": "integer",
+      "nullable": false,
+      "non_empty_samples": [
+        "1",
+        "1",
+        "1",
+        "1",
+        "1"
+      ]
+    },
+    {
+      "name": "cod_cpv",
+      "inferred_type": "text",
+      "nullable": false,
+      "non_empty_samples": [
+        "33141620-2",
+        "33160000-9",
+        "33160000-9",
+        "30121100-4",
+        "55510000-8"
+      ]
+    },
+    {
+      "name": "descrizione_cpv",
+      "inferred_type": "text",
+      "nullable": false,
+      "non_empty_samples": [
+        "KIT SANITARI.",
+        "TECNICA OPERATORIA.",
+        "TECNICA OPERATORIA.",
+        "FOTOCOPIATRICI.",
+        "SERVIZI DI MENSA."
+      ]
+    },
+    {
+      "name": "flag_prevalente",
+      "inferred_type": "boolean",
+      "nullable": false,
+      "non_empty_samples": [
+        "1",
+        "1",
+        "1",
+        "1",
+        "1"
+      ]
+    },
+    {
+      "name": "COD_MOTIVO_CANCELLAZIONE",
+      "inferred_type": "unknown",
+      "nullable": true,
+      "non_empty_samples": []
+    },
+    {
+      "name": "MOTIVO_CANCELLAZIONE",
+      "inferred_type": "unknown",
+      "nullable": true,
+      "non_empty_samples": []
+    },
+    {
+      "name": "DATA_CANCELLAZIONE",
+      "inferred_type": "unknown",
+      "nullable": true,
+      "non_empty_samples": []
+    },
+    {
+      "name": "DATA_ULTIMO_PERFEZIONAMENTO",
+      "inferred_type": "date",
+      "nullable": false,
+      "non_empty_samples": [
+        "2011-04-26",
+        "2011-04-21",
+        "2011-04-21",
+        "2011-04-11",
+        "2013-12-11"
+      ]
+    },
+    {
+      "name": "COD_MODALITA_INDIZIONE_SPECIALI",
+      "inferred_type": "decimal",
+      "nullable": true,
+      "non_empty_samples": [
+        "4.0",
+        "3.0",
+        "4.0",
+        "4.0",
+        "3.0"
+      ]
+    },
+    {
+      "name": "MODALITA_INDIZIONE_SPECIALI",
+      "inferred_type": "text",
+      "nullable": true,
+      "non_empty_samples": [
+        "PROCEDURA CHE NON PREVEDE INDIZIONE DI GARA",
+        "GARA INDETTA MEDIANTE BANDO DI GARA",
+        "PROCEDURA CHE NON PREVEDE INDIZIONE DI GARA",
+        "PROCEDURA CHE NON PREVEDE INDIZIONE DI GARA",
+        "GARA INDETTA MEDIANTE BANDO DI GARA"
+      ]
+    },
+    {
+      "name": "COD_MODALITA_INDIZIONE_SERVIZI",
+      "inferred_type": "decimal",
+      "nullable": true,
+      "non_empty_samples": [
+        "7.0"
+      ]
+    },
+    {
+      "name": "MODALITA_INDIZIONE_SERVIZI",
+      "inferred_type": "text",
+      "nullable": true,
+      "non_empty_samples": [
+        "PROCEDURA CHE NON PREVEDE INDIZIONE DI GARA"
+      ]
+    },
+    {
+      "name": "DURATA_PREVISTA",
+      "inferred_type": "decimal",
+      "nullable": true,
+      "non_empty_samples": [
+        "365.0"
+      ]
+    },
+    {
+      "name": "COD_STRUMENTO_SVOLGIMENTO",
+      "inferred_type": "decimal",
+      "nullable": true,
+      "non_empty_samples": [
+        "1.0",
+        "1.0"
+      ]
+    },
+    {
+      "name": "STRUMENTO_SVOLGIMENTO",
+      "inferred_type": "text",
+      "nullable": true,
+      "non_empty_samples": [
+        "PROCEDURA SVOLTA IN MODALITÀ TRADIZIONALE O CARTACEA",
+        "PROCEDURA SVOLTA IN MODALITÀ TRADIZIONALE O CARTACEA"
+      ]
+    },
+    {
+      "name": "FLAG_URGENZA",
+      "inferred_type": "boolean",
+      "nullable": false,
+      "non_empty_samples": [
+        "0",
+        "0",
+        "0",
+        "0",
+        "0"
+      ]
+    },
+    {
+      "name": "COD_MOTIVO_URGENZA",
+      "inferred_type": "decimal",
+      "nullable": true,
+      "non_empty_samples": [
+        "98.0",
+        "98.0",
+        "98.0",
+        "98.0",
+        "98.0"
+      ]
+    },
+    {
+      "name": "MOTIVO_URGENZA",
+      "inferred_type": "text",
+      "nullable": true,
+      "non_empty_samples": [
+        "ART. 176 - D.P.R. 207/2010",
+        "ART. 176 - D.P.R. 207/2010",
+        "ART. 176 - D.P.R. 207/2010",
+        "ART. 176 - D.P.R. 207/2010",
+        "ART. 176 - D.P.R. 207/2010"
+      ]
+    },
+    {
+      "name": "FLAG_DELEGA",
+      "inferred_type": "unknown",
+      "nullable": true,
+      "non_empty_samples": []
+    },
+    {
+      "name": "FUNZIONI_DELEGATE",
+      "inferred_type": "unknown",
+      "nullable": true,
+      "non_empty_samples": []
+    },
+    {
+      "name": "CF_SA_DELEGANTE",
+      "inferred_type": "unknown",
+      "nullable": true,
+      "non_empty_samples": []
+    },
+    {
+      "name": "DENOMINAZIONE_SA_DELEGANTE",
+      "inferred_type": "unknown",
+      "nullable": true,
+      "non_empty_samples": []
+    },
+    {
+      "name": "CF_SA_DELEGATA",
+      "inferred_type": "unknown",
+      "nullable": true,
+      "non_empty_samples": []
+    },
+    {
+      "name": "DENOMINAZIONE_SA_DELEGATA",
+      "inferred_type": "unknown",
+      "nullable": true,
+      "non_empty_samples": []
+    },
+    {
+      "name": "IMPORTO_SICUREZZA",
+      "inferred_type": "decimal",
+      "nullable": true,
+      "non_empty_samples": [
+        "21801.28",
+        "76553.54",
+        "35000.0",
+        "30600.0",
+        "27397.24"
+      ]
+    },
+    {
+      "name": "TIPO_APPALTO_RISERVATO",
+      "inferred_type": "unknown",
+      "nullable": true,
+      "non_empty_samples": []
+    },
+    {
+      "name": "CUI_PROGRAMMA",
+      "inferred_type": "integer",
+      "nullable": true,
+      "non_empty_samples": [
+        "0021282604400120050019",
+        "0021282604400120050019"
+      ]
+    },
+    {
+      "name": "FLAG_PREV_RIPETIZIONI",
+      "inferred_type": "boolean",
+      "nullable": true,
+      "non_empty_samples": [
+        "0",
+        "0",
+        "0",
+        "0",
+        "0"
+      ]
+    },
+    {
+      "name": "COD_IPOTESI_COLLEGAMENTO",
+      "inferred_type": "unknown",
+      "nullable": true,
+      "non_empty_samples": []
+    },
+    {
+      "name": "IPOTESI_COLLEGAMENTO",
+      "inferred_type": "unknown",
+      "nullable": true,
+      "non_empty_samples": []
+    },
+    {
+      "name": "CIG_COLLEGAMENTO",
+      "inferred_type": "unknown",
+      "nullable": true,
+      "non_empty_samples": []
+    },
+    {
+      "name": "COD_ESITO",
+      "inferred_type": "decimal",
+      "nullable": true,
+      "non_empty_samples": [
+        "1.0",
+        "1.0",
+        "1.0",
+        "1.0",
+        "1.0"
+      ]
+    },
+    {
+      "name": "ESITO",
+      "inferred_type": "text",
+      "nullable": true,
+      "non_empty_samples": [
+        "AGGIUDICATA",
+        "AGGIUDICATA",
+        "AGGIUDICATA",
+        "AGGIUDICATA",
+        "AGGIUDICATA"
+      ]
+    },
+    {
+      "name": "DATA_COMUNICAZIONE_ESITO",
+      "inferred_type": "date",
+      "nullable": true,
+      "non_empty_samples": [
+        "2012-02-15",
+        "2012-02-16",
+        "2014-12-15",
+        "2018-05-02",
+        "2011-05-18"
+      ]
+    },
+    {
+      "name": "FLAG_PNRR_PNC",
+      "inferred_type": "boolean",
+      "nullable": true,
+      "non_empty_samples": [
+        "0",
+        "0"
+      ]
+    }
+  ]
+}

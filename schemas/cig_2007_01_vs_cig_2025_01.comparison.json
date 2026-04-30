@@ -1,0 +1,113 @@
+{
+  "left_source_path": "data/raw/cig-2007/cig_csv_2007_01/extracted/cig_csv_2007_01.csv",
+  "right_source_path": "data/raw/cig-2025/cig_csv_2025_01/extracted/cig_csv_2025_01.csv",
+  "left_column_count": 61,
+  "right_column_count": 61,
+  "shared_column_count": 61,
+  "left_only_columns": [],
+  "right_only_columns": [],
+  "type_changes": [
+    {
+      "name": "CF_SA_DELEGANTE",
+      "left_type": "unknown",
+      "right_type": "integer"
+    },
+    {
+      "name": "CF_SA_DELEGATA",
+      "left_type": "unknown",
+      "right_type": "text"
+    },
+    {
+      "name": "CIG_COLLEGAMENTO",
+      "left_type": "unknown",
+      "right_type": "text"
+    },
+    {
+      "name": "COD_IPOTESI_COLLEGAMENTO",
+      "left_type": "unknown",
+      "right_type": "decimal"
+    },
+    {
+      "name": "CUI_PROGRAMMA",
+      "left_type": "integer",
+      "right_type": "text"
+    },
+    {
+      "name": "DENOMINAZIONE_SA_DELEGANTE",
+      "left_type": "unknown",
+      "right_type": "text"
+    },
+    {
+      "name": "DENOMINAZIONE_SA_DELEGATA",
+      "left_type": "unknown",
+      "right_type": "text"
+    },
+    {
+      "name": "FLAG_DELEGA",
+      "left_type": "unknown",
+      "right_type": "boolean"
+    },
+    {
+      "name": "FUNZIONI_DELEGATE",
+      "left_type": "unknown",
+      "right_type": "text"
+    },
+    {
+      "name": "IPOTESI_COLLEGAMENTO",
+      "left_type": "unknown",
+      "right_type": "text"
+    },
+    {
+      "name": "TIPO_APPALTO_RISERVATO",
+      "left_type": "unknown",
+      "right_type": "text"
+    },
+    {
+      "name": "numero_gara",
+      "left_type": "integer",
+      "right_type": "text"
+    }
+  ],
+  "nullable_changes": [
+    {
+      "name": "FLAG_PNRR_PNC",
+      "left_nullable": true,
+      "right_nullable": false
+    },
+    {
+      "name": "cf_amministrazione_appaltante",
+      "left_nullable": false,
+      "right_nullable": true
+    },
+    {
+      "name": "denominazione_amministrazione_appaltante",
+      "left_nullable": false,
+      "right_nullable": true
+    },
+    {
+      "name": "denominazione_centro_costo",
+      "left_nullable": false,
+      "right_nullable": true
+    },
+    {
+      "name": "descrizione_cpv",
+      "left_nullable": false,
+      "right_nullable": true
+    },
+    {
+      "name": "id_centro_costo",
+      "left_nullable": false,
+      "right_nullable": true
+    },
+    {
+      "name": "n_lotti_componenti",
+      "left_nullable": true,
+      "right_nullable": false
+    },
+    {
+      "name": "sezione_regionale",
+      "left_nullable": false,
+      "right_nullable": true
+    }
+  ]
+}

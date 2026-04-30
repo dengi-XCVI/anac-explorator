@@ -1,0 +1,723 @@
+{
+  "source_path": "data/raw/cig-2025/cig_csv_2025_01/extracted/cig_csv_2025_01.csv",
+  "delimiter": ";",
+  "encoding": "utf-8-sig",
+  "rows_sampled": 112879,
+  "row_length_mismatches": 0,
+  "columns": [
+    {
+      "name": "cig",
+      "inferred_type": "text",
+      "nullable": false,
+      "non_empty_samples": [
+        "B552431AE5",
+        "B53B54D65D",
+        "B55EC5A84F",
+        "B558D65BE2",
+        "B5193E8379"
+      ]
+    },
+    {
+      "name": "cig_accordo_quadro",
+      "inferred_type": "text",
+      "nullable": true,
+      "non_empty_samples": [
+        "9384075FA7",
+        "A030EB05B9",
+        "B36C7D3510",
+        "A01EE1C153",
+        "A01EE6B284"
+      ]
+    },
+    {
+      "name": "numero_gara",
+      "inferred_type": "text",
+      "nullable": false,
+      "non_empty_samples": [
+        "start_17/01/2025 13:13:24_001700/2025",
+        "368342_tender_243933",
+        "tender://ospedalegiglio/id/2093",
+        "G01944-f9c34ba3-0b07-459b-b0b5-fbce643a92de",
+        "630910_75951"
+      ]
+    },
+    {
+      "name": "oggetto_gara",
+      "inferred_type": "text",
+      "nullable": false,
+      "non_empty_samples": [
+        "INTERVENTO DI RECUPERO DEL CONTESTO PAESAGGISTICO DELLA FRAZIONE DI TRASSILICO - VIA DI ACCESSO A MOLE VIGNE",
+        "GARA EUROPEA A PROCEDURA APERTA AI SENSI DELL'ART. 71 DEL D.LGS. N. 36/2023 PER L'AGGIUDICAZIONE DELLA FORNITURA, SUDDIVISA IN 50 LOTTI, DI DISPOSITIVI MEDICI CND A06 PER IL PERIODO DI 24 MESI, EVENTUALMENTE RINNOVABILE PER ULTERIORI 12 MESI",
+        "ATTIVAZIONE FORNITURA SEMESTRALE DISPOSITIVI DI RADIOLOGIA INTERVENTISTICA IN LOTTI N. 3",
+        "AFFIDAMENTO ASSISTENZA LEGALE RICONDUCIBILE A SERVIZIO LEGALE CONNESSO ALL'ESERCIZIO DEI PUBBLICI POTERI EX ART. 56 DE D.LGS. N. 36/2023 E S.M.I.",
+        "ID. 22PRE002 - FORNITURA PRODOTTI PER PNEUMOLOGIA E OSSIGENOTERAPIA"
+      ]
+    },
+    {
+      "name": "importo_complessivo_gara",
+      "inferred_type": "decimal",
+      "nullable": true,
+      "non_empty_samples": [
+        "38754.65",
+        "1160254.08",
+        "6630.0",
+        "40000.0",
+        "2623217.59"
+      ]
+    },
+    {
+      "name": "n_lotti_componenti",
+      "inferred_type": "integer",
+      "nullable": false,
+      "non_empty_samples": [
+        "1",
+        "50",
+        "3",
+        "1",
+        "30"
+      ]
+    },
+    {
+      "name": "oggetto_lotto",
+      "inferred_type": "text",
+      "nullable": false,
+      "non_empty_samples": [
+        "INTERVENTO DI RECUPERO DEL CONTESTO PAESAGGISTICO DELLA FRAZIONE DI TRASSILICO - VIA DI ACCESSO A MOLE VIGNE",
+        "LOTTO 3 - SERBATOIO DI DRENAGGIO IN SILICONE CAPACITÀ ML 400",
+        "FILTRO CAVALE RIMOVIBILE - LOTTO. N. 2",
+        "AFFIDAMENTO ASSISTENZA LEGALE RICONDUCIBILE A SERVIZIO LEGALE CONNESSO ALL'ESERCIZIO DEI PUBBLICI POTERI EX ART. 56 DE D.LGS. N. 36/2023 E S.M.I.",
+        "22PRE002 - LOTTO 20"
+      ]
+    },
+    {
+      "name": "importo_lotto",
+      "inferred_type": "decimal",
+      "nullable": false,
+      "non_empty_samples": [
+        "38754.65",
+        "31008.0",
+        "2380.0",
+        "40000.0",
+        "6991.25"
+      ]
+    },
+    {
+      "name": "oggetto_principale_contratto",
+      "inferred_type": "text",
+      "nullable": false,
+      "non_empty_samples": [
+        "LAVORI",
+        "FORNITURE",
+        "FORNITURE",
+        "SERVIZI",
+        "FORNITURE"
+      ]
+    },
+    {
+      "name": "stato",
+      "inferred_type": "text",
+      "nullable": false,
+      "non_empty_samples": [
+        "ATTIVO",
+        "ATTIVO",
+        "ATTIVO",
+        "ATTIVO",
+        "ATTIVO"
+      ]
+    },
+    {
+      "name": "settore",
+      "inferred_type": "text",
+      "nullable": false,
+      "non_empty_samples": [
+        "SETTORI ORDINARI",
+        "SETTORI ORDINARI",
+        "SETTORI ORDINARI",
+        "SETTORI ORDINARI",
+        "SETTORI ORDINARI"
+      ]
+    },
+    {
+      "name": "luogo_istat",
+      "inferred_type": "integer",
+      "nullable": true,
+      "non_empty_samples": [
+        "046015",
+        "092009",
+        "082027",
+        "019036",
+        "030129"
+      ]
+    },
+    {
+      "name": "provincia",
+      "inferred_type": "text",
+      "nullable": true,
+      "non_empty_samples": [
+        "LUCCA",
+        "CAGLIARI",
+        "PALERMO",
+        "CREMONA",
+        "UDINE"
+      ]
+    },
+    {
+      "name": "data_pubblicazione",
+      "inferred_type": "date",
+      "nullable": false,
+      "non_empty_samples": [
+        "2025-01-24",
+        "2025-01-20",
+        "2025-01-27",
+        "2025-01-24",
+        "2025-01-08"
+      ]
+    },
+    {
+      "name": "data_scadenza_offerta",
+      "inferred_type": "date",
+      "nullable": true,
+      "non_empty_samples": [
+        "2025-01-23",
+        "2025-03-07",
+        "2024-10-21",
+        "2025-01-24",
+        "2025-02-12"
+      ]
+    },
+    {
+      "name": "cod_tipo_scelta_contraente",
+      "inferred_type": "integer",
+      "nullable": false,
+      "non_empty_samples": [
+        "24",
+        "1",
+        "4",
+        "4",
+        "1"
+      ]
+    },
+    {
+      "name": "tipo_scelta_contraente",
+      "inferred_type": "text",
+      "nullable": false,
+      "non_empty_samples": [
+        "AFFIDAMENTO DIRETTO",
+        "PROCEDURA APERTA",
+        "PROCEDURA NEGOZIATA SENZA PREVIA PUBBLICAZIONE",
+        "PROCEDURA NEGOZIATA SENZA PREVIA PUBBLICAZIONE",
+        "PROCEDURA APERTA"
+      ]
+    },
+    {
+      "name": "cod_modalita_realizzazione",
+      "inferred_type": "integer",
+      "nullable": false,
+      "non_empty_samples": [
+        "1",
+        "1",
+        "1",
+        "1",
+        "1"
+      ]
+    },
+    {
+      "name": "modalita_realizzazione",
+      "inferred_type": "text",
+      "nullable": false,
+      "non_empty_samples": [
+        "CONTRATTO D'APPALTO",
+        "CONTRATTO D'APPALTO",
+        "CONTRATTO D'APPALTO",
+        "CONTRATTO D'APPALTO",
+        "CONTRATTO D'APPALTO"
+      ]
+    },
+    {
+      "name": "codice_ausa",
+      "inferred_type": "integer",
+      "nullable": true,
+      "non_empty_samples": [
+        "0000239369",
+        "0000221620",
+        "0000223369",
+        "0000159628",
+        "0000597896"
+      ]
+    },
+    {
+      "name": "cf_amministrazione_appaltante",
+      "inferred_type": "integer",
+      "nullable": true,
+      "non_empty_samples": [
+        "81000160465",
+        "03108560925",
+        "05205490823",
+        "00110040193",
+        "02948180308"
+      ]
+    },
+    {
+      "name": "denominazione_amministrazione_appaltante",
+      "inferred_type": "text",
+      "nullable": true,
+      "non_empty_samples": [
+        "COMUNE DI GALLICANO",
+        "AZIENDA OSPEDALIERO-UNIVERSITARIA DI CAGLIARI",
+        "ISTITUTO G.GIGLIO DI CEFALU",
+        "A.E.M. CREMONA SPA A SOCIO UNICO",
+        "AZIENDA REGIONALE DI COORDINAMENTO PER LA SALUTE"
+      ]
+    },
+    {
+      "name": "sezione_regionale",
+      "inferred_type": "text",
+      "nullable": true,
+      "non_empty_samples": [
+        "SEZIONE REGIONALE TOSCANA",
+        "SEZIONE REGIONALE SARDEGNA",
+        "SEZIONE REGIONALE SICILIA",
+        "SEZIONE REGIONALE LOMBARDIA",
+        "NON CLASSIFICATO"
+      ]
+    },
+    {
+      "name": "id_centro_costo",
+      "inferred_type": "text",
+      "nullable": true,
+      "non_empty_samples": [
+        "D4EC5B46-8752-49C6-B930-57944FB92EC9",
+        "CF70D0AD-C47B-4DB9-8F12-0759E833EF1A",
+        "3ABD9A9F-5520-4949-8E1F-A5F665B93B65",
+        "C3DB4328-BC89-49B4-8243-88FD473CCBFD",
+        "17C0B423-876A-4B10-898F-27D488F741E4"
+      ]
+    },
+    {
+      "name": "denominazione_centro_costo",
+      "inferred_type": "text",
+      "nullable": true,
+      "non_empty_samples": [
+        "SETTORE LAVORI PUBBLICI",
+        "SETTORE ACQUISTI A.O.U. DI CAGLIARI",
+        "UFFICIO ACQUISTI",
+        "DIREZIONE GENERALE",
+        "ACQUISTI CENTRALIZZATI"
+      ]
+    },
+    {
+      "name": "anno_pubblicazione",
+      "inferred_type": "integer",
+      "nullable": false,
+      "non_empty_samples": [
+        "2025",
+        "2025",
+        "2025",
+        "2025",
+        "2025"
+      ]
+    },
+    {
+      "name": "mese_pubblicazione",
+      "inferred_type": "integer",
+      "nullable": false,
+      "non_empty_samples": [
+        "1",
+        "1",
+        "1",
+        "1",
+        "1"
+      ]
+    },
+    {
+      "name": "cod_cpv",
+      "inferred_type": "text",
+      "nullable": false,
+      "non_empty_samples": [
+        "45112000-5",
+        "33141600-6",
+        "33190000-8",
+        "79111000-5",
+        "33190000-8"
+      ]
+    },
+    {
+      "name": "descrizione_cpv",
+      "inferred_type": "text",
+      "nullable": true,
+      "non_empty_samples": [
+        "LAVORI DI SCAVO E MOVIMENTO TERRA",
+        "RECIPIENTI E SACCHE DI RACCOLTA, MATERIALE DI DRENAGGIO",
+        "DISPOSITIVI E PRODOTTI MEDICI VARI",
+        "SERVIZI DI CONSULENZA GIURIDICA",
+        "DISPOSITIVI E PRODOTTI MEDICI VARI"
+      ]
+    },
+    {
+      "name": "flag_prevalente",
+      "inferred_type": "boolean",
+      "nullable": false,
+      "non_empty_samples": [
+        "1",
+        "1",
+        "1",
+        "1",
+        "1"
+      ]
+    },
+    {
+      "name": "COD_MOTIVO_CANCELLAZIONE",
+      "inferred_type": "unknown",
+      "nullable": true,
+      "non_empty_samples": []
+    },
+    {
+      "name": "MOTIVO_CANCELLAZIONE",
+      "inferred_type": "unknown",
+      "nullable": true,
+      "non_empty_samples": []
+    },
+    {
+      "name": "DATA_CANCELLAZIONE",
+      "inferred_type": "unknown",
+      "nullable": true,
+      "non_empty_samples": []
+    },
+    {
+      "name": "DATA_ULTIMO_PERFEZIONAMENTO",
+      "inferred_type": "date",
+      "nullable": false,
+      "non_empty_samples": [
+        "2025-01-23",
+        "2025-01-17",
+        "2025-01-27",
+        "2025-01-24",
+        "2025-01-07"
+      ]
+    },
+    {
+      "name": "COD_MODALITA_INDIZIONE_SPECIALI",
+      "inferred_type": "decimal",
+      "nullable": true,
+      "non_empty_samples": [
+        "4.0",
+        "4.0",
+        "4.0",
+        "4.0",
+        "4.0"
+      ]
+    },
+    {
+      "name": "MODALITA_INDIZIONE_SPECIALI",
+      "inferred_type": "text",
+      "nullable": true,
+      "non_empty_samples": [
+        "PROCEDURA CHE NON PREVEDE INDIZIONE DI GARA",
+        "PROCEDURA CHE NON PREVEDE INDIZIONE DI GARA",
+        "PROCEDURA CHE NON PREVEDE INDIZIONE DI GARA",
+        "PROCEDURA CHE NON PREVEDE INDIZIONE DI GARA",
+        "PROCEDURA CHE NON PREVEDE INDIZIONE DI GARA"
+      ]
+    },
+    {
+      "name": "COD_MODALITA_INDIZIONE_SERVIZI",
+      "inferred_type": "decimal",
+      "nullable": true,
+      "non_empty_samples": [
+        "7.0",
+        "7.0",
+        "7.0",
+        "3.0",
+        "7.0"
+      ]
+    },
+    {
+      "name": "MODALITA_INDIZIONE_SERVIZI",
+      "inferred_type": "text",
+      "nullable": true,
+      "non_empty_samples": [
+        "PROCEDURA CHE NON PREVEDE INDIZIONE DI GARA",
+        "PROCEDURA CHE NON PREVEDE INDIZIONE DI GARA",
+        "PROCEDURA CHE NON PREVEDE INDIZIONE DI GARA",
+        "GARA INDETTA MEDIANTE AVVISO SULL’ESISTENZA DI UN SISTEMA DI QUALIFICAZIONE",
+        "PROCEDURA CHE NON PREVEDE INDIZIONE DI GARA"
+      ]
+    },
+    {
+      "name": "DURATA_PREVISTA",
+      "inferred_type": "decimal",
+      "nullable": true,
+      "non_empty_samples": [
+        "36.0",
+        "336.0",
+        "365.0",
+        "365.0",
+        "1095.0"
+      ]
+    },
+    {
+      "name": "COD_STRUMENTO_SVOLGIMENTO",
+      "inferred_type": "decimal",
+      "nullable": true,
+      "non_empty_samples": [
+        "5.0",
+        "5.0",
+        "5.0",
+        "5.0",
+        "5.0"
+      ]
+    },
+    {
+      "name": "STRUMENTO_SVOLGIMENTO",
+      "inferred_type": "text",
+      "nullable": true,
+      "non_empty_samples": [
+        "PROCEDURE SVOLTE ATTRAVERSO PIATTAFORME TELEMATICHE DI NEGOZIAZIONE ART.58",
+        "PROCEDURE SVOLTE ATTRAVERSO PIATTAFORME TELEMATICHE DI NEGOZIAZIONE ART.58",
+        "PROCEDURE SVOLTE ATTRAVERSO PIATTAFORME TELEMATICHE DI NEGOZIAZIONE ART.58",
+        "PROCEDURE SVOLTE ATTRAVERSO PIATTAFORME TELEMATICHE DI NEGOZIAZIONE ART.58",
+        "PROCEDURE SVOLTE ATTRAVERSO PIATTAFORME TELEMATICHE DI NEGOZIAZIONE ART.58"
+      ]
+    },
+    {
+      "name": "FLAG_URGENZA",
+      "inferred_type": "boolean",
+      "nullable": false,
+      "non_empty_samples": [
+        "1",
+        "1",
+        "0",
+        "0",
+        "1"
+      ]
+    },
+    {
+      "name": "COD_MOTIVO_URGENZA",
+      "inferred_type": "decimal",
+      "nullable": true,
+      "non_empty_samples": [
+        "7.0",
+        "7.0",
+        "7.0",
+        "7.0",
+        "7.0"
+      ]
+    },
+    {
+      "name": "MOTIVO_URGENZA",
+      "inferred_type": "text",
+      "nullable": true,
+      "non_empty_samples": [
+        "NON APPLICABILE",
+        "NON APPLICABILE",
+        "NON APPLICABILE",
+        "non applicabile",
+        "non applicabile"
+      ]
+    },
+    {
+      "name": "FLAG_DELEGA",
+      "inferred_type": "boolean",
+      "nullable": true,
+      "non_empty_samples": [
+        "0",
+        "0",
+        "0",
+        "0",
+        "0"
+      ]
+    },
+    {
+      "name": "FUNZIONI_DELEGATE",
+      "inferred_type": "text",
+      "nullable": true,
+      "non_empty_samples": [
+        "Solo aggiudicazione",
+        "Proposta di aggiudicazione",
+        "Solo aggiudicazione",
+        "Proposta di aggiudicazione",
+        "Aggiudicazione, stipula ed esecuzione del contratto"
+      ]
+    },
+    {
+      "name": "CF_SA_DELEGANTE",
+      "inferred_type": "integer",
+      "nullable": true,
+      "non_empty_samples": [
+        "81000160465",
+        "05205490823",
+        "00110040193",
+        "02948180308",
+        "01405600220"
+      ]
+    },
+    {
+      "name": "DENOMINAZIONE_SA_DELEGANTE",
+      "inferred_type": "text",
+      "nullable": true,
+      "non_empty_samples": [
+        "COMUNE DI GALLICANO",
+        "ISTITUTO G.GIGLIO DI CEFALU'",
+        "AZIENDA ENERGETICA MUNICIPALE S.P.A. E PUO' ESSERE INDICATA CON LA SIGLA A.E.M. CREMONA S.P.A.",
+        "AZIENDA REGIONALE DI COORDINAMENTO PER LA SALUTE",
+        "NOVARETI SPA"
+      ]
+    },
+    {
+      "name": "CF_SA_DELEGATA",
+      "inferred_type": "text",
+      "nullable": true,
+      "non_empty_samples": [
+        "01766100984",
+        "CFAVCP-0000507",
+        "93067060751",
+        "CFAVCP-0001CC2",
+        "16791301001"
+      ]
+    },
+    {
+      "name": "DENOMINAZIONE_SA_DELEGATA",
+      "inferred_type": "text",
+      "nullable": true,
+      "non_empty_samples": [
+        "COMUNITA' MONTANA DI VALLECAMONICA",
+        "S.U.A. MONTI DAUNI",
+        "UNIONE DEI COMUNI DEL NORD SALENTO",
+        "CUC DELLA MEDIA VALLE CRATI",
+        "GIUBILEO 2025 SPA"
+      ]
+    },
+    {
+      "name": "IMPORTO_SICUREZZA",
+      "inferred_type": "decimal",
+      "nullable": true,
+      "non_empty_samples": [
+        "1093.52",
+        "0.0",
+        "0.0",
+        "0.0",
+        "50.0"
+      ]
+    },
+    {
+      "name": "TIPO_APPALTO_RISERVATO",
+      "inferred_type": "text",
+      "nullable": true,
+      "non_empty_samples": [
+        "LA PARTECIPAZIONE NON È RISERVATA.",
+        "LA PARTECIPAZIONE NON È RISERVATA.",
+        "LA PARTECIPAZIONE NON È RISERVATA.",
+        "LA PARTECIPAZIONE NON È RISERVATA.",
+        "LA PARTECIPAZIONE NON È RISERVATA."
+      ]
+    },
+    {
+      "name": "CUI_PROGRAMMA",
+      "inferred_type": "text",
+      "nullable": true,
+      "non_empty_samples": [
+        "L01320740580202200048",
+        "L00857830178202400008",
+        "F03901420236202300463",
+        "S02483810392202200025",
+        "S02483810392202200025"
+      ]
+    },
+    {
+      "name": "FLAG_PREV_RIPETIZIONI",
+      "inferred_type": "boolean",
+      "nullable": true,
+      "non_empty_samples": [
+        "0",
+        "0",
+        "0",
+        "1",
+        "1"
+      ]
+    },
+    {
+      "name": "COD_IPOTESI_COLLEGAMENTO",
+      "inferred_type": "decimal",
+      "nullable": true,
+      "non_empty_samples": [
+        "10.0",
+        "10.0",
+        "10.0",
+        "10.0",
+        "10.0"
+      ]
+    },
+    {
+      "name": "IPOTESI_COLLEGAMENTO",
+      "inferred_type": "text",
+      "nullable": true,
+      "non_empty_samples": [
+        "NO, NESSUNA IPOTESI DI COLLEGAMENTO",
+        "NO, NESSUNA IPOTESI DI COLLEGAMENTO",
+        "NO, NESSUNA IPOTESI DI COLLEGAMENTO",
+        "NO, NESSUNA IPOTESI DI COLLEGAMENTO",
+        "NO, NESSUNA IPOTESI DI COLLEGAMENTO"
+      ]
+    },
+    {
+      "name": "CIG_COLLEGAMENTO",
+      "inferred_type": "text",
+      "nullable": true,
+      "non_empty_samples": [
+        "ZC43941248",
+        "92853934B4",
+        "9396580F1B",
+        "Z8439406EA",
+        "97270832D3"
+      ]
+    },
+    {
+      "name": "COD_ESITO",
+      "inferred_type": "decimal",
+      "nullable": true,
+      "non_empty_samples": [
+        "1.0",
+        "1.0",
+        "98.0",
+        "1.0",
+        "1.0"
+      ]
+    },
+    {
+      "name": "ESITO",
+      "inferred_type": "text",
+      "nullable": true,
+      "non_empty_samples": [
+        "AGGIUDICATA",
+        "AGGIUDICATA",
+        "NON È STATO SELEZIONATO NESSUN VINCITORE E LA GARA È CHIUSA.",
+        "AGGIUDICATA",
+        "AGGIUDICATA"
+      ]
+    },
+    {
+      "name": "DATA_COMUNICAZIONE_ESITO",
+      "inferred_type": "date",
+      "nullable": true,
+      "non_empty_samples": [
+        "2025-01-23",
+        "2025-11-28",
+        "2024-11-13",
+        "2025-01-09",
+        "2025-03-14"
+      ]
+    },
+    {
+      "name": "FLAG_PNRR_PNC",
+      "inferred_type": "boolean",
+      "nullable": false,
+      "non_empty_samples": [
+        "0",
+        "0",
+        "0",
+        "0",
+        "0"
+      ]
+    }
+  ]
+}
