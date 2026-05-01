@@ -1,0 +1,1496 @@
+{
+  "dictionary_name": "cig_2025_01",
+  "dataset_id": "cig-2025",
+  "source_schema_path": "schemas/cig_2025_01.schema.json",
+  "comparison_path": "schemas/cig_2007_01_vs_cig_2025_01.comparison.json",
+  "vocabulary_index_path": "vocabularies/index.json",
+  "section_count": 9,
+  "entry_count": 61,
+  "sections": [
+    "Identifiers and lot structure",
+    "Amounts and contract scope",
+    "Publication and procedure",
+    "Location and classification",
+    "Contracting authority and cost center",
+    "Cancellation and lifecycle maintenance",
+    "Indiction and execution instruments",
+    "Urgency and delegated execution",
+    "Planning, linking, and outcome"
+  ],
+  "entries": [
+    {
+      "name": "cig",
+      "section": "Identifiers and lot structure",
+      "description": "Unique ANAC tender-lot identifier for the current procurement record.",
+      "inferred_type": "text",
+      "nullable": false,
+      "non_empty_samples": [
+        "B552431AE5",
+        "B53B54D65D",
+        "B55EC5A84F",
+        "B558D65BE2",
+        "B5193E8379"
+      ],
+      "related_fields": [
+        "cig_accordo_quadro",
+        "numero_gara"
+      ],
+      "code_meaning_status": "not_applicable",
+      "cross_year_notes": [],
+      "notes": [],
+      "code_reference": null
+    },
+    {
+      "name": "cig_accordo_quadro",
+      "section": "Identifiers and lot structure",
+      "description": "Reference CIG for the parent framework agreement or convention when the current lot derives from one.",
+      "inferred_type": "text",
+      "nullable": true,
+      "non_empty_samples": [
+        "9384075FA7",
+        "A030EB05B9",
+        "B36C7D3510",
+        "A01EE1C153",
+        "A01EE6B284"
+      ],
+      "related_fields": [
+        "cig"
+      ],
+      "code_meaning_status": "not_applicable",
+      "cross_year_notes": [],
+      "notes": [],
+      "code_reference": null
+    },
+    {
+      "name": "numero_gara",
+      "section": "Identifiers and lot structure",
+      "description": "Source procedure identifier for the broader procurement, not necessarily a purely numeric value.",
+      "inferred_type": "text",
+      "nullable": false,
+      "non_empty_samples": [
+        "start_17/01/2025 13:13:24_001700/2025",
+        "368342_tender_243933",
+        "tender://ospedalegiglio/id/2093",
+        "G01944-f9c34ba3-0b07-459b-b0b5-fbce643a92de",
+        "630910_75951"
+      ],
+      "related_fields": [
+        "cig",
+        "oggetto_gara",
+        "n_lotti_componenti"
+      ],
+      "code_meaning_status": "not_applicable",
+      "cross_year_notes": [
+        "Compared with January 2007, the inferred type changed from `integer` to `text`."
+      ],
+      "notes": [
+        "The January 2025 file contains mixed identifier formats, so this field should not be treated as strictly numeric."
+      ],
+      "code_reference": null
+    },
+    {
+      "name": "oggetto_gara",
+      "section": "Identifiers and lot structure",
+      "description": "Overall title or subject of the procurement procedure.",
+      "inferred_type": "text",
+      "nullable": false,
+      "non_empty_samples": [
+        "INTERVENTO DI RECUPERO DEL CONTESTO PAESAGGISTICO DELLA FRAZIONE DI TRASSILICO - VIA DI ACCESSO A MOLE VIGNE",
+        "GARA EUROPEA A PROCEDURA APERTA AI SENSI DELL'ART. 71 DEL D.LGS. N. 36/2023 PER L'AGGIUDICAZIONE DELLA FORNITURA, SUDDIVISA IN 50 LOTTI, DI DISPOSITIVI MEDICI CND A06 PER IL PERIODO DI 24 MESI, EVENTUALMENTE RINNOVABILE PER ULTERIORI 12 MESI",
+        "ATTIVAZIONE FORNITURA SEMESTRALE DISPOSITIVI DI RADIOLOGIA INTERVENTISTICA IN LOTTI N. 3",
+        "AFFIDAMENTO ASSISTENZA LEGALE RICONDUCIBILE A SERVIZIO LEGALE CONNESSO ALL'ESERCIZIO DEI PUBBLICI POTERI EX ART. 56 DE D.LGS. N. 36/2023 E S.M.I.",
+        "ID. 22PRE002 - FORNITURA PRODOTTI PER PNEUMOLOGIA E OSSIGENOTERAPIA"
+      ],
+      "related_fields": [
+        "numero_gara",
+        "oggetto_lotto"
+      ],
+      "code_meaning_status": "not_applicable",
+      "cross_year_notes": [],
+      "notes": [],
+      "code_reference": null
+    },
+    {
+      "name": "importo_complessivo_gara",
+      "section": "Amounts and contract scope",
+      "description": "Total amount declared for the broader procurement procedure.",
+      "inferred_type": "decimal",
+      "nullable": true,
+      "non_empty_samples": [
+        "38754.65",
+        "1160254.08",
+        "6630.0",
+        "40000.0",
+        "2623217.59"
+      ],
+      "related_fields": [
+        "importo_lotto",
+        "n_lotti_componenti"
+      ],
+      "code_meaning_status": "not_applicable",
+      "cross_year_notes": [],
+      "notes": [],
+      "code_reference": null
+    },
+    {
+      "name": "n_lotti_componenti",
+      "section": "Identifiers and lot structure",
+      "description": "Number of lots or components declared for the broader procurement.",
+      "inferred_type": "integer",
+      "nullable": false,
+      "non_empty_samples": [
+        "1",
+        "50",
+        "3",
+        "1",
+        "30"
+      ],
+      "related_fields": [
+        "numero_gara",
+        "importo_complessivo_gara"
+      ],
+      "code_meaning_status": "not_applicable",
+      "cross_year_notes": [
+        "Compared with January 2007, nullability changed from `True` to `False`."
+      ],
+      "notes": [],
+      "code_reference": null
+    },
+    {
+      "name": "oggetto_lotto",
+      "section": "Identifiers and lot structure",
+      "description": "Title or subject of the specific lot represented by the current row.",
+      "inferred_type": "text",
+      "nullable": false,
+      "non_empty_samples": [
+        "INTERVENTO DI RECUPERO DEL CONTESTO PAESAGGISTICO DELLA FRAZIONE DI TRASSILICO - VIA DI ACCESSO A MOLE VIGNE",
+        "LOTTO 3 - SERBATOIO DI DRENAGGIO IN SILICONE CAPACITÀ ML 400",
+        "FILTRO CAVALE RIMOVIBILE - LOTTO. N. 2",
+        "AFFIDAMENTO ASSISTENZA LEGALE RICONDUCIBILE A SERVIZIO LEGALE CONNESSO ALL'ESERCIZIO DEI PUBBLICI POTERI EX ART. 56 DE D.LGS. N. 36/2023 E S.M.I.",
+        "22PRE002 - LOTTO 20"
+      ],
+      "related_fields": [
+        "oggetto_gara",
+        "importo_lotto"
+      ],
+      "code_meaning_status": "not_applicable",
+      "cross_year_notes": [],
+      "notes": [],
+      "code_reference": null
+    },
+    {
+      "name": "importo_lotto",
+      "section": "Amounts and contract scope",
+      "description": "Declared amount for the specific lot represented by the current row.",
+      "inferred_type": "decimal",
+      "nullable": false,
+      "non_empty_samples": [
+        "38754.65",
+        "31008.0",
+        "2380.0",
+        "40000.0",
+        "6991.25"
+      ],
+      "related_fields": [
+        "importo_complessivo_gara",
+        "oggetto_lotto",
+        "IMPORTO_SICUREZZA"
+      ],
+      "code_meaning_status": "not_applicable",
+      "cross_year_notes": [],
+      "notes": [],
+      "code_reference": null
+    },
+    {
+      "name": "oggetto_principale_contratto",
+      "section": "Amounts and contract scope",
+      "description": "Main contract object category, such as works, supplies, or services.",
+      "inferred_type": "text",
+      "nullable": false,
+      "non_empty_samples": [
+        "LAVORI",
+        "FORNITURE",
+        "FORNITURE",
+        "SERVIZI",
+        "FORNITURE"
+      ],
+      "related_fields": [],
+      "code_meaning_status": "not_applicable",
+      "cross_year_notes": [],
+      "notes": [],
+      "code_reference": null
+    },
+    {
+      "name": "stato",
+      "section": "Publication and procedure",
+      "description": "Current record or procedure status reported by the source dataset.",
+      "inferred_type": "text",
+      "nullable": false,
+      "non_empty_samples": [
+        "ATTIVO",
+        "ATTIVO",
+        "ATTIVO",
+        "ATTIVO",
+        "ATTIVO"
+      ],
+      "related_fields": [],
+      "code_meaning_status": "not_applicable",
+      "cross_year_notes": [],
+      "notes": [],
+      "code_reference": null
+    },
+    {
+      "name": "settore",
+      "section": "Amounts and contract scope",
+      "description": "Regulatory sector of the procurement, such as ordinary or special sectors.",
+      "inferred_type": "text",
+      "nullable": false,
+      "non_empty_samples": [
+        "SETTORI ORDINARI",
+        "SETTORI ORDINARI",
+        "SETTORI ORDINARI",
+        "SETTORI ORDINARI",
+        "SETTORI ORDINARI"
+      ],
+      "related_fields": [],
+      "code_meaning_status": "not_applicable",
+      "cross_year_notes": [],
+      "notes": [],
+      "code_reference": null
+    },
+    {
+      "name": "luogo_istat",
+      "section": "Location and classification",
+      "description": "ISTAT territorial code for the procurement location.",
+      "inferred_type": "integer",
+      "nullable": true,
+      "non_empty_samples": [
+        "046015",
+        "092009",
+        "082027",
+        "019036",
+        "030129"
+      ],
+      "related_fields": [
+        "provincia"
+      ],
+      "code_meaning_status": "not_applicable",
+      "cross_year_notes": [],
+      "notes": [],
+      "code_reference": null
+    },
+    {
+      "name": "provincia",
+      "section": "Location and classification",
+      "description": "Province name associated with the procurement location.",
+      "inferred_type": "text",
+      "nullable": true,
+      "non_empty_samples": [
+        "LUCCA",
+        "CAGLIARI",
+        "PALERMO",
+        "CREMONA",
+        "UDINE"
+      ],
+      "related_fields": [
+        "luogo_istat"
+      ],
+      "code_meaning_status": "not_applicable",
+      "cross_year_notes": [],
+      "notes": [],
+      "code_reference": null
+    },
+    {
+      "name": "data_pubblicazione",
+      "section": "Publication and procedure",
+      "description": "Publication date of the ANAC record.",
+      "inferred_type": "date",
+      "nullable": false,
+      "non_empty_samples": [
+        "2025-01-24",
+        "2025-01-20",
+        "2025-01-27",
+        "2025-01-24",
+        "2025-01-08"
+      ],
+      "related_fields": [
+        "anno_pubblicazione",
+        "mese_pubblicazione",
+        "data_scadenza_offerta"
+      ],
+      "code_meaning_status": "not_applicable",
+      "cross_year_notes": [],
+      "notes": [],
+      "code_reference": null
+    },
+    {
+      "name": "data_scadenza_offerta",
+      "section": "Publication and procedure",
+      "description": "Deadline for submitting offers when the procedure exposes one.",
+      "inferred_type": "date",
+      "nullable": true,
+      "non_empty_samples": [
+        "2025-01-23",
+        "2025-03-07",
+        "2024-10-21",
+        "2025-01-24",
+        "2025-02-12"
+      ],
+      "related_fields": [
+        "data_pubblicazione"
+      ],
+      "code_meaning_status": "not_applicable",
+      "cross_year_notes": [],
+      "notes": [],
+      "code_reference": null
+    },
+    {
+      "name": "cod_tipo_scelta_contraente",
+      "section": "Publication and procedure",
+      "description": "Code for the contractor-selection procedure used for the lot.",
+      "inferred_type": "integer",
+      "nullable": false,
+      "non_empty_samples": [
+        "24",
+        "1",
+        "4",
+        "4",
+        "1"
+      ],
+      "related_fields": [
+        "tipo_scelta_contraente"
+      ],
+      "code_meaning_status": "resolved",
+      "cross_year_notes": [],
+      "notes": [],
+      "code_reference": {
+        "dataset_id": "bandi-cig-tipo-scelta-contraente",
+        "table_name": "tipo_scelta_contraente",
+        "resolved_fields": [
+          "cod_tipo_scelta_contraente",
+          "tipo_scelta_contraente"
+        ],
+        "notes": "Directly resolves a code/label pair already present in the January 2025 CIG schema.",
+        "artifact_path": "vocabularies/bandi-cig-tipo-scelta-contraente.json",
+        "entry_count": 46,
+        "preview_entries": [
+          {
+            "code": "1",
+            "label": "PROCEDURA APERTA"
+          },
+          {
+            "code": "2",
+            "label": "PROCEDURA RISTRETTA"
+          },
+          {
+            "code": "3",
+            "label": "PROCEDURA NEGOZIATA PREVIA PUBBLICAZIONE"
+          },
+          {
+            "code": "4",
+            "label": "PROCEDURA NEGOZIATA SENZA PREVIA PUBBLICAZIONE"
+          },
+          {
+            "code": "5",
+            "label": "DIALOGO COMPETITIVO"
+          }
+        ]
+      }
+    },
+    {
+      "name": "tipo_scelta_contraente",
+      "section": "Publication and procedure",
+      "description": "Italian label for the contractor-selection procedure code.",
+      "inferred_type": "text",
+      "nullable": false,
+      "non_empty_samples": [
+        "AFFIDAMENTO DIRETTO",
+        "PROCEDURA APERTA",
+        "PROCEDURA NEGOZIATA SENZA PREVIA PUBBLICAZIONE",
+        "PROCEDURA NEGOZIATA SENZA PREVIA PUBBLICAZIONE",
+        "PROCEDURA APERTA"
+      ],
+      "related_fields": [
+        "cod_tipo_scelta_contraente"
+      ],
+      "code_meaning_status": "resolved",
+      "cross_year_notes": [],
+      "notes": [],
+      "code_reference": {
+        "dataset_id": "bandi-cig-tipo-scelta-contraente",
+        "table_name": "tipo_scelta_contraente",
+        "resolved_fields": [
+          "cod_tipo_scelta_contraente",
+          "tipo_scelta_contraente"
+        ],
+        "notes": "Directly resolves a code/label pair already present in the January 2025 CIG schema.",
+        "artifact_path": "vocabularies/bandi-cig-tipo-scelta-contraente.json",
+        "entry_count": 46,
+        "preview_entries": [
+          {
+            "code": "1",
+            "label": "PROCEDURA APERTA"
+          },
+          {
+            "code": "2",
+            "label": "PROCEDURA RISTRETTA"
+          },
+          {
+            "code": "3",
+            "label": "PROCEDURA NEGOZIATA PREVIA PUBBLICAZIONE"
+          },
+          {
+            "code": "4",
+            "label": "PROCEDURA NEGOZIATA SENZA PREVIA PUBBLICAZIONE"
+          },
+          {
+            "code": "5",
+            "label": "DIALOGO COMPETITIVO"
+          }
+        ]
+      }
+    },
+    {
+      "name": "cod_modalita_realizzazione",
+      "section": "Publication and procedure",
+      "description": "Code for the execution or realization modality of the lot.",
+      "inferred_type": "integer",
+      "nullable": false,
+      "non_empty_samples": [
+        "1",
+        "1",
+        "1",
+        "1",
+        "1"
+      ],
+      "related_fields": [
+        "modalita_realizzazione"
+      ],
+      "code_meaning_status": "resolved",
+      "cross_year_notes": [],
+      "notes": [],
+      "code_reference": {
+        "dataset_id": "bandi-cig-modalita-realizzazione",
+        "table_name": "modalita_realizzazione",
+        "resolved_fields": [
+          "cod_modalita_realizzazione",
+          "modalita_realizzazione"
+        ],
+        "notes": "Directly resolves a code/label pair already present in the January 2025 CIG schema.",
+        "artifact_path": "vocabularies/bandi-cig-modalita-realizzazione.json",
+        "entry_count": 28,
+        "preview_entries": [
+          {
+            "code": "01",
+            "label": "APPALTO"
+          },
+          {
+            "code": "1",
+            "label": "CONTRATTO D'APPALTO"
+          },
+          {
+            "code": "02",
+            "label": "APPALTO SU PROGETTO ESECUTIVO"
+          },
+          {
+            "code": "2",
+            "label": "CONTRATTO D'APPALTO DISCENDENTE DA ACCORDO QUADRO/CONVENZIONE CON SUCCESSIVO CONFRONTO COMPETITIVO"
+          },
+          {
+            "code": "03",
+            "label": "APPALTO SU PROGETTO DEFINITIVO"
+          }
+        ]
+      }
+    },
+    {
+      "name": "modalita_realizzazione",
+      "section": "Publication and procedure",
+      "description": "Italian label for the execution or realization modality code.",
+      "inferred_type": "text",
+      "nullable": false,
+      "non_empty_samples": [
+        "CONTRATTO D'APPALTO",
+        "CONTRATTO D'APPALTO",
+        "CONTRATTO D'APPALTO",
+        "CONTRATTO D'APPALTO",
+        "CONTRATTO D'APPALTO"
+      ],
+      "related_fields": [
+        "cod_modalita_realizzazione"
+      ],
+      "code_meaning_status": "resolved",
+      "cross_year_notes": [],
+      "notes": [],
+      "code_reference": {
+        "dataset_id": "bandi-cig-modalita-realizzazione",
+        "table_name": "modalita_realizzazione",
+        "resolved_fields": [
+          "cod_modalita_realizzazione",
+          "modalita_realizzazione"
+        ],
+        "notes": "Directly resolves a code/label pair already present in the January 2025 CIG schema.",
+        "artifact_path": "vocabularies/bandi-cig-modalita-realizzazione.json",
+        "entry_count": 28,
+        "preview_entries": [
+          {
+            "code": "01",
+            "label": "APPALTO"
+          },
+          {
+            "code": "1",
+            "label": "CONTRATTO D'APPALTO"
+          },
+          {
+            "code": "02",
+            "label": "APPALTO SU PROGETTO ESECUTIVO"
+          },
+          {
+            "code": "2",
+            "label": "CONTRATTO D'APPALTO DISCENDENTE DA ACCORDO QUADRO/CONVENZIONE CON SUCCESSIVO CONFRONTO COMPETITIVO"
+          },
+          {
+            "code": "03",
+            "label": "APPALTO SU PROGETTO DEFINITIVO"
+          }
+        ]
+      }
+    },
+    {
+      "name": "codice_ausa",
+      "section": "Contracting authority and cost center",
+      "description": "AUSA identifier of the contracting authority.",
+      "inferred_type": "integer",
+      "nullable": true,
+      "non_empty_samples": [
+        "0000239369",
+        "0000221620",
+        "0000223369",
+        "0000159628",
+        "0000597896"
+      ],
+      "related_fields": [
+        "cf_amministrazione_appaltante",
+        "denominazione_amministrazione_appaltante"
+      ],
+      "code_meaning_status": "not_applicable",
+      "cross_year_notes": [],
+      "notes": [],
+      "code_reference": null
+    },
+    {
+      "name": "cf_amministrazione_appaltante",
+      "section": "Contracting authority and cost center",
+      "description": "Tax code or source identifier of the contracting authority.",
+      "inferred_type": "integer",
+      "nullable": true,
+      "non_empty_samples": [
+        "81000160465",
+        "03108560925",
+        "05205490823",
+        "00110040193",
+        "02948180308"
+      ],
+      "related_fields": [
+        "codice_ausa",
+        "denominazione_amministrazione_appaltante"
+      ],
+      "code_meaning_status": "not_applicable",
+      "cross_year_notes": [
+        "Compared with January 2007, nullability changed from `False` to `True`."
+      ],
+      "notes": [],
+      "code_reference": null
+    },
+    {
+      "name": "denominazione_amministrazione_appaltante",
+      "section": "Contracting authority and cost center",
+      "description": "Name of the contracting authority.",
+      "inferred_type": "text",
+      "nullable": true,
+      "non_empty_samples": [
+        "COMUNE DI GALLICANO",
+        "AZIENDA OSPEDALIERO-UNIVERSITARIA DI CAGLIARI",
+        "ISTITUTO G.GIGLIO DI CEFALU",
+        "A.E.M. CREMONA SPA A SOCIO UNICO",
+        "AZIENDA REGIONALE DI COORDINAMENTO PER LA SALUTE"
+      ],
+      "related_fields": [
+        "cf_amministrazione_appaltante",
+        "codice_ausa"
+      ],
+      "code_meaning_status": "not_applicable",
+      "cross_year_notes": [
+        "Compared with January 2007, nullability changed from `False` to `True`."
+      ],
+      "notes": [],
+      "code_reference": null
+    },
+    {
+      "name": "sezione_regionale",
+      "section": "Contracting authority and cost center",
+      "description": "Regional ANAC section associated with the record or authority.",
+      "inferred_type": "text",
+      "nullable": true,
+      "non_empty_samples": [
+        "SEZIONE REGIONALE TOSCANA",
+        "SEZIONE REGIONALE SARDEGNA",
+        "SEZIONE REGIONALE SICILIA",
+        "SEZIONE REGIONALE LOMBARDIA",
+        "NON CLASSIFICATO"
+      ],
+      "related_fields": [],
+      "code_meaning_status": "not_applicable",
+      "cross_year_notes": [
+        "Compared with January 2007, nullability changed from `False` to `True`."
+      ],
+      "notes": [],
+      "code_reference": null
+    },
+    {
+      "name": "id_centro_costo",
+      "section": "Contracting authority and cost center",
+      "description": "Internal cost-center identifier linked to the procurement.",
+      "inferred_type": "text",
+      "nullable": true,
+      "non_empty_samples": [
+        "D4EC5B46-8752-49C6-B930-57944FB92EC9",
+        "CF70D0AD-C47B-4DB9-8F12-0759E833EF1A",
+        "3ABD9A9F-5520-4949-8E1F-A5F665B93B65",
+        "C3DB4328-BC89-49B4-8243-88FD473CCBFD",
+        "17C0B423-876A-4B10-898F-27D488F741E4"
+      ],
+      "related_fields": [
+        "denominazione_centro_costo"
+      ],
+      "code_meaning_status": "not_applicable",
+      "cross_year_notes": [
+        "Compared with January 2007, nullability changed from `False` to `True`."
+      ],
+      "notes": [],
+      "code_reference": null
+    },
+    {
+      "name": "denominazione_centro_costo",
+      "section": "Contracting authority and cost center",
+      "description": "Name of the cost center linked to the procurement.",
+      "inferred_type": "text",
+      "nullable": true,
+      "non_empty_samples": [
+        "SETTORE LAVORI PUBBLICI",
+        "SETTORE ACQUISTI A.O.U. DI CAGLIARI",
+        "UFFICIO ACQUISTI",
+        "DIREZIONE GENERALE",
+        "ACQUISTI CENTRALIZZATI"
+      ],
+      "related_fields": [
+        "id_centro_costo"
+      ],
+      "code_meaning_status": "not_applicable",
+      "cross_year_notes": [
+        "Compared with January 2007, nullability changed from `False` to `True`."
+      ],
+      "notes": [],
+      "code_reference": null
+    },
+    {
+      "name": "anno_pubblicazione",
+      "section": "Publication and procedure",
+      "description": "Publication year extracted from the record.",
+      "inferred_type": "integer",
+      "nullable": false,
+      "non_empty_samples": [
+        "2025",
+        "2025",
+        "2025",
+        "2025",
+        "2025"
+      ],
+      "related_fields": [
+        "mese_pubblicazione",
+        "data_pubblicazione"
+      ],
+      "code_meaning_status": "not_applicable",
+      "cross_year_notes": [],
+      "notes": [],
+      "code_reference": null
+    },
+    {
+      "name": "mese_pubblicazione",
+      "section": "Publication and procedure",
+      "description": "Publication month number extracted from the record.",
+      "inferred_type": "integer",
+      "nullable": false,
+      "non_empty_samples": [
+        "1",
+        "1",
+        "1",
+        "1",
+        "1"
+      ],
+      "related_fields": [
+        "anno_pubblicazione",
+        "data_pubblicazione"
+      ],
+      "code_meaning_status": "not_applicable",
+      "cross_year_notes": [],
+      "notes": [],
+      "code_reference": null
+    },
+    {
+      "name": "cod_cpv",
+      "section": "Location and classification",
+      "description": "Common Procurement Vocabulary code attached to the lot.",
+      "inferred_type": "text",
+      "nullable": false,
+      "non_empty_samples": [
+        "45112000-5",
+        "33141600-6",
+        "33190000-8",
+        "79111000-5",
+        "33190000-8"
+      ],
+      "related_fields": [
+        "descrizione_cpv",
+        "flag_prevalente"
+      ],
+      "code_meaning_status": "not_applicable",
+      "cross_year_notes": [],
+      "notes": [],
+      "code_reference": null
+    },
+    {
+      "name": "descrizione_cpv",
+      "section": "Location and classification",
+      "description": "Italian label for the CPV classification.",
+      "inferred_type": "text",
+      "nullable": true,
+      "non_empty_samples": [
+        "LAVORI DI SCAVO E MOVIMENTO TERRA",
+        "RECIPIENTI E SACCHE DI RACCOLTA, MATERIALE DI DRENAGGIO",
+        "DISPOSITIVI E PRODOTTI MEDICI VARI",
+        "SERVIZI DI CONSULENZA GIURIDICA",
+        "DISPOSITIVI E PRODOTTI MEDICI VARI"
+      ],
+      "related_fields": [
+        "cod_cpv",
+        "flag_prevalente"
+      ],
+      "code_meaning_status": "not_applicable",
+      "cross_year_notes": [
+        "Compared with January 2007, nullability changed from `False` to `True`."
+      ],
+      "notes": [],
+      "code_reference": null
+    },
+    {
+      "name": "flag_prevalente",
+      "section": "Location and classification",
+      "description": "Flag indicating whether the listed CPV classification is the principal one.",
+      "inferred_type": "boolean",
+      "nullable": false,
+      "non_empty_samples": [
+        "1",
+        "1",
+        "1",
+        "1",
+        "1"
+      ],
+      "related_fields": [
+        "cod_cpv",
+        "descrizione_cpv"
+      ],
+      "code_meaning_status": "not_applicable",
+      "cross_year_notes": [],
+      "notes": [],
+      "code_reference": null
+    },
+    {
+      "name": "COD_MOTIVO_CANCELLAZIONE",
+      "section": "Cancellation and lifecycle maintenance",
+      "description": "Code describing why the procurement record was cancelled, when cancellation applies.",
+      "inferred_type": "unknown",
+      "nullable": true,
+      "non_empty_samples": [],
+      "related_fields": [
+        "MOTIVO_CANCELLAZIONE",
+        "DATA_CANCELLAZIONE"
+      ],
+      "code_meaning_status": "not_applicable",
+      "cross_year_notes": [],
+      "notes": [
+        "The current full-file scan did not observe any non-empty values for this field."
+      ],
+      "code_reference": null
+    },
+    {
+      "name": "MOTIVO_CANCELLAZIONE",
+      "section": "Cancellation and lifecycle maintenance",
+      "description": "Italian label for the cancellation reason.",
+      "inferred_type": "unknown",
+      "nullable": true,
+      "non_empty_samples": [],
+      "related_fields": [
+        "COD_MOTIVO_CANCELLAZIONE",
+        "DATA_CANCELLAZIONE"
+      ],
+      "code_meaning_status": "not_applicable",
+      "cross_year_notes": [],
+      "notes": [
+        "The current full-file scan did not observe any non-empty values for this field."
+      ],
+      "code_reference": null
+    },
+    {
+      "name": "DATA_CANCELLAZIONE",
+      "section": "Cancellation and lifecycle maintenance",
+      "description": "Date on which the procurement record was cancelled.",
+      "inferred_type": "unknown",
+      "nullable": true,
+      "non_empty_samples": [],
+      "related_fields": [
+        "COD_MOTIVO_CANCELLAZIONE",
+        "MOTIVO_CANCELLAZIONE"
+      ],
+      "code_meaning_status": "not_applicable",
+      "cross_year_notes": [],
+      "notes": [
+        "The current full-file scan did not observe any non-empty values for this field."
+      ],
+      "code_reference": null
+    },
+    {
+      "name": "DATA_ULTIMO_PERFEZIONAMENTO",
+      "section": "Cancellation and lifecycle maintenance",
+      "description": "Last date on which the ANAC record was finalized or updated to a perfected state.",
+      "inferred_type": "date",
+      "nullable": false,
+      "non_empty_samples": [
+        "2025-01-23",
+        "2025-01-17",
+        "2025-01-27",
+        "2025-01-24",
+        "2025-01-07"
+      ],
+      "related_fields": [],
+      "code_meaning_status": "not_applicable",
+      "cross_year_notes": [],
+      "notes": [],
+      "code_reference": null
+    },
+    {
+      "name": "COD_MODALITA_INDIZIONE_SPECIALI",
+      "section": "Indiction and execution instruments",
+      "description": "Code for the indiction mode used in special-sector procedures.",
+      "inferred_type": "decimal",
+      "nullable": true,
+      "non_empty_samples": [
+        "4.0",
+        "4.0",
+        "4.0",
+        "4.0",
+        "4.0"
+      ],
+      "related_fields": [
+        "MODALITA_INDIZIONE_SPECIALI"
+      ],
+      "code_meaning_status": "missing",
+      "cross_year_notes": [],
+      "notes": [
+        "No dedicated controlled vocabulary dataset has been wired yet."
+      ],
+      "code_reference": null
+    },
+    {
+      "name": "MODALITA_INDIZIONE_SPECIALI",
+      "section": "Indiction and execution instruments",
+      "description": "Italian label for the special-sector indiction mode code.",
+      "inferred_type": "text",
+      "nullable": true,
+      "non_empty_samples": [
+        "PROCEDURA CHE NON PREVEDE INDIZIONE DI GARA",
+        "PROCEDURA CHE NON PREVEDE INDIZIONE DI GARA",
+        "PROCEDURA CHE NON PREVEDE INDIZIONE DI GARA",
+        "PROCEDURA CHE NON PREVEDE INDIZIONE DI GARA",
+        "PROCEDURA CHE NON PREVEDE INDIZIONE DI GARA"
+      ],
+      "related_fields": [
+        "COD_MODALITA_INDIZIONE_SPECIALI"
+      ],
+      "code_meaning_status": "not_applicable",
+      "cross_year_notes": [],
+      "notes": [],
+      "code_reference": null
+    },
+    {
+      "name": "COD_MODALITA_INDIZIONE_SERVIZI",
+      "section": "Indiction and execution instruments",
+      "description": "Code for the indiction mode used in service-related procedure cases.",
+      "inferred_type": "decimal",
+      "nullable": true,
+      "non_empty_samples": [
+        "7.0",
+        "7.0",
+        "7.0",
+        "3.0",
+        "7.0"
+      ],
+      "related_fields": [
+        "MODALITA_INDIZIONE_SERVIZI"
+      ],
+      "code_meaning_status": "missing",
+      "cross_year_notes": [],
+      "notes": [
+        "No dedicated controlled vocabulary dataset has been wired yet."
+      ],
+      "code_reference": null
+    },
+    {
+      "name": "MODALITA_INDIZIONE_SERVIZI",
+      "section": "Indiction and execution instruments",
+      "description": "Italian label for the service-related indiction mode code.",
+      "inferred_type": "text",
+      "nullable": true,
+      "non_empty_samples": [
+        "PROCEDURA CHE NON PREVEDE INDIZIONE DI GARA",
+        "PROCEDURA CHE NON PREVEDE INDIZIONE DI GARA",
+        "PROCEDURA CHE NON PREVEDE INDIZIONE DI GARA",
+        "GARA INDETTA MEDIANTE AVVISO SULL’ESISTENZA DI UN SISTEMA DI QUALIFICAZIONE",
+        "PROCEDURA CHE NON PREVEDE INDIZIONE DI GARA"
+      ],
+      "related_fields": [
+        "COD_MODALITA_INDIZIONE_SERVIZI"
+      ],
+      "code_meaning_status": "not_applicable",
+      "cross_year_notes": [],
+      "notes": [],
+      "code_reference": null
+    },
+    {
+      "name": "DURATA_PREVISTA",
+      "section": "Amounts and contract scope",
+      "description": "Planned contract duration value reported by the source; the exact unit should be confirmed against ANAC domain rules.",
+      "inferred_type": "decimal",
+      "nullable": true,
+      "non_empty_samples": [
+        "36.0",
+        "336.0",
+        "365.0",
+        "365.0",
+        "1095.0"
+      ],
+      "related_fields": [],
+      "code_meaning_status": "not_applicable",
+      "cross_year_notes": [],
+      "notes": [
+        "The source values look numeric, but the duration unit is not yet confirmed in repository documentation."
+      ],
+      "code_reference": null
+    },
+    {
+      "name": "COD_STRUMENTO_SVOLGIMENTO",
+      "section": "Indiction and execution instruments",
+      "description": "Code for the instrument or platform used to conduct the procedure.",
+      "inferred_type": "decimal",
+      "nullable": true,
+      "non_empty_samples": [
+        "5.0",
+        "5.0",
+        "5.0",
+        "5.0",
+        "5.0"
+      ],
+      "related_fields": [
+        "STRUMENTO_SVOLGIMENTO"
+      ],
+      "code_meaning_status": "missing",
+      "cross_year_notes": [],
+      "notes": [
+        "No dedicated controlled vocabulary dataset has been wired yet."
+      ],
+      "code_reference": null
+    },
+    {
+      "name": "STRUMENTO_SVOLGIMENTO",
+      "section": "Indiction and execution instruments",
+      "description": "Italian label for the procedure-conduct instrument code.",
+      "inferred_type": "text",
+      "nullable": true,
+      "non_empty_samples": [
+        "PROCEDURE SVOLTE ATTRAVERSO PIATTAFORME TELEMATICHE DI NEGOZIAZIONE ART.58",
+        "PROCEDURE SVOLTE ATTRAVERSO PIATTAFORME TELEMATICHE DI NEGOZIAZIONE ART.58",
+        "PROCEDURE SVOLTE ATTRAVERSO PIATTAFORME TELEMATICHE DI NEGOZIAZIONE ART.58",
+        "PROCEDURE SVOLTE ATTRAVERSO PIATTAFORME TELEMATICHE DI NEGOZIAZIONE ART.58",
+        "PROCEDURE SVOLTE ATTRAVERSO PIATTAFORME TELEMATICHE DI NEGOZIAZIONE ART.58"
+      ],
+      "related_fields": [
+        "COD_STRUMENTO_SVOLGIMENTO"
+      ],
+      "code_meaning_status": "not_applicable",
+      "cross_year_notes": [],
+      "notes": [],
+      "code_reference": null
+    },
+    {
+      "name": "FLAG_URGENZA",
+      "section": "Urgency and delegated execution",
+      "description": "Flag indicating whether the lot is treated as urgent.",
+      "inferred_type": "boolean",
+      "nullable": false,
+      "non_empty_samples": [
+        "1",
+        "1",
+        "0",
+        "0",
+        "1"
+      ],
+      "related_fields": [
+        "COD_MOTIVO_URGENZA",
+        "MOTIVO_URGENZA"
+      ],
+      "code_meaning_status": "not_applicable",
+      "cross_year_notes": [],
+      "notes": [],
+      "code_reference": null
+    },
+    {
+      "name": "COD_MOTIVO_URGENZA",
+      "section": "Urgency and delegated execution",
+      "description": "Code for the urgency rationale when urgency handling applies.",
+      "inferred_type": "decimal",
+      "nullable": true,
+      "non_empty_samples": [
+        "7.0",
+        "7.0",
+        "7.0",
+        "7.0",
+        "7.0"
+      ],
+      "related_fields": [
+        "FLAG_URGENZA",
+        "MOTIVO_URGENZA"
+      ],
+      "code_meaning_status": "missing",
+      "cross_year_notes": [],
+      "notes": [
+        "No dedicated controlled vocabulary dataset has been wired yet."
+      ],
+      "code_reference": null
+    },
+    {
+      "name": "MOTIVO_URGENZA",
+      "section": "Urgency and delegated execution",
+      "description": "Italian label for the urgency rationale code.",
+      "inferred_type": "text",
+      "nullable": true,
+      "non_empty_samples": [
+        "NON APPLICABILE",
+        "NON APPLICABILE",
+        "NON APPLICABILE",
+        "non applicabile",
+        "non applicabile"
+      ],
+      "related_fields": [
+        "FLAG_URGENZA",
+        "COD_MOTIVO_URGENZA"
+      ],
+      "code_meaning_status": "not_applicable",
+      "cross_year_notes": [],
+      "notes": [],
+      "code_reference": null
+    },
+    {
+      "name": "FLAG_DELEGA",
+      "section": "Urgency and delegated execution",
+      "description": "Flag indicating whether the procedure involves delegated procurement functions.",
+      "inferred_type": "boolean",
+      "nullable": true,
+      "non_empty_samples": [
+        "0",
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "related_fields": [
+        "FUNZIONI_DELEGATE",
+        "CF_SA_DELEGANTE",
+        "CF_SA_DELEGATA"
+      ],
+      "code_meaning_status": "not_applicable",
+      "cross_year_notes": [
+        "Compared with January 2007, the inferred type changed from `unknown` to `boolean`."
+      ],
+      "notes": [],
+      "code_reference": null
+    },
+    {
+      "name": "FUNZIONI_DELEGATE",
+      "section": "Urgency and delegated execution",
+      "description": "Description of the procurement functions delegated to another authority or body.",
+      "inferred_type": "text",
+      "nullable": true,
+      "non_empty_samples": [
+        "Solo aggiudicazione",
+        "Proposta di aggiudicazione",
+        "Solo aggiudicazione",
+        "Proposta di aggiudicazione",
+        "Aggiudicazione, stipula ed esecuzione del contratto"
+      ],
+      "related_fields": [
+        "FLAG_DELEGA",
+        "CF_SA_DELEGANTE",
+        "CF_SA_DELEGATA"
+      ],
+      "code_meaning_status": "not_applicable",
+      "cross_year_notes": [
+        "Compared with January 2007, the inferred type changed from `unknown` to `text`."
+      ],
+      "notes": [],
+      "code_reference": null
+    },
+    {
+      "name": "CF_SA_DELEGANTE",
+      "section": "Urgency and delegated execution",
+      "description": "Tax code or identifier of the delegating contracting authority.",
+      "inferred_type": "integer",
+      "nullable": true,
+      "non_empty_samples": [
+        "81000160465",
+        "05205490823",
+        "00110040193",
+        "02948180308",
+        "01405600220"
+      ],
+      "related_fields": [
+        "DENOMINAZIONE_SA_DELEGANTE",
+        "FLAG_DELEGA"
+      ],
+      "code_meaning_status": "not_applicable",
+      "cross_year_notes": [
+        "Compared with January 2007, the inferred type changed from `unknown` to `integer`."
+      ],
+      "notes": [],
+      "code_reference": null
+    },
+    {
+      "name": "DENOMINAZIONE_SA_DELEGANTE",
+      "section": "Urgency and delegated execution",
+      "description": "Name of the delegating contracting authority.",
+      "inferred_type": "text",
+      "nullable": true,
+      "non_empty_samples": [
+        "COMUNE DI GALLICANO",
+        "ISTITUTO G.GIGLIO DI CEFALU'",
+        "AZIENDA ENERGETICA MUNICIPALE S.P.A. E PUO' ESSERE INDICATA CON LA SIGLA A.E.M. CREMONA S.P.A.",
+        "AZIENDA REGIONALE DI COORDINAMENTO PER LA SALUTE",
+        "NOVARETI SPA"
+      ],
+      "related_fields": [
+        "CF_SA_DELEGANTE",
+        "FLAG_DELEGA"
+      ],
+      "code_meaning_status": "not_applicable",
+      "cross_year_notes": [
+        "Compared with January 2007, the inferred type changed from `unknown` to `text`."
+      ],
+      "notes": [],
+      "code_reference": null
+    },
+    {
+      "name": "CF_SA_DELEGATA",
+      "section": "Urgency and delegated execution",
+      "description": "Tax code or identifier of the delegated authority or purchasing body.",
+      "inferred_type": "text",
+      "nullable": true,
+      "non_empty_samples": [
+        "01766100984",
+        "CFAVCP-0000507",
+        "93067060751",
+        "CFAVCP-0001CC2",
+        "16791301001"
+      ],
+      "related_fields": [
+        "DENOMINAZIONE_SA_DELEGATA",
+        "FLAG_DELEGA"
+      ],
+      "code_meaning_status": "not_applicable",
+      "cross_year_notes": [
+        "Compared with January 2007, the inferred type changed from `unknown` to `text`."
+      ],
+      "notes": [],
+      "code_reference": null
+    },
+    {
+      "name": "DENOMINAZIONE_SA_DELEGATA",
+      "section": "Urgency and delegated execution",
+      "description": "Name of the delegated authority or purchasing body.",
+      "inferred_type": "text",
+      "nullable": true,
+      "non_empty_samples": [
+        "COMUNITA' MONTANA DI VALLECAMONICA",
+        "S.U.A. MONTI DAUNI",
+        "UNIONE DEI COMUNI DEL NORD SALENTO",
+        "CUC DELLA MEDIA VALLE CRATI",
+        "GIUBILEO 2025 SPA"
+      ],
+      "related_fields": [
+        "CF_SA_DELEGATA",
+        "FLAG_DELEGA"
+      ],
+      "code_meaning_status": "not_applicable",
+      "cross_year_notes": [
+        "Compared with January 2007, the inferred type changed from `unknown` to `text`."
+      ],
+      "notes": [],
+      "code_reference": null
+    },
+    {
+      "name": "IMPORTO_SICUREZZA",
+      "section": "Amounts and contract scope",
+      "description": "Safety-related amount reported separately from the main lot amount.",
+      "inferred_type": "decimal",
+      "nullable": true,
+      "non_empty_samples": [
+        "1093.52",
+        "0.0",
+        "0.0",
+        "0.0",
+        "50.0"
+      ],
+      "related_fields": [],
+      "code_meaning_status": "not_applicable",
+      "cross_year_notes": [],
+      "notes": [],
+      "code_reference": null
+    },
+    {
+      "name": "TIPO_APPALTO_RISERVATO",
+      "section": "Amounts and contract scope",
+      "description": "Text describing whether participation in the procurement is reserved to specific categories of operators.",
+      "inferred_type": "text",
+      "nullable": true,
+      "non_empty_samples": [
+        "LA PARTECIPAZIONE NON È RISERVATA.",
+        "LA PARTECIPAZIONE NON È RISERVATA.",
+        "LA PARTECIPAZIONE NON È RISERVATA.",
+        "LA PARTECIPAZIONE NON È RISERVATA.",
+        "LA PARTECIPAZIONE NON È RISERVATA."
+      ],
+      "related_fields": [],
+      "code_meaning_status": "not_applicable",
+      "cross_year_notes": [
+        "Compared with January 2007, the inferred type changed from `unknown` to `text`."
+      ],
+      "notes": [],
+      "code_reference": null
+    },
+    {
+      "name": "CUI_PROGRAMMA",
+      "section": "Planning, linking, and outcome",
+      "description": "Program-level CUI identifier linked to planning documents or scheduled interventions.",
+      "inferred_type": "text",
+      "nullable": true,
+      "non_empty_samples": [
+        "L01320740580202200048",
+        "L00857830178202400008",
+        "F03901420236202300463",
+        "S02483810392202200025",
+        "S02483810392202200025"
+      ],
+      "related_fields": [
+        "FLAG_PREV_RIPETIZIONI"
+      ],
+      "code_meaning_status": "not_applicable",
+      "cross_year_notes": [
+        "Compared with January 2007, the inferred type changed from `integer` to `text`."
+      ],
+      "notes": [],
+      "code_reference": null
+    },
+    {
+      "name": "FLAG_PREV_RIPETIZIONI",
+      "section": "Planning, linking, and outcome",
+      "description": "Flag indicating whether repeat or renewal options are foreseen.",
+      "inferred_type": "boolean",
+      "nullable": true,
+      "non_empty_samples": [
+        "0",
+        "0",
+        "0",
+        "1",
+        "1"
+      ],
+      "related_fields": [
+        "CUI_PROGRAMMA"
+      ],
+      "code_meaning_status": "not_applicable",
+      "cross_year_notes": [],
+      "notes": [],
+      "code_reference": null
+    },
+    {
+      "name": "COD_IPOTESI_COLLEGAMENTO",
+      "section": "Planning, linking, and outcome",
+      "description": "Code for the linkage scenario that connects the lot to another procurement record.",
+      "inferred_type": "decimal",
+      "nullable": true,
+      "non_empty_samples": [
+        "10.0",
+        "10.0",
+        "10.0",
+        "10.0",
+        "10.0"
+      ],
+      "related_fields": [
+        "IPOTESI_COLLEGAMENTO",
+        "CIG_COLLEGAMENTO"
+      ],
+      "code_meaning_status": "missing",
+      "cross_year_notes": [
+        "Compared with January 2007, the inferred type changed from `unknown` to `decimal`."
+      ],
+      "notes": [
+        "No dedicated controlled vocabulary dataset has been wired yet."
+      ],
+      "code_reference": null
+    },
+    {
+      "name": "IPOTESI_COLLEGAMENTO",
+      "section": "Planning, linking, and outcome",
+      "description": "Italian label for the linkage scenario code.",
+      "inferred_type": "text",
+      "nullable": true,
+      "non_empty_samples": [
+        "NO, NESSUNA IPOTESI DI COLLEGAMENTO",
+        "NO, NESSUNA IPOTESI DI COLLEGAMENTO",
+        "NO, NESSUNA IPOTESI DI COLLEGAMENTO",
+        "NO, NESSUNA IPOTESI DI COLLEGAMENTO",
+        "NO, NESSUNA IPOTESI DI COLLEGAMENTO"
+      ],
+      "related_fields": [
+        "COD_IPOTESI_COLLEGAMENTO",
+        "CIG_COLLEGAMENTO"
+      ],
+      "code_meaning_status": "not_applicable",
+      "cross_year_notes": [
+        "Compared with January 2007, the inferred type changed from `unknown` to `text`."
+      ],
+      "notes": [],
+      "code_reference": null
+    },
+    {
+      "name": "CIG_COLLEGAMENTO",
+      "section": "Planning, linking, and outcome",
+      "description": "Linked CIG referenced by the current procurement when a linkage scenario applies.",
+      "inferred_type": "text",
+      "nullable": true,
+      "non_empty_samples": [
+        "ZC43941248",
+        "92853934B4",
+        "9396580F1B",
+        "Z8439406EA",
+        "97270832D3"
+      ],
+      "related_fields": [
+        "COD_IPOTESI_COLLEGAMENTO",
+        "IPOTESI_COLLEGAMENTO"
+      ],
+      "code_meaning_status": "not_applicable",
+      "cross_year_notes": [
+        "Compared with January 2007, the inferred type changed from `unknown` to `text`."
+      ],
+      "notes": [],
+      "code_reference": null
+    },
+    {
+      "name": "COD_ESITO",
+      "section": "Planning, linking, and outcome",
+      "description": "Outcome code for the procedure or lot.",
+      "inferred_type": "decimal",
+      "nullable": true,
+      "non_empty_samples": [
+        "1.0",
+        "1.0",
+        "98.0",
+        "1.0",
+        "1.0"
+      ],
+      "related_fields": [
+        "ESITO",
+        "DATA_COMUNICAZIONE_ESITO"
+      ],
+      "code_meaning_status": "missing",
+      "cross_year_notes": [],
+      "notes": [
+        "No dedicated controlled vocabulary dataset has been wired yet."
+      ],
+      "code_reference": null
+    },
+    {
+      "name": "ESITO",
+      "section": "Planning, linking, and outcome",
+      "description": "Italian label for the recorded procedure outcome.",
+      "inferred_type": "text",
+      "nullable": true,
+      "non_empty_samples": [
+        "AGGIUDICATA",
+        "AGGIUDICATA",
+        "NON È STATO SELEZIONATO NESSUN VINCITORE E LA GARA È CHIUSA.",
+        "AGGIUDICATA",
+        "AGGIUDICATA"
+      ],
+      "related_fields": [
+        "COD_ESITO",
+        "DATA_COMUNICAZIONE_ESITO"
+      ],
+      "code_meaning_status": "not_applicable",
+      "cross_year_notes": [],
+      "notes": [],
+      "code_reference": null
+    },
+    {
+      "name": "DATA_COMUNICAZIONE_ESITO",
+      "section": "Planning, linking, and outcome",
+      "description": "Date on which the procedure outcome was communicated.",
+      "inferred_type": "date",
+      "nullable": true,
+      "non_empty_samples": [
+        "2025-01-23",
+        "2025-11-28",
+        "2024-11-13",
+        "2025-01-09",
+        "2025-03-14"
+      ],
+      "related_fields": [
+        "COD_ESITO",
+        "ESITO"
+      ],
+      "code_meaning_status": "not_applicable",
+      "cross_year_notes": [],
+      "notes": [],
+      "code_reference": null
+    },
+    {
+      "name": "FLAG_PNRR_PNC",
+      "section": "Planning, linking, and outcome",
+      "description": "Flag indicating whether the procurement is linked to PNRR or PNC funding or reporting.",
+      "inferred_type": "boolean",
+      "nullable": false,
+      "non_empty_samples": [
+        "0",
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "related_fields": [],
+      "code_meaning_status": "not_applicable",
+      "cross_year_notes": [
+        "Compared with January 2007, nullability changed from `True` to `False`."
+      ],
+      "notes": [],
+      "code_reference": null
+    }
+  ]
+}

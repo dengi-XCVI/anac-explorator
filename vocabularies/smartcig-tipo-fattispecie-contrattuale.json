@@ -1,0 +1,809 @@
+{
+  "dataset_id": "smartcig-tipo-fattispecie-contrattuale",
+  "description": "Controlled vocabulary for SMARTCIG contract-type identifiers.",
+  "resource_name": "smartcig-tipo-fattispecie-contrattuale_csv",
+  "resource_url": "https://dati.anticorruzione.it/opendata/download/dataset/smartcig-tipo-fattispecie-contrattuale/filesystem/smartcig-tipo-fattispecie-contrattuale_csv.zip",
+  "csv_path": "data/raw/smartcig-tipo-fattispecie-contrattuale/smartcig-tipo-fattispecie-contrattuale_csv/extracted/smartcig-tipo-fattispecie-contrattuale_csv.csv",
+  "archive_path": "data/raw/smartcig-tipo-fattispecie-contrattuale/smartcig-tipo-fattispecie-contrattuale_csv/smartcig-tipo-fattispecie-contrattuale_csv.zip",
+  "schema_path": "schemas/smartcig-tipo-fattispecie-contrattuale.schema.json",
+  "tables": [
+    {
+      "name": "tipo_fattispecie_contrattuale",
+      "description": "Crosswalk from SMARTCIG contract-type identifier to Italian label.",
+      "resolved_fields": [
+        "tipo_fattispecie_contrattuale_id",
+        "tipo_fattispecie_contrattuale_denominazione"
+      ],
+      "source_columns": [
+        "tipo-fattispecie-contrattuale_id",
+        "tipo-fattispecie-contrattuale_denominazione"
+      ],
+      "code_column": "tipo-fattispecie-contrattuale_id",
+      "label_column": "tipo-fattispecie-contrattuale_denominazione",
+      "extra_columns": [],
+      "entry_count": 78,
+      "entries": [
+        {
+          "code": "00015154059",
+          "label": "CONTRATTI FINO A € 40.000 ESCLUSI EX ART. 20 C. 1 DEL CODICE",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-fattispecie-contrattuale_id": "00015154059",
+            "tipo-fattispecie-contrattuale_denominazione": "CONTRATTI FINO A € 40.000 ESCLUSI EX ART. 20 C. 1 DEL CODICE"
+          }
+        },
+        {
+          "code": "00047312435",
+          "label": "CONTRATTI E CONCORSI DI PROGETTAZIONE AGGIUDICATI IN BASE A NORME INTERNAZIONALI",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-fattispecie-contrattuale_id": "00047312435",
+            "tipo-fattispecie-contrattuale_denominazione": "CONTRATTI E CONCORSI DI PROGETTAZIONE AGGIUDICATI IN BASE A NORME INTERNAZIONALI"
+          }
+        },
+        {
+          "code": "00048944719",
+          "label": "CONTRATTI FINO A € 40.000 EX ART. 20 C. 2 DEL CODICE",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-fattispecie-contrattuale_id": "00048944719",
+            "tipo-fattispecie-contrattuale_denominazione": "CONTRATTI FINO A € 40.000 EX ART. 20 C. 2 DEL CODICE"
+          }
+        },
+        {
+          "code": "00079803250",
+          "label": "SERVIZI LEGALI FINO A € 40.000 ESCLUSI DALL'APPLICAZIONE DEL CODICE",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-fattispecie-contrattuale_id": "00079803250",
+            "tipo-fattispecie-contrattuale_denominazione": "SERVIZI LEGALI FINO A € 40.000 ESCLUSI DALL'APPLICAZIONE DEL CODICE"
+          }
+        },
+        {
+          "code": "00089439067",
+          "label": "LAVORI DI IMPORTO INFERIORE A € 40.000 AI SENSI DELL’ART. 125 O 57 DEL CODICE",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-fattispecie-contrattuale_id": "00089439067",
+            "tipo-fattispecie-contrattuale_denominazione": "LAVORI DI IMPORTO INFERIORE A € 40.000 AI SENSI DELL’ART. 125 O 57 DEL CODICE"
+          }
+        },
+        {
+          "code": "00105754066",
+          "label": "CONTRATTI FINO A € 150.000 ESCLUSI EX ART. 24 DEL CODICE",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-fattispecie-contrattuale_id": "00105754066",
+            "tipo-fattispecie-contrattuale_denominazione": "CONTRATTI FINO A € 150.000 ESCLUSI EX ART. 24 DEL CODICE"
+          }
+        },
+        {
+          "code": "00148719881",
+          "label": "APPALTI E CONCESSIONI AGGIUDICATI A UNIMPRESA COLLEGATA",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-fattispecie-contrattuale_id": "00148719881",
+            "tipo-fattispecie-contrattuale_denominazione": "APPALTI E CONCESSIONI AGGIUDICATI A UNIMPRESA COLLEGATA"
+          }
+        },
+        {
+          "code": "00163049584",
+          "label": "CONTRATTI FINO A € 150.000 ESCLUSI EX ART. 19 DEL CODICE",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-fattispecie-contrattuale_id": "00163049584",
+            "tipo-fattispecie-contrattuale_denominazione": "CONTRATTI FINO A € 150.000 ESCLUSI EX ART. 19 DEL CODICE"
+          }
+        },
+        {
+          "code": "00177963228",
+          "label": "CONTRATTI FINO A € 40.000 EX ART. 21 DEL DEL CODICE CON PREVALENZA SERVIZI DI CUI ALL'ALLEGATO IIB",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-fattispecie-contrattuale_id": "00177963228",
+            "tipo-fattispecie-contrattuale_denominazione": "CONTRATTI FINO A € 40.000 EX ART. 21 DEL DEL CODICE CON PREVALENZA SERVIZI DI CUI ALL'ALLEGATO IIB"
+          }
+        },
+        {
+          "code": "00207564296",
+          "label": "APPALTI AVENTI AD OGGETTO L'ACQUISTO DI PRODOTTI AGRICOLI E ALIMENTARI FINO A € 10.000 ANNUI DA IMPRESE AGRICOLE SITUATE NEI COMUNI INDIVIDUATI DAL CODICE",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-fattispecie-contrattuale_id": "00207564296",
+            "tipo-fattispecie-contrattuale_denominazione": "APPALTI AVENTI AD OGGETTO L'ACQUISTO DI PRODOTTI AGRICOLI E ALIMENTARI FINO A € 10.000 ANNUI DA IMPRESE AGRICOLE SITUATE NEI COMUNI INDIVIDUATI DAL CODICE"
+          }
+        },
+        {
+          "code": "00231751997",
+          "label": "APPALTI AVENTI AD OGGETTO LACQUISTO DI PRODOTTI AGRICOLI E ALIMENTARI FINO A € 10.000 ANNUI DA IMPRESE AGRICOLE SITUATE NEI COMUNI INDIVIDUATI DAL CODICE",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-fattispecie-contrattuale_id": "00231751997",
+            "tipo-fattispecie-contrattuale_denominazione": "APPALTI AVENTI AD OGGETTO LACQUISTO DI PRODOTTI AGRICOLI E ALIMENTARI FINO A € 10.000 ANNUI DA IMPRESE AGRICOLE SITUATE NEI COMUNI INDIVIDUATI DAL CODICE"
+          }
+        },
+        {
+          "code": "00236668329",
+          "label": "CONTRATTI FINO A € 40.000 NEI SETTORI MEDIA AUDIOVISI O RADIOFONICI",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-fattispecie-contrattuale_id": "00236668329",
+            "tipo-fattispecie-contrattuale_denominazione": "CONTRATTI FINO A € 40.000 NEI SETTORI MEDIA AUDIOVISI O RADIOFONICI"
+          }
+        },
+        {
+          "code": "00258143298",
+          "label": "CONTRATTI DI ACQUISTO E LOCAZIONE DI IMMOBILI",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-fattispecie-contrattuale_id": "00258143298",
+            "tipo-fattispecie-contrattuale_denominazione": "CONTRATTI DI ACQUISTO E LOCAZIONE DI IMMOBILI"
+          }
+        },
+        {
+          "code": "00267297858",
+          "label": "APPALTI FINO A € 40.000 EURO AGGIUDICATI DA PARTICOLARI ENTI AGGIUDICATORI PER L'ACQUISTO DI ACQUA E PER LA FORNITURA DI ENERGIA O DI COMBUSTIBILI DESTINATI ALLA PRODUZIONE DI ENERGIA",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-fattispecie-contrattuale_id": "00267297858",
+            "tipo-fattispecie-contrattuale_denominazione": "APPALTI FINO A € 40.000 EURO AGGIUDICATI DA PARTICOLARI ENTI AGGIUDICATORI PER L'ACQUISTO DI ACQUA E PER LA FORNITURA DI ENERGIA O DI COMBUSTIBILI DESTINATI ALLA PRODUZIONE DI ENERGIA"
+          }
+        },
+        {
+          "code": "00309620704",
+          "label": "CONTRATTI DI IMPORTO INFERIORE AD EURO 40.000",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-fattispecie-contrattuale_id": "00309620704",
+            "tipo-fattispecie-contrattuale_denominazione": "CONTRATTI DI IMPORTO INFERIORE AD EURO 40.000"
+          }
+        },
+        {
+          "code": "00347863373",
+          "label": "APPALTI  FINO A € 40.000 EURO AGGIUDICATI DA PARTICOLARI ENTI AGGIUDICATORI PER LACQUISTO DI ACQUA E PER LA FORNITURA DI ENERGIA O DI COMBUSTIBILI DESTINATI ALLA PRODUZIONE DI ENERGIA",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-fattispecie-contrattuale_id": "00347863373",
+            "tipo-fattispecie-contrattuale_denominazione": "APPALTI  FINO A € 40.000 EURO AGGIUDICATI DA PARTICOLARI ENTI AGGIUDICATORI PER LACQUISTO DI ACQUA E PER LA FORNITURA DI ENERGIA O DI COMBUSTIBILI DESTINATI ALLA PRODUZIONE DI ENERGIA"
+          }
+        },
+        {
+          "code": "00357608394",
+          "label": "CONTRATTI FINO A € 40.000 EX ART. 21 DEL DEL CODICE CON PREVALENZA SERVIZI DI CUI ALLALLEGATO IIB",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-fattispecie-contrattuale_id": "00357608394",
+            "tipo-fattispecie-contrattuale_denominazione": "CONTRATTI FINO A € 40.000 EX ART. 21 DEL DEL CODICE CON PREVALENZA SERVIZI DI CUI ALLALLEGATO IIB"
+          }
+        },
+        {
+          "code": "00369664842",
+          "label": "APPALTI E CONCORSI DI PROGETTAZIONE  AGGIUDICATI O ORGANIZZATI PER FINI DIVERSI DAL PERSEGUIMENTO DI UNATTIVITA INTERESSATA O PER LESERCIZIO DI UNATTIVITA IN UN PAESE TERZO",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-fattispecie-contrattuale_id": "00369664842",
+            "tipo-fattispecie-contrattuale_denominazione": "APPALTI E CONCORSI DI PROGETTAZIONE  AGGIUDICATI O ORGANIZZATI PER FINI DIVERSI DAL PERSEGUIMENTO DI UNATTIVITA INTERESSATA O PER LESERCIZIO DI UNATTIVITA IN UN PAESE TERZO"
+          }
+        },
+        {
+          "code": "00398488972",
+          "label": "OPERE A SCOMPUTO FINO € 40.000",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-fattispecie-contrattuale_id": "00398488972",
+            "tipo-fattispecie-contrattuale_denominazione": "OPERE A SCOMPUTO FINO € 40.000"
+          }
+        },
+        {
+          "code": "00416345396",
+          "label": "SERVIZI DI TRASPORTO PUBBLICO DI PASSEGGERI PER FERROVIA O METROPOLITANA FINO A € 40.000",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-fattispecie-contrattuale_id": "00416345396",
+            "tipo-fattispecie-contrattuale_denominazione": "SERVIZI DI TRASPORTO PUBBLICO DI PASSEGGERI PER FERROVIA O METROPOLITANA FINO A € 40.000"
+          }
+        },
+        {
+          "code": "00445087477",
+          "label": "APPALTI AVENTI AD OGGETTO LACQUISTO DI PRODOTTI AGRICOLI E ALIMENTARI FINO A € 10.000 ANNUI E € 40.000 COMPLESSIVI DA IMPRESE AGRICOLE SITUATE NEI COMUNI INDIVIDUATI DAL CODICE",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-fattispecie-contrattuale_id": "00445087477",
+            "tipo-fattispecie-contrattuale_denominazione": "APPALTI AVENTI AD OGGETTO LACQUISTO DI PRODOTTI AGRICOLI E ALIMENTARI FINO A € 10.000 ANNUI E € 40.000 COMPLESSIVI DA IMPRESE AGRICOLE SITUATE NEI COMUNI INDIVIDUATI DAL CODICE"
+          }
+        },
+        {
+          "code": "00446186695",
+          "label": "SERVIZI DI ARBITRATO E DI CONCILIAZIONE  FINO A € 40.000",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-fattispecie-contrattuale_id": "00446186695",
+            "tipo-fattispecie-contrattuale_denominazione": "SERVIZI DI ARBITRATO E DI CONCILIAZIONE  FINO A € 40.000"
+          }
+        },
+        {
+          "code": "00453375990",
+          "label": "CONTRATTI FINO A € 20.000 ESCLUSI EX ART. 21 DEL CODICE CON PREVALENZA SERVIZI DI CUI ALL'ALLEGATO IIA",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-fattispecie-contrattuale_id": "00453375990",
+            "tipo-fattispecie-contrattuale_denominazione": "CONTRATTI FINO A € 20.000 ESCLUSI EX ART. 21 DEL CODICE CON PREVALENZA SERVIZI DI CUI ALL'ALLEGATO IIA"
+          }
+        },
+        {
+          "code": "00453522957",
+          "label": "CONTRATTI FINO A € 150.000 EX ART. 21 DEL DEL CODICE CON PREVALENZA SERVIZI DI CUI ALLALLEGATO IIB",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-fattispecie-contrattuale_id": "00453522957",
+            "tipo-fattispecie-contrattuale_denominazione": "CONTRATTI FINO A € 150.000 EX ART. 21 DEL DEL CODICE CON PREVALENZA SERVIZI DI CUI ALLALLEGATO IIB"
+          }
+        },
+        {
+          "code": "00548669781",
+          "label": "CONCESSIONI, APPALTI PUBBLICI E ACCORDI FINO A € 40.000 TRA ENTI E AMMINISTRAZIONI AGGIUDICATRICI NELL'AMBITO DEL SETTORE PUBBLICO",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-fattispecie-contrattuale_id": "00548669781",
+            "tipo-fattispecie-contrattuale_denominazione": "CONCESSIONI, APPALTI PUBBLICI E ACCORDI FINO A € 40.000 TRA ENTI E AMMINISTRAZIONI AGGIUDICATRICI NELL'AMBITO DEL SETTORE PUBBLICO"
+          }
+        },
+        {
+          "code": "00549894586",
+          "label": "CONTRATTI FINO A € 20.000 ESCLUSI EX ART. 21 DEL CODICE CON PREVALENZA SERVIZI DI CUI ALLALLEGATO IIA",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-fattispecie-contrattuale_id": "00549894586",
+            "tipo-fattispecie-contrattuale_denominazione": "CONTRATTI FINO A € 20.000 ESCLUSI EX ART. 21 DEL CODICE CON PREVALENZA SERVIZI DI CUI ALLALLEGATO IIA"
+          }
+        },
+        {
+          "code": "00552139100",
+          "label": "CONCESSIONI FINO A € 40.000 EURO NEL SETTORE IDRICO ESCLUSE DALL'APPLICAZIONE DEL CODICE DEI CONTRATTI PUBBLICI",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-fattispecie-contrattuale_id": "00552139100",
+            "tipo-fattispecie-contrattuale_denominazione": "CONCESSIONI FINO A € 40.000 EURO NEL SETTORE IDRICO ESCLUSE DALL'APPLICAZIONE DEL CODICE DEI CONTRATTI PUBBLICI"
+          }
+        },
+        {
+          "code": "00576609597",
+          "label": "SERVIZI CONNESSI A CAMPAGNE POLITICHE FINO A € 40.000 AGGIUDICATI DA UN PARTITO POLITICO NEL CONTESTO DI UNA CAMPAGNA ELETTORALE",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-fattispecie-contrattuale_id": "00576609597",
+            "tipo-fattispecie-contrattuale_denominazione": "SERVIZI CONNESSI A CAMPAGNE POLITICHE FINO A € 40.000 AGGIUDICATI DA UN PARTITO POLITICO NEL CONTESTO DI UNA CAMPAGNA ELETTORALE"
+          }
+        },
+        {
+          "code": "00580916775",
+          "label": "CONTRATTI FINO A € 40.000 DI SPONSORIZZAZIONE TECNICA",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-fattispecie-contrattuale_id": "00580916775",
+            "tipo-fattispecie-contrattuale_denominazione": "CONTRATTI FINO A € 40.000 DI SPONSORIZZAZIONE TECNICA"
+          }
+        },
+        {
+          "code": "00596953922",
+          "label": "ACQUISTO TITOLI E STRUMENTI FINANZIARI FINO A € 40.000",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-fattispecie-contrattuale_id": "00596953922",
+            "tipo-fattispecie-contrattuale_denominazione": "ACQUISTO TITOLI E STRUMENTI FINANZIARI FINO A € 40.000"
+          }
+        },
+        {
+          "code": "00627261063",
+          "label": "PRESTITI FINO A € 40.000",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-fattispecie-contrattuale_id": "00627261063",
+            "tipo-fattispecie-contrattuale_denominazione": "PRESTITI FINO A € 40.000"
+          }
+        },
+        {
+          "code": "00647439091",
+          "label": "COPROGRAMMAZIONE/COGPROGETTAZIONE DI SERVIZI SOCIALI",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-fattispecie-contrattuale_id": "00647439091",
+            "tipo-fattispecie-contrattuale_denominazione": "COPROGRAMMAZIONE/COGPROGETTAZIONE DI SERVIZI SOCIALI"
+          }
+        },
+        {
+          "code": "00655969556",
+          "label": "CONCESSIONI AGGIUDICATE DAGLI ENTI AGGIUDICATORI PER LESERCIZIO DELLE LORO ATTIVITA IN UN PAESE TERZO IN CIRCOSTANZE CHE NON COMPORTINO LO SFRUTTAMENTO MATERIALE DI UNA RETE O DI UNAREA GEOGRAFICA ALLINTERNO DELLUNIONE EUROPEA",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-fattispecie-contrattuale_id": "00655969556",
+            "tipo-fattispecie-contrattuale_denominazione": "CONCESSIONI AGGIUDICATE DAGLI ENTI AGGIUDICATORI PER LESERCIZIO DELLE LORO ATTIVITA IN UN PAESE TERZO IN CIRCOSTANZE CHE NON COMPORTINO LO SFRUTTAMENTO MATERIALE DI UNA RETE O DI UNAREA GEOGRAFICA ALLINTERNO DELLUNIONE EUROPEA"
+          }
+        },
+        {
+          "code": "00658553867",
+          "label": "APPALTI NEI SETTORI DELLA DIFESA E DELLA SICUREZZA",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-fattispecie-contrattuale_id": "00658553867",
+            "tipo-fattispecie-contrattuale_denominazione": "APPALTI NEI SETTORI DELLA DIFESA E DELLA SICUREZZA"
+          }
+        },
+        {
+          "code": "00685986281",
+          "label": "SERVIZI LEGALI FINO A € 40.000 ESCLUSI DALLAPPLICAZIONE DEL CODICE",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-fattispecie-contrattuale_id": "00685986281",
+            "tipo-fattispecie-contrattuale_denominazione": "SERVIZI LEGALI FINO A € 40.000 ESCLUSI DALLAPPLICAZIONE DEL CODICE"
+          }
+        },
+        {
+          "code": "00741193020",
+          "label": "CONCESSIONI AGGIUDICATE DAGLI ENTI AGGIUDICATORI PER L'ESERCIZIO DELLE LORO ATTIVITA' IN UN PAESE TERZO IN CIRCOSTANZE CHE NON COMPORTINO LO SFRUTTAMENTO MATERIALE DI UNA RETE O DI UN'AREA GEOGRAFICA ALL'INTERNO DELL'UNIONE EUROPEA",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-fattispecie-contrattuale_id": "00741193020",
+            "tipo-fattispecie-contrattuale_denominazione": "CONCESSIONI AGGIUDICATE DAGLI ENTI AGGIUDICATORI PER L'ESERCIZIO DELLE LORO ATTIVITA' IN UN PAESE TERZO IN CIRCOSTANZE CHE NON COMPORTINO LO SFRUTTAMENTO MATERIALE DI UNA RETE O DI UN'AREA GEOGRAFICA ALL'INTERNO DELL'UNIONE EUROPEA"
+          }
+        },
+        {
+          "code": "00756874506",
+          "label": "APPALTI E CONCORSI DI PROGETTAZIONE  AGGIUDICATI O ORGANIZZATI PER FINI DIVERSI DAL PERSEGUIMENTO DI UN'ATTIVITA' INTERESSATA O PER L'ESERCIZIO DI UN'ATTIVITA' IN UN PAESE TERZO",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-fattispecie-contrattuale_id": "00756874506",
+            "tipo-fattispecie-contrattuale_denominazione": "APPALTI E CONCORSI DI PROGETTAZIONE  AGGIUDICATI O ORGANIZZATI PER FINI DIVERSI DAL PERSEGUIMENTO DI UN'ATTIVITA' INTERESSATA O PER L'ESERCIZIO DI UN'ATTIVITA' IN UN PAESE TERZO"
+          }
+        },
+        {
+          "code": "00771514518",
+          "label": "APPALTI E CONCORSI DI PROGETTAZIONE AGGIUDICATI O ORGANIZZATI PER FINI DIVERSI DAL PERSEGUIMENTO DI UN'ATTIVITA' INTERESSATA O PER L'ESERCIZIO DI UN'ATTIVITA' IN UN PAESE TERZO",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-fattispecie-contrattuale_id": "00771514518",
+            "tipo-fattispecie-contrattuale_denominazione": "APPALTI E CONCORSI DI PROGETTAZIONE AGGIUDICATI O ORGANIZZATI PER FINI DIVERSI DAL PERSEGUIMENTO DI UN'ATTIVITA' INTERESSATA O PER L'ESERCIZIO DI UN'ATTIVITA' IN UN PAESE TERZO"
+          }
+        },
+        {
+          "code": "00815451523",
+          "label": "CONTRATTI DI SERVIZI  FINO A € 40.000 AGGIUDICATI IN BASE A UN DIRITTO ESCLUSIVO",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-fattispecie-contrattuale_id": "00815451523",
+            "tipo-fattispecie-contrattuale_denominazione": "CONTRATTI DI SERVIZI  FINO A € 40.000 AGGIUDICATI IN BASE A UN DIRITTO ESCLUSIVO"
+          }
+        },
+        {
+          "code": "00830872961",
+          "label": "CONTRATTI FINO A € 40.000 ESCLUSI EX ART. 23 DEL CODICE",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-fattispecie-contrattuale_id": "00830872961",
+            "tipo-fattispecie-contrattuale_denominazione": "CONTRATTI FINO A € 40.000 ESCLUSI EX ART. 23 DEL CODICE"
+          }
+        },
+        {
+          "code": "00912999862",
+          "label": "COPROGETTAZIONE FINO A € 40.000",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-fattispecie-contrattuale_id": "00912999862",
+            "tipo-fattispecie-contrattuale_denominazione": "COPROGETTAZIONE FINO A € 40.000"
+          }
+        },
+        {
+          "code": "00915489600",
+          "label": "ART. 22 D.L.GS 163/2006",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-fattispecie-contrattuale_id": "00915489600",
+            "tipo-fattispecie-contrattuale_denominazione": "ART. 22 D.L.GS 163/2006"
+          }
+        },
+        {
+          "code": "00948774961",
+          "label": "OPERA PUBBLICA REALIZZATA A SPESE DEL PRIVATO FINO A € 40.000",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-fattispecie-contrattuale_id": "00948774961",
+            "tipo-fattispecie-contrattuale_denominazione": "OPERA PUBBLICA REALIZZATA A SPESE DEL PRIVATO FINO A € 40.000"
+          }
+        },
+        {
+          "code": "00958186192",
+          "label": "SERVIZI DI DIFESA E PROTEZIONE CIVILE FINO A € 40.000 FORNITI DA ORGANIZZAZIONI E ASSOCIAZIONI SENZA SCOPO DI LUCRO",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-fattispecie-contrattuale_id": "00958186192",
+            "tipo-fattispecie-contrattuale_denominazione": "SERVIZI DI DIFESA E PROTEZIONE CIVILE FINO A € 40.000 FORNITI DA ORGANIZZAZIONI E ASSOCIAZIONI SENZA SCOPO DI LUCRO"
+          }
+        },
+        {
+          "code": "00998450959",
+          "label": "APPALTI NEI SETTORI SPECIALI E CONCESSIONI AGGIUDICATI AD UNA JOINT-VENTURE O AD UN ENTE AGGIUDICATORE FACENTE PARTE DI UNA JOINT VENTURE",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-fattispecie-contrattuale_id": "00998450959",
+            "tipo-fattispecie-contrattuale_denominazione": "APPALTI NEI SETTORI SPECIALI E CONCESSIONI AGGIUDICATI AD UNA JOINT-VENTURE O AD UN ENTE AGGIUDICATORE FACENTE PARTE DI UNA JOINT VENTURE"
+          }
+        },
+        {
+          "code": "01002507651",
+          "label": "CONTRATTI FINO A € 40.000 NEL SETTORE DELL’ACQUA, DELL’ENERGIA E DEI TRASPORTI",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-fattispecie-contrattuale_id": "01002507651",
+            "tipo-fattispecie-contrattuale_denominazione": "CONTRATTI FINO A € 40.000 NEL SETTORE DELL’ACQUA, DELL’ENERGIA E DEI TRASPORTI"
+          }
+        },
+        {
+          "code": "01011892042",
+          "label": "CONTRATTI FINO A € 40.000 ESCLUSI EX ART. 22 DEL CODICE",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-fattispecie-contrattuale_id": "01011892042",
+            "tipo-fattispecie-contrattuale_denominazione": "CONTRATTI FINO A € 40.000 ESCLUSI EX ART. 22 DEL CODICE"
+          }
+        },
+        {
+          "code": "01042159248",
+          "label": "CONTRATTI FINO A € 150.000 ESCLUSI EX ART. 22 DEL CODICE",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-fattispecie-contrattuale_id": "01042159248",
+            "tipo-fattispecie-contrattuale_denominazione": "CONTRATTI FINO A € 150.000 ESCLUSI EX ART. 22 DEL CODICE"
+          }
+        },
+        {
+          "code": "01071616727",
+          "label": "CONTRATTI FINO A € 150.000 ESCLUSI EX ART. 26 DEL CODICE",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-fattispecie-contrattuale_id": "01071616727",
+            "tipo-fattispecie-contrattuale_denominazione": "CONTRATTI FINO A € 150.000 ESCLUSI EX ART. 26 DEL CODICE"
+          }
+        },
+        {
+          "code": "01072909182",
+          "label": "SERVIZI DI ARBITRATO E DI CONCILIAZIONE FINO A € 40.000",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-fattispecie-contrattuale_id": "01072909182",
+            "tipo-fattispecie-contrattuale_denominazione": "SERVIZI DI ARBITRATO E DI CONCILIAZIONE FINO A € 40.000"
+          }
+        },
+        {
+          "code": "01122064768",
+          "label": "CONTRATTI FINO A € 40.000 NEI SETTORI DELLE COMUNICAZIONI ELETTRONICHE",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-fattispecie-contrattuale_id": "01122064768",
+            "tipo-fattispecie-contrattuale_denominazione": "CONTRATTI FINO A € 40.000 NEI SETTORI DELLE COMUNICAZIONI ELETTRONICHE"
+          }
+        },
+        {
+          "code": "01158556800",
+          "label": "CONTRATTI E CONCORSI DI PROGETTAZIONE AGGIUDICATI O ORGANIZZATI IN BASE A NORME INTERNAZIONALI FINO A € 40.000",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-fattispecie-contrattuale_id": "01158556800",
+            "tipo-fattispecie-contrattuale_denominazione": "CONTRATTI E CONCORSI DI PROGETTAZIONE AGGIUDICATI O ORGANIZZATI IN BASE A NORME INTERNAZIONALI FINO A € 40.000"
+          }
+        },
+        {
+          "code": "01181389215",
+          "label": "CONCESSIONI DI SERVIZI DI TRASPORTO AEREO A NORMA DEL REGOLAMENTO CE N. 1008/2008 DEL PARLAMENTO EUROPEO E CONCESSIONI DI SERVIZI DI TRASPORTO PUBBLICO DI PASSEGGERI AI SENSI DEL REGOLAMENTO N. 1370/2007 FINO AD € 40.000",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-fattispecie-contrattuale_id": "01181389215",
+            "tipo-fattispecie-contrattuale_denominazione": "CONCESSIONI DI SERVIZI DI TRASPORTO AEREO A NORMA DEL REGOLAMENTO CE N. 1008/2008 DEL PARLAMENTO EUROPEO E CONCESSIONI DI SERVIZI DI TRASPORTO PUBBLICO DI PASSEGGERI AI SENSI DEL REGOLAMENTO N. 1370/2007 FINO AD € 40.000"
+          }
+        },
+        {
+          "code": "01193867781",
+          "label": "CONTRATTI AFFIDATI DIRETTAMENTE AD UN ENTE AGGIUDICATORE O DA UN CONCESSIONARIO DI LL.PP AD IMPRESE COLLEGATE, EX ART 218 E 149 DEL CODICE",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-fattispecie-contrattuale_id": "01193867781",
+            "tipo-fattispecie-contrattuale_denominazione": "CONTRATTI AFFIDATI DIRETTAMENTE AD UN ENTE AGGIUDICATORE O DA UN CONCESSIONARIO DI LL.PP AD IMPRESE COLLEGATE, EX ART 218 E 149 DEL CODICE"
+          }
+        },
+        {
+          "code": "01207098270",
+          "label": "PAGAMENTI DEI CONCESSIONARI DI FINANZIAMENTI PUBBLICI ANCHE EUROPEI",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-fattispecie-contrattuale_id": "01207098270",
+            "tipo-fattispecie-contrattuale_denominazione": "PAGAMENTI DEI CONCESSIONARI DI FINANZIAMENTI PUBBLICI ANCHE EUROPEI"
+          }
+        },
+        {
+          "code": "01214380849",
+          "label": "CONTRATTI E CONVENZIONI PER SERVIZI SOCIALI E SOCIO-SANITARI INTERAMENTE SOTTRATTI ALL'APPLICAZIONE DEL CODICE",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-fattispecie-contrattuale_id": "01214380849",
+            "tipo-fattispecie-contrattuale_denominazione": "CONTRATTI E CONVENZIONI PER SERVIZI SOCIALI E SOCIO-SANITARI INTERAMENTE SOTTRATTI ALL'APPLICAZIONE DEL CODICE"
+          }
+        },
+        {
+          "code": "01229857964",
+          "label": "CONTRATTI DI SERVIZI FINO A € 40.000 AGGIUDICATI IN BASE A UN DIRITTO ESCLUSIVO",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-fattispecie-contrattuale_id": "01229857964",
+            "tipo-fattispecie-contrattuale_denominazione": "CONTRATTI DI SERVIZI FINO A € 40.000 AGGIUDICATI IN BASE A UN DIRITTO ESCLUSIVO"
+          }
+        },
+        {
+          "code": "01232502716",
+          "label": "CONTRATTI FINO A € 40.000 ESCLUSI EX ART. 21 DEL CODICE CON PREVALENZA SERVIZI DI CUI ALLALLEGATO IIA",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-fattispecie-contrattuale_id": "01232502716",
+            "tipo-fattispecie-contrattuale_denominazione": "CONTRATTI FINO A € 40.000 ESCLUSI EX ART. 21 DEL CODICE CON PREVALENZA SERVIZI DI CUI ALLALLEGATO IIA"
+          }
+        },
+        {
+          "code": "01242636652",
+          "label": "CONTRATTI FINO A € 20.000 ESCLUSI EX ART. 20 C. 2 DEL CODICE",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-fattispecie-contrattuale_id": "01242636652",
+            "tipo-fattispecie-contrattuale_denominazione": "CONTRATTI FINO A € 20.000 ESCLUSI EX ART. 20 C. 2 DEL CODICE"
+          }
+        },
+        {
+          "code": "01303757909",
+          "label": "SERVIZI E FORNITURE FINO A € 20.000 AI SENSI DELL’ART. 125 O 57 DEL CODICE",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-fattispecie-contrattuale_id": "01303757909",
+            "tipo-fattispecie-contrattuale_denominazione": "SERVIZI E FORNITURE FINO A € 20.000 AI SENSI DELL’ART. 125 O 57 DEL CODICE"
+          }
+        },
+        {
+          "code": "01337293957",
+          "label": "CONTRATTI FINO A € 150.000 ESCLUSI EX ART. 23 DEL CODICE",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-fattispecie-contrattuale_id": "01337293957",
+            "tipo-fattispecie-contrattuale_denominazione": "CONTRATTI FINO A € 150.000 ESCLUSI EX ART. 23 DEL CODICE"
+          }
+        },
+        {
+          "code": "01363507166",
+          "label": "APPALTI  FINO A € 40.000 EURO AGGIUDICATI DA PARTICOLARI ENTI AGGIUDICATORI PER L'ACQUISTO DI ACQUA E PER LA FORNITURA DI ENERGIA O DI COMBUSTIBILI DESTINATI ALLA PRODUZIONE DI ENERGIA",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-fattispecie-contrattuale_id": "01363507166",
+            "tipo-fattispecie-contrattuale_denominazione": "APPALTI  FINO A € 40.000 EURO AGGIUDICATI DA PARTICOLARI ENTI AGGIUDICATORI PER L'ACQUISTO DI ACQUA E PER LA FORNITURA DI ENERGIA O DI COMBUSTIBILI DESTINATI ALLA PRODUZIONE DI ENERGIA"
+          }
+        },
+        {
+          "code": "01434534206",
+          "label": "CONTRATTI FINO A € 40.000 NEI SETTORI DEI SERVIZI POSTALI",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-fattispecie-contrattuale_id": "01434534206",
+            "tipo-fattispecie-contrattuale_denominazione": "CONTRATTI FINO A € 40.000 NEI SETTORI DEI SERVIZI POSTALI"
+          }
+        },
+        {
+          "code": "01524241649",
+          "label": "CONTRATTI FINO A € 150.000 ESCLUSI EX ART. 25 DEL CODICE",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-fattispecie-contrattuale_id": "01524241649",
+            "tipo-fattispecie-contrattuale_denominazione": "CONTRATTI FINO A € 150.000 ESCLUSI EX ART. 25 DEL CODICE"
+          }
+        },
+        {
+          "code": "01546147206",
+          "label": "CONTRATTI FINO A € 40.000 ESCLUSI EX ART. 26 DEL CODICE",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-fattispecie-contrattuale_id": "01546147206",
+            "tipo-fattispecie-contrattuale_denominazione": "CONTRATTI FINO A € 40.000 ESCLUSI EX ART. 26 DEL CODICE"
+          }
+        },
+        {
+          "code": "01552025496",
+          "label": "AFFIDAMENTO DI SERVIZI PER ACQUISIZIONE DI BUONI SPESA PER EMERGENZA COVID-19",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-fattispecie-contrattuale_id": "01552025496",
+            "tipo-fattispecie-contrattuale_denominazione": "AFFIDAMENTO DI SERVIZI PER ACQUISIZIONE DI BUONI SPESA PER EMERGENZA COVID-19"
+          }
+        },
+        {
+          "code": "01582775125",
+          "label": "CONCESSIONI FINO A € 40.000 EURO NEL SETTORE IDRICO ESCLUSE DALLAPPLICAZIONE DEL CODICE DEI CONTRATTI PUBBLICI",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-fattispecie-contrattuale_id": "01582775125",
+            "tipo-fattispecie-contrattuale_denominazione": "CONCESSIONI FINO A € 40.000 EURO NEL SETTORE IDRICO ESCLUSE DALLAPPLICAZIONE DEL CODICE DEI CONTRATTI PUBBLICI"
+          }
+        },
+        {
+          "code": "01635696961",
+          "label": "CONTRATTI FINO A € 40.000 ESCLUSI EX ART. 19 DEL CODICE",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-fattispecie-contrattuale_id": "01635696961",
+            "tipo-fattispecie-contrattuale_denominazione": "CONTRATTI FINO A € 40.000 ESCLUSI EX ART. 19 DEL CODICE"
+          }
+        },
+        {
+          "code": "01652098768",
+          "label": "APPALTI E CONCESSIONI AGGIUDICATI A UN'IMPRESA COLLEGATA",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-fattispecie-contrattuale_id": "01652098768",
+            "tipo-fattispecie-contrattuale_denominazione": "APPALTI E CONCESSIONI AGGIUDICATI A UN'IMPRESA COLLEGATA"
+          }
+        },
+        {
+          "code": "01680966500",
+          "label": "CONTRATTI FINO A € 40.000 ESCLUSI EX ART. 24 DEL CODICE",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-fattispecie-contrattuale_id": "01680966500",
+            "tipo-fattispecie-contrattuale_denominazione": "CONTRATTI FINO A € 40.000 ESCLUSI EX ART. 24 DEL CODICE"
+          }
+        },
+        {
+          "code": "01699420648",
+          "label": "APPALTI CONSISTENTI NELLA CREAZIONE O NELL'ACQUISIZIONE DI UN'OPERA D'ARTE O RAPPRESENTAZIONE ARTISTICA UNICA",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-fattispecie-contrattuale_id": "01699420648",
+            "tipo-fattispecie-contrattuale_denominazione": "APPALTI CONSISTENTI NELLA CREAZIONE O NELL'ACQUISIZIONE DI UN'OPERA D'ARTE O RAPPRESENTAZIONE ARTISTICA UNICA"
+          }
+        },
+        {
+          "code": "01721265127",
+          "label": "CONTRATTI FINO A € 150.000 EX ART. 20 C. 1 DEL CODICE",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-fattispecie-contrattuale_id": "01721265127",
+            "tipo-fattispecie-contrattuale_denominazione": "CONTRATTI FINO A € 150.000 EX ART. 20 C. 1 DEL CODICE"
+          }
+        },
+        {
+          "code": "01799276609",
+          "label": "APPALTI NEI SETTORI SPECIALI FINO A € 40.000 AGGIUDICATI A SCOPO DI RIVENDITA O DI LOCAZIONE A TERZI",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-fattispecie-contrattuale_id": "01799276609",
+            "tipo-fattispecie-contrattuale_denominazione": "APPALTI NEI SETTORI SPECIALI FINO A € 40.000 AGGIUDICATI A SCOPO DI RIVENDITA O DI LOCAZIONE A TERZI"
+          }
+        },
+        {
+          "code": "01846975532",
+          "label": "PER QUESTO TIPO DI CONTRATTO NON È PREVISTO NESSUN TIPO DI ESCLUSIONE",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-fattispecie-contrattuale_id": "01846975532",
+            "tipo-fattispecie-contrattuale_denominazione": "PER QUESTO TIPO DI CONTRATTO NON È PREVISTO NESSUN TIPO DI ESCLUSIONE"
+          }
+        },
+        {
+          "code": "01860048249",
+          "label": "CONTRATTI FINO A € 40.000 ESCLUSI EX ART. 21 DEL CODICE CON PREVALENZA SERVIZI DI CUI ALL'ALLEGATO IIA",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-fattispecie-contrattuale_id": "01860048249",
+            "tipo-fattispecie-contrattuale_denominazione": "CONTRATTI FINO A € 40.000 ESCLUSI EX ART. 21 DEL CODICE CON PREVALENZA SERVIZI DI CUI ALL'ALLEGATO IIA"
+          }
+        },
+        {
+          "code": "01890137095",
+          "label": "CONCESSIONI DI SERVIZI DI LOTTERIE FINO A € 40.000 AGGIUDICATE SULLA BASE DI UN DIRITTO ESCLUSIVO",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-fattispecie-contrattuale_id": "01890137095",
+            "tipo-fattispecie-contrattuale_denominazione": "CONCESSIONI DI SERVIZI DI LOTTERIE FINO A € 40.000 AGGIUDICATE SULLA BASE DI UN DIRITTO ESCLUSIVO"
+          }
+        },
+        {
+          "code": "02114454687",
+          "label": "CONCESSIONI, APPALTI PUBBLICI E ACCORDI FINO A € 40.000 TRA ENTI E AMMINISTRAZIONI AGGIUDICATRICI NELLAMBITO DEL SETTORE PUBBLICO",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-fattispecie-contrattuale_id": "02114454687",
+            "tipo-fattispecie-contrattuale_denominazione": "CONCESSIONI, APPALTI PUBBLICI E ACCORDI FINO A € 40.000 TRA ENTI E AMMINISTRAZIONI AGGIUDICATRICI NELLAMBITO DEL SETTORE PUBBLICO"
+          }
+        },
+        {
+          "code": "02114465904",
+          "label": "CONTRATTI FINO A € 150.000 EX ART. 21 DEL DEL CODICE CON PREVALENZA SERVIZI DI CUI ALL'ALLEGATO IIB",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-fattispecie-contrattuale_id": "02114465904",
+            "tipo-fattispecie-contrattuale_denominazione": "CONTRATTI FINO A € 150.000 EX ART. 21 DEL DEL CODICE CON PREVALENZA SERVIZI DI CUI ALL'ALLEGATO IIB"
+          }
+        }
+      ]
+    }
+  ]
+}

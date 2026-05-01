@@ -8,7 +8,12 @@ from pathlib import Path
 from zipfile import ZipFile
 
 from anac_explorator.models import CkanResource
-from anac_explorator.sample import _extract_first_csv, select_cig_monthly_resource
+from anac_explorator.sample import (
+    _extract_first_csv,
+    _materialize_csv,
+    select_cig_monthly_resource,
+    select_csv_resource,
+)
 
 
 class SampleTests(unittest.TestCase):
@@ -38,3 +43,27 @@ class SampleTests(unittest.TestCase):
 
             self.assertEqual(extracted_path.name, "sample.csv")
             self.assertIn("cig;importo", extracted_path.read_text(encoding="utf-8"))
+
+    def test_select_csv_resource_skips_log_csv_entries(self) -> None:
+        """@notice Prefer downloadable zipped CSV resources over logCsv entries."""
+
+        resources = [
+            CkanResource(id="1", name="dataset_csv_logCsv", format="CSV", url="https://example.invalid/log.csv"),
+            CkanResource(id="2", name="dataset_csv", format="CSV", url="https://example.invalid/data.zip"),
+        ]
+
+        resource = select_csv_resource(resources)
+
+        self.assertEqual(resource.name, "dataset_csv")
+
+    def test_materialize_csv_copies_plain_csv_payloads(self) -> None:
+        """@notice Treat mislabeled non-ZIP payloads as plain CSV files."""
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            download_path = Path(temp_dir) / "dataset_csv.zip"
+            download_path.write_text("code;label\n1;VALUE\n", encoding="utf-8")
+
+            csv_path = _materialize_csv(download_path, Path(temp_dir) / "out")
+
+            self.assertEqual(csv_path.name, "dataset_csv.csv")
+            self.assertIn("code;label", csv_path.read_text(encoding="utf-8"))

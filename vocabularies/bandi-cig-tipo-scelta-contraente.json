@@ -1,0 +1,489 @@
+{
+  "dataset_id": "bandi-cig-tipo-scelta-contraente",
+  "description": "Controlled vocabulary for CIG procedure-choice codes.",
+  "resource_name": "bandi-cig-tipo-scelta-contraente_csv",
+  "resource_url": "https://dati.anticorruzione.it/opendata/download/dataset/bandi-cig-tipo-scelta-contraente/filesystem/bandi-cig-tipo-scelta-contraente_csv.zip",
+  "csv_path": "data/raw/bandi-cig-tipo-scelta-contraente/bandi-cig-tipo-scelta-contraente_csv/extracted/bandi-cig-tipo-scelta-contraente_csv.csv",
+  "archive_path": "data/raw/bandi-cig-tipo-scelta-contraente/bandi-cig-tipo-scelta-contraente_csv/bandi-cig-tipo-scelta-contraente_csv.zip",
+  "schema_path": "schemas/bandi-cig-tipo-scelta-contraente.schema.json",
+  "tables": [
+    {
+      "name": "tipo_scelta_contraente",
+      "description": "Crosswalk from CIG procedure-choice code to Italian label.",
+      "resolved_fields": [
+        "cod_tipo_scelta_contraente",
+        "tipo_scelta_contraente"
+      ],
+      "source_columns": [
+        "tipo-scelta-contraente_codice",
+        "tipo-scelta-contraente_denominazione"
+      ],
+      "code_column": "tipo-scelta-contraente_codice",
+      "label_column": "tipo-scelta-contraente_denominazione",
+      "extra_columns": [],
+      "entry_count": 46,
+      "entries": [
+        {
+          "code": "1",
+          "label": "PROCEDURA APERTA",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-scelta-contraente_codice": "1",
+            "tipo-scelta-contraente_denominazione": "PROCEDURA APERTA"
+          }
+        },
+        {
+          "code": "2",
+          "label": "PROCEDURA RISTRETTA",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-scelta-contraente_codice": "2",
+            "tipo-scelta-contraente_denominazione": "PROCEDURA RISTRETTA"
+          }
+        },
+        {
+          "code": "3",
+          "label": "PROCEDURA NEGOZIATA PREVIA PUBBLICAZIONE",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-scelta-contraente_codice": "3",
+            "tipo-scelta-contraente_denominazione": "PROCEDURA NEGOZIATA PREVIA PUBBLICAZIONE"
+          }
+        },
+        {
+          "code": "4",
+          "label": "PROCEDURA NEGOZIATA SENZA PREVIA PUBBLICAZIONE",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-scelta-contraente_codice": "4",
+            "tipo-scelta-contraente_denominazione": "PROCEDURA NEGOZIATA SENZA PREVIA PUBBLICAZIONE"
+          }
+        },
+        {
+          "code": "5",
+          "label": "DIALOGO COMPETITIVO",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-scelta-contraente_codice": "5",
+            "tipo-scelta-contraente_denominazione": "DIALOGO COMPETITIVO"
+          }
+        },
+        {
+          "code": "6",
+          "label": "PROCEDURA NEGOZIATA SENZA PREVIA INDIZIONE DI GARA (SETTORI SPECIALI)",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-scelta-contraente_codice": "6",
+            "tipo-scelta-contraente_denominazione": "PROCEDURA NEGOZIATA SENZA PREVIA INDIZIONE DI GARA (SETTORI SPECIALI)"
+          }
+        },
+        {
+          "code": "7",
+          "label": "SISTEMA DINAMICO DI ACQUISIZIONE",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-scelta-contraente_codice": "7",
+            "tipo-scelta-contraente_denominazione": "SISTEMA DINAMICO DI ACQUISIZIONE"
+          }
+        },
+        {
+          "code": "8",
+          "label": "AFFIDAMENTO IN ECONOMIA - COTTIMO FIDUCIARIO",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-scelta-contraente_codice": "8",
+            "tipo-scelta-contraente_denominazione": "AFFIDAMENTO IN ECONOMIA - COTTIMO FIDUCIARIO"
+          }
+        },
+        {
+          "code": "9",
+          "label": "PUBBLICO INCANTO",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-scelta-contraente_codice": "9",
+            "tipo-scelta-contraente_denominazione": "PUBBLICO INCANTO"
+          }
+        },
+        {
+          "code": "10",
+          "label": "LICITAZIONE PRIVATA",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-scelta-contraente_codice": "10",
+            "tipo-scelta-contraente_denominazione": "LICITAZIONE PRIVATA"
+          }
+        },
+        {
+          "code": "11",
+          "label": "LICITAZIONE PRIVATA SEMPLIFICATA",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-scelta-contraente_codice": "11",
+            "tipo-scelta-contraente_denominazione": "LICITAZIONE PRIVATA SEMPLIFICATA"
+          }
+        },
+        {
+          "code": "12",
+          "label": "AFFIDAMENTO DIRETTO EX ART.5 DELLA LEGGE N.381/91",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-scelta-contraente_codice": "12",
+            "tipo-scelta-contraente_denominazione": "AFFIDAMENTO DIRETTO EX ART.5 DELLA LEGGE N.381/91"
+          }
+        },
+        {
+          "code": "13",
+          "label": "TRATTATIVA PRIVATA",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-scelta-contraente_codice": "13",
+            "tipo-scelta-contraente_denominazione": "TRATTATIVA PRIVATA"
+          }
+        },
+        {
+          "code": "14",
+          "label": "PROCEDURA SELETTIVA EX ART. 238 C.7, D.LGS. 163/2006",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-scelta-contraente_codice": "14",
+            "tipo-scelta-contraente_denominazione": "PROCEDURA SELETTIVA EX ART. 238 C.7, D.LGS. 163/2006"
+          }
+        },
+        {
+          "code": "15",
+          "label": "PROCEDURA NEGOZIATA",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-scelta-contraente_codice": "15",
+            "tipo-scelta-contraente_denominazione": "PROCEDURA NEGOZIATA"
+          }
+        },
+        {
+          "code": "16",
+          "label": "ACCORDO QUADRO",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-scelta-contraente_codice": "16",
+            "tipo-scelta-contraente_denominazione": "ACCORDO QUADRO"
+          }
+        },
+        {
+          "code": "17",
+          "label": "NON CLASSIFICATO",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-scelta-contraente_codice": "17",
+            "tipo-scelta-contraente_denominazione": "NON CLASSIFICATO"
+          }
+        },
+        {
+          "code": "18",
+          "label": "AFFIDAMENTO DIRETTO EX ART. 5 DELLA LEGGE 381/91",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-scelta-contraente_codice": "18",
+            "tipo-scelta-contraente_denominazione": "AFFIDAMENTO DIRETTO EX ART. 5 DELLA LEGGE 381/91"
+          }
+        },
+        {
+          "code": "19",
+          "label": "CONVENZIONE",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-scelta-contraente_codice": "19",
+            "tipo-scelta-contraente_denominazione": "CONVENZIONE"
+          }
+        },
+        {
+          "code": "20",
+          "label": "AGGIUDICAZIONE DI APPALTI PUBBLICI DESTINATI AD AMMINISTRAZIONI AGGIUDICATRICI O AD ALTRI ENTI AGGIUDICATORI",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-scelta-contraente_codice": "20",
+            "tipo-scelta-contraente_denominazione": "AGGIUDICAZIONE DI APPALTI PUBBLICI DESTINATI AD AMMINISTRAZIONI AGGIUDICATRICI O AD ALTRI ENTI AGGIUDICATORI"
+          }
+        },
+        {
+          "code": "21",
+          "label": "AGGIUDICAZIONE E REALIZZAZIONE/ACQUISTO DI LAVORI, FORNITURE O SERVIZI DESTINATI AD AMMINISTRAZIONI AGGIUDICATRICI O AD ALTRI ENTI AGGIUDICATORI",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-scelta-contraente_codice": "21",
+            "tipo-scelta-contraente_denominazione": "AGGIUDICAZIONE E REALIZZAZIONE/ACQUISTO DI LAVORI, FORNITURE O SERVIZI DESTINATI AD AMMINISTRAZIONI AGGIUDICATRICI O AD ALTRI ENTI AGGIUDICATORI"
+          }
+        },
+        {
+          "code": "22",
+          "label": "PROCEDURA RISTRETTA DERIVANTE DA AVVISI CON CUI SI INDICE LA GARA",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-scelta-contraente_codice": "22",
+            "tipo-scelta-contraente_denominazione": "PROCEDURA RISTRETTA DERIVANTE DA AVVISI CON CUI SI INDICE LA GARA"
+          }
+        },
+        {
+          "code": "23",
+          "label": "PROCEDURA NEGOZIATA CON PREVIA INDIZIONE DI GARA (SETTORI SPECIALI)",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-scelta-contraente_codice": "23",
+            "tipo-scelta-contraente_denominazione": "PROCEDURA NEGOZIATA CON PREVIA INDIZIONE DI GARA (SETTORI SPECIALI)"
+          }
+        },
+        {
+          "code": "24",
+          "label": "AFFIDAMENTO DIRETTO",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-scelta-contraente_codice": "24",
+            "tipo-scelta-contraente_denominazione": "AFFIDAMENTO DIRETTO"
+          }
+        },
+        {
+          "code": "25",
+          "label": "AFFIDAMENTO DIRETTO A SOCIETA' IN HOUSE",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-scelta-contraente_codice": "25",
+            "tipo-scelta-contraente_denominazione": "AFFIDAMENTO DIRETTO A SOCIETA' IN HOUSE"
+          }
+        },
+        {
+          "code": "26",
+          "label": "AFFIDAMENTO DIRETTO A SOCIETA' RAGGRUPPATE/CONSORZIATE O CONTROLLATE NELLE CONCESSIONI E NEI PARTENARIATI",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-scelta-contraente_codice": "26",
+            "tipo-scelta-contraente_denominazione": "AFFIDAMENTO DIRETTO A SOCIETA' RAGGRUPPATE/CONSORZIATE O CONTROLLATE NELLE CONCESSIONI E NEI PARTENARIATI"
+          }
+        },
+        {
+          "code": "27",
+          "label": "AFFIDAMENTO DIRETTO IN ADESIONE AD ACCORDO QUADRO/CONVENZIONE",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-scelta-contraente_codice": "27",
+            "tipo-scelta-contraente_denominazione": "AFFIDAMENTO DIRETTO IN ADESIONE AD ACCORDO QUADRO/CONVENZIONE"
+          }
+        },
+        {
+          "code": "28",
+          "label": "CONFRONTO COMPETITIVO IN ADESIONE AD ACCORDO QUADRO/CONVENZIONE",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-scelta-contraente_codice": "28",
+            "tipo-scelta-contraente_denominazione": "CONFRONTO COMPETITIVO IN ADESIONE AD ACCORDO QUADRO/CONVENZIONE"
+          }
+        },
+        {
+          "code": "29",
+          "label": "PROCEDURA AI SENSI DEI REGOLAMENTI DEGLI ORGANI COSTITUZIONALI",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-scelta-contraente_codice": "29",
+            "tipo-scelta-contraente_denominazione": "PROCEDURA AI SENSI DEI REGOLAMENTI DEGLI ORGANI COSTITUZIONALI"
+          }
+        },
+        {
+          "code": "30",
+          "label": "PROCEDURA RISTRETTA SEMPLIFICATA",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-scelta-contraente_codice": "30",
+            "tipo-scelta-contraente_denominazione": "PROCEDURA RISTRETTA SEMPLIFICATA"
+          }
+        },
+        {
+          "code": "31",
+          "label": "PROCEDURA DERIVANTE DA LEGGE REGIONALE",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-scelta-contraente_codice": "31",
+            "tipo-scelta-contraente_denominazione": "PROCEDURA DERIVANTE DA LEGGE REGIONALE"
+          }
+        },
+        {
+          "code": "32",
+          "label": "AFFIDAMENTO DIRETTO PER VARIANTE SUPERIORE AL 20% DELL'IMPORTO CONTRATTUALE",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-scelta-contraente_codice": "32",
+            "tipo-scelta-contraente_denominazione": "AFFIDAMENTO DIRETTO PER VARIANTE SUPERIORE AL 20% DELL'IMPORTO CONTRATTUALE"
+          }
+        },
+        {
+          "code": "33",
+          "label": "AFFIDAMENTO RISERVATO",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-scelta-contraente_codice": "33",
+            "tipo-scelta-contraente_denominazione": "AFFIDAMENTO RISERVATO"
+          }
+        },
+        {
+          "code": "34",
+          "label": "PROCEDURA NEGOZIATA PER AFFIDAMENTI SOTTO SOGLIA",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-scelta-contraente_codice": "34",
+            "tipo-scelta-contraente_denominazione": "PROCEDURA NEGOZIATA PER AFFIDAMENTI SOTTO SOGLIA"
+          }
+        },
+        {
+          "code": "35",
+          "label": "PROCEDURA ART.16 COMMA 2-BIS DPR 380/2001 PER OPERE URBANIZZAZIONE A SCOMPUTO PRIMARIE SOTTO SOGLIA COMUNITARIA",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-scelta-contraente_codice": "35",
+            "tipo-scelta-contraente_denominazione": "PROCEDURA ART.16 COMMA 2-BIS DPR 380/2001 PER OPERE URBANIZZAZIONE A SCOMPUTO PRIMARIE SOTTO SOGLIA COMUNITARIA"
+          }
+        },
+        {
+          "code": "36",
+          "label": "PARTERNARIATO PER L'INNOVAZIONE",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-scelta-contraente_codice": "36",
+            "tipo-scelta-contraente_denominazione": "PARTERNARIATO PER L'INNOVAZIONE"
+          }
+        },
+        {
+          "code": "37",
+          "label": "AFFIDAMENTO DIRETTO PER LAVORI, SERVIZI O FORNITURE SUPPLEMENTARI",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-scelta-contraente_codice": "37",
+            "tipo-scelta-contraente_denominazione": "AFFIDAMENTO DIRETTO PER LAVORI, SERVIZI O FORNITURE SUPPLEMENTARI"
+          }
+        },
+        {
+          "code": "38",
+          "label": "PROCEDURA COMPETITIVA CON NEGOZIAZIONE",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-scelta-contraente_codice": "38",
+            "tipo-scelta-contraente_denominazione": "PROCEDURA COMPETITIVA CON NEGOZIAZIONE"
+          }
+        },
+        {
+          "code": "39",
+          "label": "PROCEDURA DISCIPLINATA DA REGOLAMENTO INTERNO PER SETTORI SPECIALI",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-scelta-contraente_codice": "39",
+            "tipo-scelta-contraente_denominazione": "PROCEDURA DISCIPLINATA DA REGOLAMENTO INTERNO PER SETTORI SPECIALI"
+          }
+        },
+        {
+          "code": "40",
+          "label": "AFFIDAMENTO DIRETTO PER MODIFICHE CONTRATTUALI O VARIANTI PER LE QUALI È NECESSARIA UNA NUOVA PROCEDURA DI AFFIDAMENTO",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-scelta-contraente_codice": "40",
+            "tipo-scelta-contraente_denominazione": "AFFIDAMENTO DIRETTO PER MODIFICHE CONTRATTUALI O VARIANTI PER LE QUALI È NECESSARIA UNA NUOVA PROCEDURA DI AFFIDAMENTO"
+          }
+        },
+        {
+          "code": "97",
+          "label": "ALTRA PROCEDURA A PIU' FASI",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-scelta-contraente_codice": "97",
+            "tipo-scelta-contraente_denominazione": "ALTRA PROCEDURA A PIU' FASI"
+          }
+        },
+        {
+          "code": "98",
+          "label": "ALTRA PROCEDURA A FASE UNICA",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-scelta-contraente_codice": "98",
+            "tipo-scelta-contraente_denominazione": "ALTRA PROCEDURA A FASE UNICA"
+          }
+        },
+        {
+          "code": "99",
+          "label": "PROCEDURA DI GARA",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-scelta-contraente_codice": "99",
+            "tipo-scelta-contraente_denominazione": "PROCEDURA DI GARA"
+          }
+        },
+        {
+          "code": "114",
+          "label": "PROCEDURA NEGOZIATA DERIVANTE DA AVVISI CON CUI SI INDICE UNA GARA",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-scelta-contraente_codice": "114",
+            "tipo-scelta-contraente_denominazione": "PROCEDURA NEGOZIATA DERIVANTE DA AVVISI CON CUI SI INDICE UNA GARA"
+          }
+        },
+        {
+          "code": "122",
+          "label": "* PROCEDURA RISTRETTA ART.18 C.1 B) L.R. 14/20026",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-scelta-contraente_codice": "122",
+            "tipo-scelta-contraente_denominazione": "* PROCEDURA RISTRETTA ART.18 C.1 B) L.R. 14/20026"
+          }
+        },
+        {
+          "code": "999",
+          "label": "ND",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "tipo-scelta-contraente_codice": "999",
+            "tipo-scelta-contraente_denominazione": "ND"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,75 @@
+{
+  "source_path": "data/raw/categorie-opera/20260401-categorie-opera_csv/extracted/20260401-categorie-opera_csv.csv",
+  "delimiter": ";",
+  "encoding": "utf-8-sig",
+  "rows_sampled": 576518,
+  "row_length_mismatches": 0,
+  "columns": [
+    {
+      "name": "cig",
+      "inferred_type": "text",
+      "nullable": false,
+      "non_empty_samples": [
+        "BA197D6319",
+        "9394199242",
+        "BA84D096F7",
+        "BAD8BD96B1",
+        "BA4FB74E0E"
+      ]
+    },
+    {
+      "name": "id_categoria",
+      "inferred_type": "text",
+      "nullable": false,
+      "non_empty_samples": [
+        "FS",
+        "OG 11",
+        "FS",
+        "999",
+        "FB"
+      ]
+    },
+    {
+      "name": "descrizione",
+      "inferred_type": "text",
+      "nullable": false,
+      "non_empty_samples": [
+        "FORNITURA DI SERVIZI",
+        "OG 11 - IMPIANTI TECNOLOGICI",
+        "FORNITURA DI SERVIZI",
+        "OO.CC. - Categoria non definita",
+        "FORNITURA DI BENI"
+      ]
+    },
+    {
+      "name": "cod_tipo_categoria",
+      "inferred_type": "text",
+      "nullable": false,
+      "non_empty_samples": [
+        "P",
+        "S",
+        "P",
+        "P",
+        "S"
+      ]
+    },
+    {
+      "name": "descrizione_tipo_categoria",
+      "inferred_type": "text",
+      "nullable": false,
+      "non_empty_samples": [
+        "PREVALENTE",
+        "SCORPORABILE",
+        "PREVALENTE",
+        "PREVALENTE",
+        "SCORPORABILE"
+      ]
+    },
+    {
+      "name": "classe_importo",
+      "inferred_type": "unknown",
+      "nullable": true,
+      "non_empty_samples": []
+    }
+  ]
+}

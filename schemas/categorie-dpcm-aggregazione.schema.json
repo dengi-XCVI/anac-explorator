@@ -1,0 +1,69 @@
+{
+  "source_path": "data/raw/categorie-dpcm-aggregazione/20260401-categorie-dpcm-aggregazione_csv/extracted/20260401-categorie-dpcm-aggregazione_csv.csv",
+  "delimiter": ";",
+  "encoding": "utf-8-sig",
+  "rows_sampled": 134904,
+  "row_length_mismatches": 0,
+  "columns": [
+    {
+      "name": "cig",
+      "inferred_type": "text",
+      "nullable": false,
+      "non_empty_samples": [
+        "B990ACBE80",
+        "B19EEA42D0",
+        "BA03FEC48A",
+        "BAF577E639",
+        "B295404958"
+      ]
+    },
+    {
+      "name": "cod_categoria_merceologica_dpcm_aggregazione",
+      "inferred_type": "integer",
+      "nullable": false,
+      "non_empty_samples": [
+        "999",
+        "999",
+        "999",
+        "999",
+        "1"
+      ]
+    },
+    {
+      "name": "categoria_merceologica_dpcm_aggregazione",
+      "inferred_type": "text",
+      "nullable": false,
+      "non_empty_samples": [
+        "LAVORI OPPURE BENI E SERVIZI NON ELENCATI NELL'ART. 1 DPCM 24 DICEMBRE 2015",
+        "LAVORI OPPURE BENI E SERVIZI NON ELENCATI NELL'ART. 1 DPCM 24 DICEMBRE 2015",
+        "LAVORI OPPURE BENI E SERVIZI NON ELENCATI NELL'ART. 1 DPCM 24 DICEMBRE 2015",
+        "LAVORI OPPURE BENI E SERVIZI NON ELENCATI NELL'ART. 1 DPCM 24 DICEMBRE 2015",
+        "FARMACI"
+      ]
+    },
+    {
+      "name": "cod_deroga_soggetto_aggregatore",
+      "inferred_type": "integer",
+      "nullable": true,
+      "non_empty_samples": [
+        "1",
+        "1",
+        "2",
+        "2",
+        "2"
+      ]
+    },
+    {
+      "name": "deroga_dpcm_soggetto_aggregatore",
+      "inferred_type": "text",
+      "nullable": true,
+      "non_empty_samples": [
+        "STAZIONE APPALTANTE NON SOGGETTA AGLI OBBLIGHI DI CUI AL DPCM 24 DICEMBRE 2015",
+        "STAZIONE APPALTANTE NON SOGGETTA AGLI OBBLIGHI DI CUI AL DPCM 24 DICEMBRE 2015",
+        "ACQUISTO ESPLETATO MEDIANTE ADESIONE A CONTRATTO DI SOGGETTO AGGREGATORE ISCRITTO NELL'ELENCO DI CUI ALLA DELIBERA DELL'AUTORITA'NAZIONALE ANTICORRUZIONE N. 784 DEL 20 LUGLIO 2016",
+        "ACQUISTO ESPLETATO MEDIANTE ADESIONE A CONTRATTO DI SOGGETTO AGGREGATORE ISCRITTO NELL'ELENCO DI CUI ALLA DELIBERA DELL'AUTORITA'NAZIONALE ANTICORRUZIONE N. 784 DEL 20 LUGLIO 2016",
+        "ACQUISTO ESPLETATO MEDIANTE ADESIONE A CONTRATTO DI SOGGETTO AGGREGATORE ISCRITTO NELL'ELENCO DI CUI ALLA DELIBERA DELL'AUTORITA'NAZIONALE ANTICORRUZIONE N. 784 DEL 20 LUGLIO 2016"
+      ]
+    }
+  ]
+}

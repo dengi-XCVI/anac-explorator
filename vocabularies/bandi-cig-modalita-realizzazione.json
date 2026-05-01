@@ -1,0 +1,309 @@
+{
+  "dataset_id": "bandi-cig-modalita-realizzazione",
+  "description": "Controlled vocabulary for CIG execution-mode codes.",
+  "resource_name": "bandi-cig-modalita-realizzazione_csv",
+  "resource_url": "https://dati.anticorruzione.it/opendata/download/dataset/bandi-cig-modalita-realizzazione/filesystem/bandi-cig-modalita-realizzazione_csv.zip",
+  "csv_path": "data/raw/bandi-cig-modalita-realizzazione/bandi-cig-modalita-realizzazione_csv/extracted/bandi-cig-modalita-realizzazione_csv.csv",
+  "archive_path": "data/raw/bandi-cig-modalita-realizzazione/bandi-cig-modalita-realizzazione_csv/bandi-cig-modalita-realizzazione_csv.zip",
+  "schema_path": "schemas/bandi-cig-modalita-realizzazione.schema.json",
+  "tables": [
+    {
+      "name": "modalita_realizzazione",
+      "description": "Crosswalk from CIG execution-mode code to Italian label.",
+      "resolved_fields": [
+        "cod_modalita_realizzazione",
+        "modalita_realizzazione"
+      ],
+      "source_columns": [
+        "modalita-realizzazione_codice",
+        "modalita-realizzazione_denominazione"
+      ],
+      "code_column": "modalita-realizzazione_codice",
+      "label_column": "modalita-realizzazione_denominazione",
+      "extra_columns": [],
+      "entry_count": 28,
+      "entries": [
+        {
+          "code": "01",
+          "label": "APPALTO",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "modalita-realizzazione_codice": "01",
+            "modalita-realizzazione_denominazione": "APPALTO"
+          }
+        },
+        {
+          "code": "1",
+          "label": "CONTRATTO D'APPALTO",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "modalita-realizzazione_codice": "1",
+            "modalita-realizzazione_denominazione": "CONTRATTO D'APPALTO"
+          }
+        },
+        {
+          "code": "02",
+          "label": "APPALTO SU PROGETTO ESECUTIVO",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "modalita-realizzazione_codice": "02",
+            "modalita-realizzazione_denominazione": "APPALTO SU PROGETTO ESECUTIVO"
+          }
+        },
+        {
+          "code": "2",
+          "label": "CONTRATTO D'APPALTO DISCENDENTE DA ACCORDO QUADRO/CONVENZIONE CON SUCCESSIVO CONFRONTO COMPETITIVO",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "modalita-realizzazione_codice": "2",
+            "modalita-realizzazione_denominazione": "CONTRATTO D'APPALTO DISCENDENTE DA ACCORDO QUADRO/CONVENZIONE CON SUCCESSIVO CONFRONTO COMPETITIVO"
+          }
+        },
+        {
+          "code": "03",
+          "label": "APPALTO SU PROGETTO DEFINITIVO",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "modalita-realizzazione_codice": "03",
+            "modalita-realizzazione_denominazione": "APPALTO SU PROGETTO DEFINITIVO"
+          }
+        },
+        {
+          "code": "3",
+          "label": "CONTRATTO DI CONCESSIONE DI LAVORI",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "modalita-realizzazione_codice": "3",
+            "modalita-realizzazione_denominazione": "CONTRATTO DI CONCESSIONE DI LAVORI"
+          }
+        },
+        {
+          "code": "4",
+          "label": "CONTRATTO DI CONCESSIONE DI SERVIZI E/O FORNITURE",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "modalita-realizzazione_codice": "4",
+            "modalita-realizzazione_denominazione": "CONTRATTO DI CONCESSIONE DI SERVIZI E/O FORNITURE"
+          }
+        },
+        {
+          "code": "5",
+          "label": "FINANZA DI PROGETTO",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "modalita-realizzazione_codice": "5",
+            "modalita-realizzazione_denominazione": "FINANZA DI PROGETTO"
+          }
+        },
+        {
+          "code": "06",
+          "label": "ACCORDO QUADRO",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "modalita-realizzazione_codice": "06",
+            "modalita-realizzazione_denominazione": "ACCORDO QUADRO"
+          }
+        },
+        {
+          "code": "6",
+          "label": "AFFIDAMENTO A CONTRAENTE GENERALE",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "modalita-realizzazione_codice": "6",
+            "modalita-realizzazione_denominazione": "AFFIDAMENTO A CONTRAENTE GENERALE"
+          }
+        },
+        {
+          "code": "7",
+          "label": "ACQUISIZIONE IN ECONOMIA",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "modalita-realizzazione_codice": "7",
+            "modalita-realizzazione_denominazione": "ACQUISIZIONE IN ECONOMIA"
+          }
+        },
+        {
+          "code": "8",
+          "label": "LOCAZIONE FINANZIARIA DI OPERE PUBBLICHE O DI PUBBLICA UTILITA'",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "modalita-realizzazione_codice": "8",
+            "modalita-realizzazione_denominazione": "LOCAZIONE FINANZIARIA DI OPERE PUBBLICHE O DI PUBBLICA UTILITA'"
+          }
+        },
+        {
+          "code": "9",
+          "label": "ACCORDO QUADRO/CONVENZIONE",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "modalita-realizzazione_codice": "9",
+            "modalita-realizzazione_denominazione": "ACCORDO QUADRO/CONVENZIONE"
+          }
+        },
+        {
+          "code": "09",
+          "label": "IN ECONOMIA",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "modalita-realizzazione_codice": "09",
+            "modalita-realizzazione_denominazione": "IN ECONOMIA"
+          }
+        },
+        {
+          "code": "10",
+          "label": "CONCORSI DI PROGETTAZIONE/CONCORSI DI IDEE",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "modalita-realizzazione_codice": "10",
+            "modalita-realizzazione_denominazione": "CONCORSI DI PROGETTAZIONE/CONCORSI DI IDEE"
+          }
+        },
+        {
+          "code": "11",
+          "label": "CONTRATTO D'APPALTO DISCENDENTE DA ACCORDO QUADRO/CONVENZIONE SENZA SUCCESSIVO CONFRONTO COMPETITIVO",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "modalita-realizzazione_codice": "11",
+            "modalita-realizzazione_denominazione": "CONTRATTO D'APPALTO DISCENDENTE DA ACCORDO QUADRO/CONVENZIONE SENZA SUCCESSIVO CONFRONTO COMPETITIVO"
+          }
+        },
+        {
+          "code": "12",
+          "label": "SCELTA DEL SOCIO PRIVATO NELLA SOCIETA' MISTA",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "modalita-realizzazione_codice": "12",
+            "modalita-realizzazione_denominazione": "SCELTA DEL SOCIO PRIVATO NELLA SOCIETA' MISTA"
+          }
+        },
+        {
+          "code": "13",
+          "label": "CONTRATTO DI DISPONIBILITÀ",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "modalita-realizzazione_codice": "13",
+            "modalita-realizzazione_denominazione": "CONTRATTO DI DISPONIBILITÀ"
+          }
+        },
+        {
+          "code": "14",
+          "label": "INTERVENTI DI SUSSIDIARIETÀ ORIZZONTALE",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "modalita-realizzazione_codice": "14",
+            "modalita-realizzazione_denominazione": "INTERVENTI DI SUSSIDIARIETÀ ORIZZONTALE"
+          }
+        },
+        {
+          "code": "15",
+          "label": "CONTRATTI DI PARTERNARIATO SOCIALE (BARATTO AMMINISTRATIVO)",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "modalita-realizzazione_codice": "15",
+            "modalita-realizzazione_denominazione": "CONTRATTI DI PARTERNARIATO SOCIALE (BARATTO AMMINISTRATIVO)"
+          }
+        },
+        {
+          "code": "16",
+          "label": "CO-PROGETTAZIONE DI SERVIZI SOCIALI",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "modalita-realizzazione_codice": "16",
+            "modalita-realizzazione_denominazione": "CO-PROGETTAZIONE DI SERVIZI SOCIALI"
+          }
+        },
+        {
+          "code": "17",
+          "label": "ACCORDO QUADRO",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "modalita-realizzazione_codice": "17",
+            "modalita-realizzazione_denominazione": "ACCORDO QUADRO"
+          }
+        },
+        {
+          "code": "18",
+          "label": "CONVENZIONE",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "modalita-realizzazione_codice": "18",
+            "modalita-realizzazione_denominazione": "CONVENZIONE"
+          }
+        },
+        {
+          "code": "19",
+          "label": "APPALTO PRE-COMMERCIALE",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "modalita-realizzazione_codice": "19",
+            "modalita-realizzazione_denominazione": "APPALTO PRE-COMMERCIALE"
+          }
+        },
+        {
+          "code": "20",
+          "label": "CONTRATTO DI CONCESSIONE DI SERVIZI DISCENDENTE DA ACCORDO QUADRO/CONVENZIONE CON SUCCESSIVO CONFRONTO COMPETITIVO",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "modalita-realizzazione_codice": "20",
+            "modalita-realizzazione_denominazione": "CONTRATTO DI CONCESSIONE DI SERVIZI DISCENDENTE DA ACCORDO QUADRO/CONVENZIONE CON SUCCESSIVO CONFRONTO COMPETITIVO"
+          }
+        },
+        {
+          "code": "21",
+          "label": "CONTRATTO DI CONCESSIONE DI SERVIZI DISCENDENTE DA ACCORDO QUADRO/CONVENZIONE SENZA SUCCESSIVO CONFRONTO COMPETITIVO",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "modalita-realizzazione_codice": "21",
+            "modalita-realizzazione_denominazione": "CONTRATTO DI CONCESSIONE DI SERVIZI DISCENDENTE DA ACCORDO QUADRO/CONVENZIONE SENZA SUCCESSIVO CONFRONTO COMPETITIVO"
+          }
+        },
+        {
+          "code": "90",
+          "label": "SOLA TRACCIABILITA'",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "modalita-realizzazione_codice": "90",
+            "modalita-realizzazione_denominazione": "SOLA TRACCIABILITA'"
+          }
+        },
+        {
+          "code": "999",
+          "label": "ND",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "modalita-realizzazione_codice": "999",
+            "modalita-realizzazione_denominazione": "ND"
+          }
+        }
+      ]
+    }
+  ]
+}

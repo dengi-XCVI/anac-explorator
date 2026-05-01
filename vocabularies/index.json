@@ -1,0 +1,156 @@
+{
+  "dataset_count": 5,
+  "datasets": [
+    {
+      "dataset_id": "bandi-cig-tipo-scelta-contraente",
+      "resource_name": "bandi-cig-tipo-scelta-contraente_csv",
+      "csv_path": "data/raw/bandi-cig-tipo-scelta-contraente/bandi-cig-tipo-scelta-contraente_csv/extracted/bandi-cig-tipo-scelta-contraente_csv.csv",
+      "schema_path": "schemas/bandi-cig-tipo-scelta-contraente.schema.json",
+      "artifact_path": "vocabularies/bandi-cig-tipo-scelta-contraente.json",
+      "table_count": 1
+    },
+    {
+      "dataset_id": "bandi-cig-modalita-realizzazione",
+      "resource_name": "bandi-cig-modalita-realizzazione_csv",
+      "csv_path": "data/raw/bandi-cig-modalita-realizzazione/bandi-cig-modalita-realizzazione_csv/extracted/bandi-cig-modalita-realizzazione_csv.csv",
+      "schema_path": "schemas/bandi-cig-modalita-realizzazione.schema.json",
+      "artifact_path": "vocabularies/bandi-cig-modalita-realizzazione.json",
+      "table_count": 1
+    },
+    {
+      "dataset_id": "categorie-dpcm-aggregazione",
+      "resource_name": "20260401-categorie-dpcm-aggregazione_csv",
+      "csv_path": "data/raw/categorie-dpcm-aggregazione/20260401-categorie-dpcm-aggregazione_csv/extracted/20260401-categorie-dpcm-aggregazione_csv.csv",
+      "schema_path": "schemas/categorie-dpcm-aggregazione.schema.json",
+      "artifact_path": "vocabularies/categorie-dpcm-aggregazione.json",
+      "table_count": 2
+    },
+    {
+      "dataset_id": "categorie-opera",
+      "resource_name": "20260401-categorie-opera_csv",
+      "csv_path": "data/raw/categorie-opera/20260401-categorie-opera_csv/extracted/20260401-categorie-opera_csv.csv",
+      "schema_path": "schemas/categorie-opera.schema.json",
+      "artifact_path": "vocabularies/categorie-opera.json",
+      "table_count": 3
+    },
+    {
+      "dataset_id": "smartcig-tipo-fattispecie-contrattuale",
+      "resource_name": "smartcig-tipo-fattispecie-contrattuale_csv",
+      "csv_path": "data/raw/smartcig-tipo-fattispecie-contrattuale/smartcig-tipo-fattispecie-contrattuale_csv/extracted/smartcig-tipo-fattispecie-contrattuale_csv.csv",
+      "schema_path": "schemas/smartcig-tipo-fattispecie-contrattuale.schema.json",
+      "artifact_path": "vocabularies/smartcig-tipo-fattispecie-contrattuale.json",
+      "table_count": 1
+    }
+  ],
+  "field_links": [
+    {
+      "scope": "current_cig_schema",
+      "dataset_id": "bandi-cig-tipo-scelta-contraente",
+      "table_name": "tipo_scelta_contraente",
+      "resolved_fields": [
+        "cod_tipo_scelta_contraente",
+        "tipo_scelta_contraente"
+      ],
+      "notes": "Directly resolves a code/label pair already present in the January 2025 CIG schema."
+    },
+    {
+      "scope": "current_cig_schema",
+      "dataset_id": "bandi-cig-modalita-realizzazione",
+      "table_name": "modalita_realizzazione",
+      "resolved_fields": [
+        "cod_modalita_realizzazione",
+        "modalita_realizzazione"
+      ],
+      "notes": "Directly resolves a code/label pair already present in the January 2025 CIG schema."
+    },
+    {
+      "scope": "future_or_adjacent_datasets",
+      "dataset_id": "categorie-dpcm-aggregazione",
+      "table_name": "categorie_dpcm_aggregazione",
+      "resolved_fields": [
+        "cod_categoria_merceologica_dpcm_aggregazione",
+        "categoria_merceologica_dpcm_aggregazione"
+      ],
+      "notes": "Resolves DPCM aggregation category codes in the dedicated category dataset rather than the current January 2025 CIG schema sample."
+    },
+    {
+      "scope": "future_or_adjacent_datasets",
+      "dataset_id": "categorie-dpcm-aggregazione",
+      "table_name": "deroghe_soggetto_aggregatore",
+      "resolved_fields": [
+        "cod_deroga_soggetto_aggregatore",
+        "deroga_dpcm_soggetto_aggregatore"
+      ],
+      "notes": "Resolves derogation codes in the DPCM aggregation dataset."
+    },
+    {
+      "scope": "future_or_adjacent_datasets",
+      "dataset_id": "categorie-opera",
+      "table_name": "categorie_opera",
+      "resolved_fields": [
+        "id_categoria",
+        "descrizione"
+      ],
+      "notes": "Resolves work-category identifiers from the category dataset."
+    },
+    {
+      "scope": "future_or_adjacent_datasets",
+      "dataset_id": "categorie-opera",
+      "table_name": "categorie_opera_varianti",
+      "resolved_fields": [
+        "id_categoria",
+        "descrizione",
+        "cod_tipo_categoria",
+        "descrizione_tipo_categoria",
+        "classe_importo"
+      ],
+      "notes": "Preserves category-type and import-class variants attached to work categories."
+    },
+    {
+      "scope": "future_or_adjacent_datasets",
+      "dataset_id": "categorie-opera",
+      "table_name": "tipi_categoria_opera",
+      "resolved_fields": [
+        "cod_tipo_categoria",
+        "descrizione_tipo_categoria"
+      ],
+      "notes": "Resolves the category-type codes reused within the work-category dataset."
+    },
+    {
+      "scope": "future_or_adjacent_datasets",
+      "dataset_id": "smartcig-tipo-fattispecie-contrattuale",
+      "table_name": "tipo_fattispecie_contrattuale",
+      "resolved_fields": [
+        "tipo_fattispecie_contrattuale_id",
+        "tipo_fattispecie_contrattuale_denominazione"
+      ],
+      "notes": "Supports SMARTCIG contract-type resolution outside the current CIG schema sample."
+    }
+  ],
+  "current_cig_schema_gaps": [
+    {
+      "field": "cod_modalita_indizione_speciali",
+      "notes": "No dedicated controlled vocabulary dataset has been wired yet."
+    },
+    {
+      "field": "cod_modalita_indizione_servizi",
+      "notes": "No dedicated controlled vocabulary dataset has been wired yet."
+    },
+    {
+      "field": "cod_strumento_svolgimento",
+      "notes": "No dedicated controlled vocabulary dataset has been wired yet."
+    },
+    {
+      "field": "cod_motivo_urgenza",
+      "notes": "No dedicated controlled vocabulary dataset has been wired yet."
+    },
+    {
+      "field": "cod_ipotesi_collegamento",
+      "notes": "No dedicated controlled vocabulary dataset has been wired yet."
+    },
+    {
+      "field": "cod_esito",
+      "notes": "No dedicated controlled vocabulary dataset has been wired yet."
+    }
+  ]
+}

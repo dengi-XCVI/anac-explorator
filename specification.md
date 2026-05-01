@@ -8,12 +8,15 @@ Create a CLI- and Python-oriented interface for ANAC open procurement data that 
 - `research/ANAC-data-research.md`
 
 ## In-scope slice
-The current implementation slice is limited to:
+The current implementation slice now covers:
 1. identifying one monthly CIG resource
 2. downloading a sample archive
 3. extracting the source data
 4. mapping the complete column schema
-5. documenting the result for later ingestion and querying phases
+5. comparing schema variations across years
+6. building controlled vocabulary cross-reference tables
+7. building a comprehensive field dictionary for the January 2025 CIG schema
+8. documenting the result for later ingestion and querying phases
 
 ## Architectural baseline
 - ANAC CKAN metadata is the source of truth for dataset and resource discovery
@@ -24,9 +27,12 @@ The current implementation slice is limited to:
 ## Implemented baseline
 - Python package skeleton under `src/anac_explorator/`
 - `anac-explorator package-show <dataset>` for CKAN metadata lookup
+- `anac-explorator download-dataset-csv <dataset>` for generic CKAN CSV acquisition
 - `anac-explorator download-cig-sample --year <year> --month <month>` for live CIG sample acquisition
 - `anac-explorator inspect-csv-schema <path>` for local CSV schema mapping
 - `anac-explorator compare-schema-files <left> <right>` for schema-diff reporting
+- `anac-explorator build-vocabulary-crosswalks` for normalized vocabulary artifact generation
+- `anac-explorator build-data-dictionary` for January 2025 CIG field-dictionary generation
 - configurable proxy and request-header support for CKAN access hardening
 - Playwright transport for WAF-protected ANAC access
 - unit coverage for CKAN response parsing, schema inference, and CLI JSON output
@@ -92,6 +98,85 @@ validated working path is `--transport playwright`.
   - `n_lotti_componenti` is nullable in January 2007 but consistently filled in January 2025
   - `FLAG_PNRR_PNC` is nullable in January 2007 and consistently present in January 2025
 
+## Controlled vocabulary findings
+- Artifact index: `vocabularies/index.json`
+- All five planned vocabulary datasets were downloaded and normalized using live CKAN metadata plus Playwright-backed resource access.
+- Selected resources:
+  - `bandi-cig-tipo-scelta-contraente_csv`
+  - `bandi-cig-modalita-realizzazione_csv`
+  - `20260401-categorie-dpcm-aggregazione_csv`
+  - `20260401-categorie-opera_csv`
+  - `smartcig-tipo-fattispecie-contrattuale_csv`
+- Raw schema artifacts:
+  - `schemas/bandi-cig-tipo-scelta-contraente.schema.json` → `46` rows / `2` columns
+  - `schemas/bandi-cig-modalita-realizzazione.schema.json` → `28` rows / `2` columns
+  - `schemas/categorie-dpcm-aggregazione.schema.json` → `134,904` rows / `5` columns
+  - `schemas/categorie-opera.schema.json` → `576,518` rows / `6` columns
+  - `schemas/smartcig-tipo-fattispecie-contrattuale.schema.json` → `78` rows / `2` columns
+
+## Generated cross-reference tables
+- `vocabularies/bandi-cig-tipo-scelta-contraente.json`
+  - table: `tipo_scelta_contraente`
+  - entry count: `46`
+  - directly resolves `cod_tipo_scelta_contraente` ↔ `tipo_scelta_contraente`
+- `vocabularies/bandi-cig-modalita-realizzazione.json`
+  - table: `modalita_realizzazione`
+  - entry count: `28`
+  - directly resolves `cod_modalita_realizzazione` ↔ `modalita_realizzazione`
+- `vocabularies/categorie-dpcm-aggregazione.json`
+  - table: `categorie_dpcm_aggregazione` → `27` entries
+  - table: `deroghe_soggetto_aggregatore` → `7` entries
+  - resolves DPCM aggregation category and derogation codes
+- `vocabularies/categorie-opera.json`
+  - table: `categorie_opera` → `97` unique code/label pairs
+  - table: `categorie_opera_varianti` → `176` unique code/label/type/class variants
+  - table: `tipi_categoria_opera` → `2` type entries
+  - preserves the work-category mappings without collapsing code/label variants prematurely
+- `vocabularies/smartcig-tipo-fattispecie-contrattuale.json`
+  - table: `tipo_fattispecie_contrattuale` → `78` entries
+  - resolves SMARTCIG contract-type identifiers
+
+## Current CIG field coverage and gaps
+- Covered directly in the current January 2025 CIG schema:
+  - `cod_tipo_scelta_contraente` ↔ `tipo_scelta_contraente`
+  - `cod_modalita_realizzazione` ↔ `modalita_realizzazione`
+- Covered for adjacent or future datasets:
+  - DPCM aggregation category and derogation fields
+  - work-category identifiers, type codes, and import-class variants
+  - SMARTCIG contract-type identifiers
+- Still unresolved for the current January 2025 CIG schema:
+  - `cod_modalita_indizione_speciali`
+  - `cod_modalita_indizione_servizi`
+  - `cod_strumento_svolgimento`
+  - `cod_motivo_urgenza`
+  - `cod_ipotesi_collegamento`
+  - `cod_esito`
+
+## Data dictionary outputs
+- Machine-readable artifact: `dictionaries/cig_2025_01.dictionary.json`
+- Human-readable artifact: `dictionaries/cig_2025_01.dictionary.md`
+- Dictionary scope:
+  - all `61` columns from `schemas/cig_2025_01.schema.json`
+  - sectioned into `9` logical groups to keep procurement, authority, lifecycle, and outcome fields readable
+  - enriched with explicit field descriptions rather than generated placeholder text
+  - linked to controlled vocabularies where the repository currently has confirmed cross-reference tables
+  - annotated with cross-year notes where `schemas/cig_2007_01_vs_cig_2025_01.comparison.json` already shows differences
+- Current code-meaning resolution status:
+  - resolved through live vocabulary artifacts:
+    - `cod_tipo_scelta_contraente` ↔ `tipo_scelta_contraente`
+    - `cod_modalita_realizzazione` ↔ `modalita_realizzazione`
+  - surfaced as explicit unresolved gaps inside the dictionary:
+    - `COD_MODALITA_INDIZIONE_SPECIALI`
+    - `COD_MODALITA_INDIZIONE_SERVIZI`
+    - `COD_STRUMENTO_SVOLGIMENTO`
+    - `COD_MOTIVO_URGENZA`
+    - `COD_IPOTESI_COLLEGAMENTO`
+    - `COD_ESITO`
+- Cross-year notes currently embedded for:
+  - type shifts such as `numero_gara` and `CUI_PROGRAMMA`
+  - delegation/linkage fields that were empty in January 2007 but typed in January 2025
+  - nullability shifts such as `FLAG_PNRR_PNC`, `n_lotti_componenti`, `descrizione_cpv`, `id_centro_costo`, and `sezione_regionale`
+
 ## Open questions
 - Compare additional months and older years to see whether the January 2007 vs January 2025 alignment holds outside this month pair.
-- Promote inferred types into explicit field semantics, especially for coded enumerations and partially sparse columns.
+- Resolve the remaining current CIG coded fields not yet covered by a controlled vocabulary dataset.

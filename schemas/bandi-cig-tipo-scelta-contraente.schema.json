@@ -1,0 +1,33 @@
+{
+  "source_path": "data/raw/bandi-cig-tipo-scelta-contraente/bandi-cig-tipo-scelta-contraente_csv/extracted/bandi-cig-tipo-scelta-contraente_csv.csv",
+  "delimiter": ";",
+  "encoding": "utf-8-sig",
+  "rows_sampled": 46,
+  "row_length_mismatches": 0,
+  "columns": [
+    {
+      "name": "tipo-scelta-contraente_codice",
+      "inferred_type": "integer",
+      "nullable": false,
+      "non_empty_samples": [
+        "28",
+        "97",
+        "38",
+        "31",
+        "6"
+      ]
+    },
+    {
+      "name": "tipo-scelta-contraente_denominazione",
+      "inferred_type": "text",
+      "nullable": false,
+      "non_empty_samples": [
+        "CONFRONTO COMPETITIVO IN ADESIONE AD ACCORDO QUADRO/CONVENZIONE",
+        "ALTRA PROCEDURA A PIU' FASI",
+        "PROCEDURA COMPETITIVA CON NEGOZIAZIONE",
+        "PROCEDURA DERIVANTE DA LEGGE REGIONALE",
+        "PROCEDURA NEGOZIATA SENZA PREVIA INDIZIONE DI GARA (SETTORI SPECIALI)"
+      ]
+    }
+  ]
+}

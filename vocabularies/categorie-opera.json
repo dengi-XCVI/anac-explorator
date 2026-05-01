@@ -1,0 +1,4057 @@
+{
+  "dataset_id": "categorie-opera",
+  "description": "Per-CIG mappings for work-category identifiers, type flags, and import-class variants.",
+  "resource_name": "20260401-categorie-opera_csv",
+  "resource_url": "https://dati.anticorruzione.it/opendata/download/dataset/categorie-opera/filesystem/20260401-categorie-opera_csv.zip",
+  "csv_path": "data/raw/categorie-opera/20260401-categorie-opera_csv/extracted/20260401-categorie-opera_csv.csv",
+  "archive_path": "data/raw/categorie-opera/20260401-categorie-opera_csv/20260401-categorie-opera_csv.zip",
+  "schema_path": "schemas/categorie-opera.schema.json",
+  "tables": [
+    {
+      "name": "categorie_opera",
+      "description": "Unique work-category identifiers and labels observed in the source dataset.",
+      "resolved_fields": [
+        "id_categoria",
+        "descrizione"
+      ],
+      "source_columns": [
+        "id_categoria",
+        "descrizione"
+      ],
+      "code_column": "id_categoria",
+      "label_column": "descrizione",
+      "extra_columns": [],
+      "entry_count": 97,
+      "entries": [
+        {
+          "code": "999",
+          "label": "* OO.CC. - CATEGORIA NON DEFINITA",
+          "attributes": {},
+          "usage_count": 3,
+          "raw": {
+            "id_categoria": "999",
+            "descrizione": "* OO.CC. - CATEGORIA NON DEFINITA"
+          }
+        },
+        {
+          "code": "999",
+          "label": "OO.CC. - CATEGORIA NON DEFINITA",
+          "attributes": {},
+          "usage_count": 3648,
+          "raw": {
+            "id_categoria": "999",
+            "descrizione": "OO.CC. - CATEGORIA NON DEFINITA"
+          }
+        },
+        {
+          "code": "999",
+          "label": "OO.CC. - Categoria non definita",
+          "attributes": {},
+          "usage_count": 55513,
+          "raw": {
+            "id_categoria": "999",
+            "descrizione": "OO.CC. - Categoria non definita"
+          }
+        },
+        {
+          "code": "AA",
+          "label": "ALTRO (STAZIONI APPALTANTI CON SISTEMA DI QUALIFICAZIONE PROPRIO)",
+          "attributes": {},
+          "usage_count": 8636,
+          "raw": {
+            "id_categoria": "AA",
+            "descrizione": "ALTRO (STAZIONI APPALTANTI CON SISTEMA DI QUALIFICAZIONE PROPRIO)"
+          }
+        },
+        {
+          "code": "AA",
+          "label": "ALTRO (Stazioni appaltanti con sistema di qualificazione proprio)",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "id_categoria": "AA",
+            "descrizione": "ALTRO (Stazioni appaltanti con sistema di qualificazione proprio)"
+          }
+        },
+        {
+          "code": "FB",
+          "label": "FORNITURA DI BENI",
+          "attributes": {},
+          "usage_count": 212702,
+          "raw": {
+            "id_categoria": "FB",
+            "descrizione": "FORNITURA DI BENI"
+          }
+        },
+        {
+          "code": "FS",
+          "label": "FORNITURA DI SERVIZI",
+          "attributes": {},
+          "usage_count": 208915,
+          "raw": {
+            "id_categoria": "FS",
+            "descrizione": "FORNITURA DI SERVIZI"
+          }
+        },
+        {
+          "code": "OG 1",
+          "label": "OG 1 - EDIFICI CIVILI E INDUSTRIALI",
+          "attributes": {},
+          "usage_count": 19916,
+          "raw": {
+            "id_categoria": "OG 1",
+            "descrizione": "OG 1 - EDIFICI CIVILI E INDUSTRIALI"
+          }
+        },
+        {
+          "code": "OG 10",
+          "label": "OG 10 - IMPIANTI PER LA TRASFORMAZIONE ALTA/MEDIA TENSIONE E PER LA DISTRIBUZIONE DI ENERGIA ELETTRICA IN CORRENTE ALTERNATA E CONTINUA ED IMPIANTI DI PUBBLICA ILLUMINAZIONE",
+          "attributes": {},
+          "usage_count": 3718,
+          "raw": {
+            "id_categoria": "OG 10",
+            "descrizione": "OG 10 - IMPIANTI PER LA TRASFORMAZIONE ALTA/MEDIA TENSIONE E PER LA DISTRIBUZIONE DI ENERGIA ELETTRICA IN CORRENTE ALTERNATA E CONTINUA ED IMPIANTI DI PUBBLICA ILLUMINAZIONE"
+          }
+        },
+        {
+          "code": "OG 11",
+          "label": "OG 11 - IMPIANTI TECNOLOGICI",
+          "attributes": {},
+          "usage_count": 5795,
+          "raw": {
+            "id_categoria": "OG 11",
+            "descrizione": "OG 11 - IMPIANTI TECNOLOGICI"
+          }
+        },
+        {
+          "code": "OG 12",
+          "label": "OG 12 - OPERE ED IMPIANTI DI BONIFICA E PROTEZIONE AMBIENTALE",
+          "attributes": {},
+          "usage_count": 722,
+          "raw": {
+            "id_categoria": "OG 12",
+            "descrizione": "OG 12 - OPERE ED IMPIANTI DI BONIFICA E PROTEZIONE AMBIENTALE"
+          }
+        },
+        {
+          "code": "OG 13",
+          "label": "OG 13 - OPERE DI INGEGNERIA NATURALISTICA",
+          "attributes": {},
+          "usage_count": 531,
+          "raw": {
+            "id_categoria": "OG 13",
+            "descrizione": "OG 13 - OPERE DI INGEGNERIA NATURALISTICA"
+          }
+        },
+        {
+          "code": "OG 2",
+          "label": "OG 2 - RESTAURO E MANUTENZIONE DEI BENI IMMOBILI SOTTOPOSTI A TUTELA",
+          "attributes": {},
+          "usage_count": 3926,
+          "raw": {
+            "id_categoria": "OG 2",
+            "descrizione": "OG 2 - RESTAURO E MANUTENZIONE DEI BENI IMMOBILI SOTTOPOSTI A TUTELA"
+          }
+        },
+        {
+          "code": "OG 3",
+          "label": "OG 3 - STRADE, AUTOSTRADE, PONTI, VIADOTTI, FERROVIE, METROPOLITANE",
+          "attributes": {},
+          "usage_count": 14636,
+          "raw": {
+            "id_categoria": "OG 3",
+            "descrizione": "OG 3 - STRADE, AUTOSTRADE, PONTI, VIADOTTI, FERROVIE, METROPOLITANE"
+          }
+        },
+        {
+          "code": "OG 4",
+          "label": "OG 4 - OPERE D'ARTE NEL SOTTOSUOLO",
+          "attributes": {},
+          "usage_count": 97,
+          "raw": {
+            "id_categoria": "OG 4",
+            "descrizione": "OG 4 - OPERE D'ARTE NEL SOTTOSUOLO"
+          }
+        },
+        {
+          "code": "OG 4",
+          "label": "OG 4 - OPERE D’ARTE NEL SOTTOSUOLO",
+          "attributes": {},
+          "usage_count": 51,
+          "raw": {
+            "id_categoria": "OG 4",
+            "descrizione": "OG 4 - OPERE D’ARTE NEL SOTTOSUOLO"
+          }
+        },
+        {
+          "code": "OG 5",
+          "label": "OG 5 - DIGHE",
+          "attributes": {},
+          "usage_count": 19,
+          "raw": {
+            "id_categoria": "OG 5",
+            "descrizione": "OG 5 - DIGHE"
+          }
+        },
+        {
+          "code": "OG 6",
+          "label": "OG 6 - ACQUEDOTTI, GASDOTTI , OLEODOTTI, OPERE DI IRRIGAZIONE E DI EVACUAZIONE",
+          "attributes": {},
+          "usage_count": 4547,
+          "raw": {
+            "id_categoria": "OG 6",
+            "descrizione": "OG 6 - ACQUEDOTTI, GASDOTTI , OLEODOTTI, OPERE DI IRRIGAZIONE E DI EVACUAZIONE"
+          }
+        },
+        {
+          "code": "OG 7",
+          "label": "OG 7 - OPERE MARITTIME E LAVORI DI DRAGAGGIO",
+          "attributes": {},
+          "usage_count": 324,
+          "raw": {
+            "id_categoria": "OG 7",
+            "descrizione": "OG 7 - OPERE MARITTIME E LAVORI DI DRAGAGGIO"
+          }
+        },
+        {
+          "code": "OG 8",
+          "label": "OG 8 - OPERE FLUVIALI, DI DIFESA, DI SISTEMAZIONE IDRAULICA E DI BONIFICA",
+          "attributes": {},
+          "usage_count": 2141,
+          "raw": {
+            "id_categoria": "OG 8",
+            "descrizione": "OG 8 - OPERE FLUVIALI, DI DIFESA, DI SISTEMAZIONE IDRAULICA E DI BONIFICA"
+          }
+        },
+        {
+          "code": "OG 9",
+          "label": "OG 9 - IMPIANTI PER LA PRODUZIONE DI ENERGIA ELETTRICA",
+          "attributes": {},
+          "usage_count": 923,
+          "raw": {
+            "id_categoria": "OG 9",
+            "descrizione": "OG 9 - IMPIANTI PER LA PRODUZIONE DI ENERGIA ELETTRICA"
+          }
+        },
+        {
+          "code": "OG1",
+          "label": "OG1 - EDIFICI CIVILI E INDUSTRIALI",
+          "attributes": {},
+          "usage_count": 65,
+          "raw": {
+            "id_categoria": "OG1",
+            "descrizione": "OG1 - EDIFICI CIVILI E INDUSTRIALI"
+          }
+        },
+        {
+          "code": "OG10",
+          "label": "OG10 - IMPIANTI PER LA TRASFORMAZIONE ALTA/MEDIA TENSIONE E PER LA DISTRIBUZIONE DI ENERGIA ELETTRICA IN CORRENTE ALTERNATA E CONTINUA",
+          "attributes": {},
+          "usage_count": 31,
+          "raw": {
+            "id_categoria": "OG10",
+            "descrizione": "OG10 - IMPIANTI PER LA TRASFORMAZIONE ALTA/MEDIA TENSIONE E PER LA DISTRIBUZIONE DI ENERGIA ELETTRICA IN CORRENTE ALTERNATA E CONTINUA"
+          }
+        },
+        {
+          "code": "OG11",
+          "label": "OG11 - IMPIANTI TECNOLOGICI",
+          "attributes": {},
+          "usage_count": 30,
+          "raw": {
+            "id_categoria": "OG11",
+            "descrizione": "OG11 - IMPIANTI TECNOLOGICI"
+          }
+        },
+        {
+          "code": "OG12",
+          "label": "OG12 - OPERE ED IMPIANTI DI BONIFICA E PROTEZIONE AMBIENTALE",
+          "attributes": {},
+          "usage_count": 2,
+          "raw": {
+            "id_categoria": "OG12",
+            "descrizione": "OG12 - OPERE ED IMPIANTI DI BONIFICA E PROTEZIONE AMBIENTALE"
+          }
+        },
+        {
+          "code": "OG13",
+          "label": "OG13 - OPERE DI INGEGNERIA NATURALISTICA",
+          "attributes": {},
+          "usage_count": 3,
+          "raw": {
+            "id_categoria": "OG13",
+            "descrizione": "OG13 - OPERE DI INGEGNERIA NATURALISTICA"
+          }
+        },
+        {
+          "code": "OG2",
+          "label": "OG2 - RESTAURO E MANUTENZIONE DEI BENI IMMOBILI SOTTOPOSTI A TUTELA AI SENSI DELLE DISPOSIZIONI IN MATERIA DI BENI CULTURALI E AMBIENTALI",
+          "attributes": {},
+          "usage_count": 18,
+          "raw": {
+            "id_categoria": "OG2",
+            "descrizione": "OG2 - RESTAURO E MANUTENZIONE DEI BENI IMMOBILI SOTTOPOSTI A TUTELA AI SENSI DELLE DISPOSIZIONI IN MATERIA DI BENI CULTURALI E AMBIENTALI"
+          }
+        },
+        {
+          "code": "OG3",
+          "label": "OG3 - STRADE, AUTOSTRADE, PONTI, VIADOTTI, FERROVIE, METROPOLITANE, FUNICOLARI, PISTE AEROPORTUALI E RELATIVE OPERE COMPLEMENTARI",
+          "attributes": {},
+          "usage_count": 61,
+          "raw": {
+            "id_categoria": "OG3",
+            "descrizione": "OG3 - STRADE, AUTOSTRADE, PONTI, VIADOTTI, FERROVIE, METROPOLITANE, FUNICOLARI, PISTE AEROPORTUALI E RELATIVE OPERE COMPLEMENTARI"
+          }
+        },
+        {
+          "code": "OG4",
+          "label": "OG4 - OPERE D'ARTE NEL SOTTOSUOLO",
+          "attributes": {},
+          "usage_count": 4,
+          "raw": {
+            "id_categoria": "OG4",
+            "descrizione": "OG4 - OPERE D'ARTE NEL SOTTOSUOLO"
+          }
+        },
+        {
+          "code": "OG5",
+          "label": "OG5 - DIGHE",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "id_categoria": "OG5",
+            "descrizione": "OG5 - DIGHE"
+          }
+        },
+        {
+          "code": "OG6",
+          "label": "OG6 - ACQUEDOTTI, GASDOTTI, OLEODOTTI, OPERE DI IRRIGAZIONE E DI EVACUAZIONE",
+          "attributes": {},
+          "usage_count": 25,
+          "raw": {
+            "id_categoria": "OG6",
+            "descrizione": "OG6 - ACQUEDOTTI, GASDOTTI, OLEODOTTI, OPERE DI IRRIGAZIONE E DI EVACUAZIONE"
+          }
+        },
+        {
+          "code": "OG7",
+          "label": "OG7 - OPERE MARITTIME E LAVORI DI DRAGAGGIO",
+          "attributes": {},
+          "usage_count": 2,
+          "raw": {
+            "id_categoria": "OG7",
+            "descrizione": "OG7 - OPERE MARITTIME E LAVORI DI DRAGAGGIO"
+          }
+        },
+        {
+          "code": "OG8",
+          "label": "OG8 - OPERE FLUVIALI, DI DIFESA, DI SISTEMAZIONE IDRAULICA E DI BONIFICA",
+          "attributes": {},
+          "usage_count": 9,
+          "raw": {
+            "id_categoria": "OG8",
+            "descrizione": "OG8 - OPERE FLUVIALI, DI DIFESA, DI SISTEMAZIONE IDRAULICA E DI BONIFICA"
+          }
+        },
+        {
+          "code": "OG9",
+          "label": "OG9 - IMPIANTI PER LA PRODUZIONE DI ENERGIA ELETTRICA",
+          "attributes": {},
+          "usage_count": 3,
+          "raw": {
+            "id_categoria": "OG9",
+            "descrizione": "OG9 - IMPIANTI PER LA PRODUZIONE DI ENERGIA ELETTRICA"
+          }
+        },
+        {
+          "code": "OS 1",
+          "label": "OS 1 - LAVORI IN TERRA",
+          "attributes": {},
+          "usage_count": 565,
+          "raw": {
+            "id_categoria": "OS 1",
+            "descrizione": "OS 1 - LAVORI IN TERRA"
+          }
+        },
+        {
+          "code": "OS 10",
+          "label": "OS 10 - SEGNALETICA STRADALE NON LUMINOSA",
+          "attributes": {},
+          "usage_count": 1271,
+          "raw": {
+            "id_categoria": "OS 10",
+            "descrizione": "OS 10 - SEGNALETICA STRADALE NON LUMINOSA"
+          }
+        },
+        {
+          "code": "OS 11",
+          "label": "OS 11 - APPARECCHIATURE STRUTTURALI SPECIALI",
+          "attributes": {},
+          "usage_count": 360,
+          "raw": {
+            "id_categoria": "OS 11",
+            "descrizione": "OS 11 - APPARECCHIATURE STRUTTURALI SPECIALI"
+          }
+        },
+        {
+          "code": "OS 12-A",
+          "label": "OS 12-A - BARRIERE STRADALI DI SICUREZZA",
+          "attributes": {},
+          "usage_count": 998,
+          "raw": {
+            "id_categoria": "OS 12-A",
+            "descrizione": "OS 12-A - BARRIERE STRADALI DI SICUREZZA"
+          }
+        },
+        {
+          "code": "OS 12-B",
+          "label": "OS 12-B - BARRIERE PARAMASSI, FERMANEVE E SIMILI",
+          "attributes": {},
+          "usage_count": 431,
+          "raw": {
+            "id_categoria": "OS 12-B",
+            "descrizione": "OS 12-B - BARRIERE PARAMASSI, FERMANEVE E SIMILI"
+          }
+        },
+        {
+          "code": "OS 13",
+          "label": "OS 13 - STRUTTURE PREFABBRICATE IN CEMENTO ARMATO",
+          "attributes": {},
+          "usage_count": 198,
+          "raw": {
+            "id_categoria": "OS 13",
+            "descrizione": "OS 13 - STRUTTURE PREFABBRICATE IN CEMENTO ARMATO"
+          }
+        },
+        {
+          "code": "OS 14",
+          "label": "OS 14 - IMPIANTI DI SMALTIMENTO E RECUPERO RIFIUTI",
+          "attributes": {},
+          "usage_count": 120,
+          "raw": {
+            "id_categoria": "OS 14",
+            "descrizione": "OS 14 - IMPIANTI DI SMALTIMENTO E RECUPERO RIFIUTI"
+          }
+        },
+        {
+          "code": "OS 15",
+          "label": "OS 15 - PULIZIA DI ACQUE MARINE, LACUSTRI, FLUVIALI",
+          "attributes": {},
+          "usage_count": 9,
+          "raw": {
+            "id_categoria": "OS 15",
+            "descrizione": "OS 15 - PULIZIA DI ACQUE MARINE, LACUSTRI, FLUVIALI"
+          }
+        },
+        {
+          "code": "OS 16",
+          "label": "OS 16 - IMPIANTI PER CENTRALI PRODUZIONE ENERGIA ELETTRICA",
+          "attributes": {},
+          "usage_count": 27,
+          "raw": {
+            "id_categoria": "OS 16",
+            "descrizione": "OS 16 - IMPIANTI PER CENTRALI PRODUZIONE ENERGIA ELETTRICA"
+          }
+        },
+        {
+          "code": "OS 17",
+          "label": "OS 17 - LINEE TELEFONICHE ED IMPIANTI DI TELEFONIA",
+          "attributes": {},
+          "usage_count": 74,
+          "raw": {
+            "id_categoria": "OS 17",
+            "descrizione": "OS 17 - LINEE TELEFONICHE ED IMPIANTI DI TELEFONIA"
+          }
+        },
+        {
+          "code": "OS 18-A",
+          "label": "OS 18-A - COMPONENTI STRUTTURALI IN ACCIAIO",
+          "attributes": {},
+          "usage_count": 879,
+          "raw": {
+            "id_categoria": "OS 18-A",
+            "descrizione": "OS 18-A - COMPONENTI STRUTTURALI IN ACCIAIO"
+          }
+        },
+        {
+          "code": "OS 18-B",
+          "label": "OS 18-B - COMPONENTI PER FACCIATE CONTINUE",
+          "attributes": {},
+          "usage_count": 116,
+          "raw": {
+            "id_categoria": "OS 18-B",
+            "descrizione": "OS 18-B - COMPONENTI PER FACCIATE CONTINUE"
+          }
+        },
+        {
+          "code": "OS 19",
+          "label": "OS 19 - IMPIANTI DI RETI DI TELECOMUNICAZIONE E DI TRASMISSIONI E TRATTAMENTO",
+          "attributes": {},
+          "usage_count": 1010,
+          "raw": {
+            "id_categoria": "OS 19",
+            "descrizione": "OS 19 - IMPIANTI DI RETI DI TELECOMUNICAZIONE E DI TRASMISSIONI E TRATTAMENTO"
+          }
+        },
+        {
+          "code": "OS 2-A",
+          "label": "OS 2-A - SUPERFICI DECORATE DI BENI IMMOBILI DEL PATRIMONIO CULTURALE E BENI CULTURALI MOBILI DI INTERESSE STORICO, ARTISTICO, ARCHEOLOGICO ED ETNOANTROPOLOGICO",
+          "attributes": {},
+          "usage_count": 602,
+          "raw": {
+            "id_categoria": "OS 2-A",
+            "descrizione": "OS 2-A - SUPERFICI DECORATE DI BENI IMMOBILI DEL PATRIMONIO CULTURALE E BENI CULTURALI MOBILI DI INTERESSE STORICO, ARTISTICO, ARCHEOLOGICO ED ETNOANTROPOLOGICO"
+          }
+        },
+        {
+          "code": "OS 2-B",
+          "label": "OS 2-B - BENI CULTURALI MOBILI DI INTERESSE ARCHIVISTICO E LIBRARIO",
+          "attributes": {},
+          "usage_count": 33,
+          "raw": {
+            "id_categoria": "OS 2-B",
+            "descrizione": "OS 2-B - BENI CULTURALI MOBILI DI INTERESSE ARCHIVISTICO E LIBRARIO"
+          }
+        },
+        {
+          "code": "OS 20-A",
+          "label": "OS 20-A - RILEVAMENTI TOPOGRAFICI",
+          "attributes": {},
+          "usage_count": 32,
+          "raw": {
+            "id_categoria": "OS 20-A",
+            "descrizione": "OS 20-A - RILEVAMENTI TOPOGRAFICI"
+          }
+        },
+        {
+          "code": "OS 20-B",
+          "label": "OS 20-B - INDAGINI GEOGNOSTICHE",
+          "attributes": {},
+          "usage_count": 307,
+          "raw": {
+            "id_categoria": "OS 20-B",
+            "descrizione": "OS 20-B - INDAGINI GEOGNOSTICHE"
+          }
+        },
+        {
+          "code": "OS 21",
+          "label": "OS 21 - OPERE STRUTTURALI SPECIALI",
+          "attributes": {},
+          "usage_count": 1900,
+          "raw": {
+            "id_categoria": "OS 21",
+            "descrizione": "OS 21 - OPERE STRUTTURALI SPECIALI"
+          }
+        },
+        {
+          "code": "OS 22",
+          "label": "OS 22 - IMPIANTI DI POTABILIZZAZIONE E DEPURAZIONE",
+          "attributes": {},
+          "usage_count": 569,
+          "raw": {
+            "id_categoria": "OS 22",
+            "descrizione": "OS 22 - IMPIANTI DI POTABILIZZAZIONE E DEPURAZIONE"
+          }
+        },
+        {
+          "code": "OS 23",
+          "label": "OS 23 - DEMOLIZIONE DI OPERE",
+          "attributes": {},
+          "usage_count": 427,
+          "raw": {
+            "id_categoria": "OS 23",
+            "descrizione": "OS 23 - DEMOLIZIONE DI OPERE"
+          }
+        },
+        {
+          "code": "OS 24",
+          "label": "OS 24 - VERDE E ARREDO URBANO",
+          "attributes": {},
+          "usage_count": 2067,
+          "raw": {
+            "id_categoria": "OS 24",
+            "descrizione": "OS 24 - VERDE E ARREDO URBANO"
+          }
+        },
+        {
+          "code": "OS 25",
+          "label": "OS 25 - SCAVI ARCHEOLOGICI",
+          "attributes": {},
+          "usage_count": 175,
+          "raw": {
+            "id_categoria": "OS 25",
+            "descrizione": "OS 25 - SCAVI ARCHEOLOGICI"
+          }
+        },
+        {
+          "code": "OS 26",
+          "label": "OS 26 - PAVIMENTAZIONI E SOVRASTRUTTURE SPECIALI",
+          "attributes": {},
+          "usage_count": 113,
+          "raw": {
+            "id_categoria": "OS 26",
+            "descrizione": "OS 26 - PAVIMENTAZIONI E SOVRASTRUTTURE SPECIALI"
+          }
+        },
+        {
+          "code": "OS 27",
+          "label": "OS 27 - IMPIANTI PER LA TRAZIONE ELETTRICA",
+          "attributes": {},
+          "usage_count": 97,
+          "raw": {
+            "id_categoria": "OS 27",
+            "descrizione": "OS 27 - IMPIANTI PER LA TRAZIONE ELETTRICA"
+          }
+        },
+        {
+          "code": "OS 28",
+          "label": "OS 28 - IMPIANTI TERMICI E DI CONDIZIONAMENTO",
+          "attributes": {},
+          "usage_count": 3787,
+          "raw": {
+            "id_categoria": "OS 28",
+            "descrizione": "OS 28 - IMPIANTI TERMICI E DI CONDIZIONAMENTO"
+          }
+        },
+        {
+          "code": "OS 29",
+          "label": "OS 29 - ARMAMENTO FERROVIARIO",
+          "attributes": {},
+          "usage_count": 139,
+          "raw": {
+            "id_categoria": "OS 29",
+            "descrizione": "OS 29 - ARMAMENTO FERROVIARIO"
+          }
+        },
+        {
+          "code": "OS 3",
+          "label": "OS 3 - IMPIANTI IDRICO-SANITARIO, CUCINE, LAVANDERIE",
+          "attributes": {},
+          "usage_count": 1983,
+          "raw": {
+            "id_categoria": "OS 3",
+            "descrizione": "OS 3 - IMPIANTI IDRICO-SANITARIO, CUCINE, LAVANDERIE"
+          }
+        },
+        {
+          "code": "OS 30",
+          "label": "OS 30 - IMPIANTI INTERNI ELETTRICI, TELEFONICI, RADIOTELEFONICI E TELEVISIVI",
+          "attributes": {},
+          "usage_count": 4964,
+          "raw": {
+            "id_categoria": "OS 30",
+            "descrizione": "OS 30 - IMPIANTI INTERNI ELETTRICI, TELEFONICI, RADIOTELEFONICI E TELEVISIVI"
+          }
+        },
+        {
+          "code": "OS 31",
+          "label": "OS 31 - IMPIANTI PER LA MOBILITÀ SOSPESA",
+          "attributes": {},
+          "usage_count": 67,
+          "raw": {
+            "id_categoria": "OS 31",
+            "descrizione": "OS 31 - IMPIANTI PER LA MOBILITÀ SOSPESA"
+          }
+        },
+        {
+          "code": "OS 32",
+          "label": "OS 32 - STRUTTURE IN LEGNO",
+          "attributes": {},
+          "usage_count": 358,
+          "raw": {
+            "id_categoria": "OS 32",
+            "descrizione": "OS 32 - STRUTTURE IN LEGNO"
+          }
+        },
+        {
+          "code": "OS 33",
+          "label": "OS 33 - COPERTURE SPECIALI",
+          "attributes": {},
+          "usage_count": 76,
+          "raw": {
+            "id_categoria": "OS 33",
+            "descrizione": "OS 33 - COPERTURE SPECIALI"
+          }
+        },
+        {
+          "code": "OS 34",
+          "label": "OS 34 - SISTEMI ANTIRUMORE PER INFRASTRUTTURE DI MOBILITÀ",
+          "attributes": {},
+          "usage_count": 142,
+          "raw": {
+            "id_categoria": "OS 34",
+            "descrizione": "OS 34 - SISTEMI ANTIRUMORE PER INFRASTRUTTURE DI MOBILITÀ"
+          }
+        },
+        {
+          "code": "OS 35",
+          "label": "OS 35 - INTERVENTI A BASSO IMPATTO AMBIENTALE",
+          "attributes": {},
+          "usage_count": 170,
+          "raw": {
+            "id_categoria": "OS 35",
+            "descrizione": "OS 35 - INTERVENTI A BASSO IMPATTO AMBIENTALE"
+          }
+        },
+        {
+          "code": "OS 4",
+          "label": "OS 4 - IMPIANTI ELETTROMECCANICI TRASPORTATORI",
+          "attributes": {},
+          "usage_count": 703,
+          "raw": {
+            "id_categoria": "OS 4",
+            "descrizione": "OS 4 - IMPIANTI ELETTROMECCANICI TRASPORTATORI"
+          }
+        },
+        {
+          "code": "OS 5",
+          "label": "OS 5 - IMPIANTI PNEUMATICI E ANTINTRUSIONE",
+          "attributes": {},
+          "usage_count": 83,
+          "raw": {
+            "id_categoria": "OS 5",
+            "descrizione": "OS 5 - IMPIANTI PNEUMATICI E ANTINTRUSIONE"
+          }
+        },
+        {
+          "code": "OS 6",
+          "label": "OS 6 - FINITURE DI OPERE GENERALI IN MATERIALI LIGNEI, PLASTICI, METALLICI E VETROSI",
+          "attributes": {},
+          "usage_count": 2643,
+          "raw": {
+            "id_categoria": "OS 6",
+            "descrizione": "OS 6 - FINITURE DI OPERE GENERALI IN MATERIALI LIGNEI, PLASTICI, METALLICI E VETROSI"
+          }
+        },
+        {
+          "code": "OS 7",
+          "label": "OS 7 - FINITURE DI OPERE GENERALI DI NATURA EDILE E TECNICA",
+          "attributes": {},
+          "usage_count": 1034,
+          "raw": {
+            "id_categoria": "OS 7",
+            "descrizione": "OS 7 - FINITURE DI OPERE GENERALI DI NATURA EDILE E TECNICA"
+          }
+        },
+        {
+          "code": "OS 8",
+          "label": "OS 8 - OPERE DI IMPERMEABILIZZAZIONE",
+          "attributes": {},
+          "usage_count": 478,
+          "raw": {
+            "id_categoria": "OS 8",
+            "descrizione": "OS 8 - OPERE DI IMPERMEABILIZZAZIONE"
+          }
+        },
+        {
+          "code": "OS 9",
+          "label": "OS 9 - IMPIANTI PER LA SEGNALETICA LUMINOSA E LA SICUREZZA DEL TRAFFICO",
+          "attributes": {},
+          "usage_count": 379,
+          "raw": {
+            "id_categoria": "OS 9",
+            "descrizione": "OS 9 - IMPIANTI PER LA SEGNALETICA LUMINOSA E LA SICUREZZA DEL TRAFFICO"
+          }
+        },
+        {
+          "code": "OS1",
+          "label": "OS1 - LAVORI IN TERRA",
+          "attributes": {},
+          "usage_count": 7,
+          "raw": {
+            "id_categoria": "OS1",
+            "descrizione": "OS1 - LAVORI IN TERRA"
+          }
+        },
+        {
+          "code": "OS10",
+          "label": "OS10 - SEGNALETICA STRADALE NON LUMINOSA",
+          "attributes": {},
+          "usage_count": 6,
+          "raw": {
+            "id_categoria": "OS10",
+            "descrizione": "OS10 - SEGNALETICA STRADALE NON LUMINOSA"
+          }
+        },
+        {
+          "code": "OS11",
+          "label": "OS11 - APPARECCHIATURE STRUTTURALI SPECIALI",
+          "attributes": {},
+          "usage_count": 3,
+          "raw": {
+            "id_categoria": "OS11",
+            "descrizione": "OS11 - APPARECCHIATURE STRUTTURALI SPECIALI"
+          }
+        },
+        {
+          "code": "OS12",
+          "label": "OS12 - BARRIERE E PROTEZIONI STRADALI",
+          "attributes": {},
+          "usage_count": 8,
+          "raw": {
+            "id_categoria": "OS12",
+            "descrizione": "OS12 - BARRIERE E PROTEZIONI STRADALI"
+          }
+        },
+        {
+          "code": "OS13",
+          "label": "OS13 - STRUTTURE PREFABBRICATE IN CEMENTO ARMATO",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "id_categoria": "OS13",
+            "descrizione": "OS13 - STRUTTURE PREFABBRICATE IN CEMENTO ARMATO"
+          }
+        },
+        {
+          "code": "OS16",
+          "label": "OS16 - IMPIANTI PER CENTRALI PRODUZIONE ENERGIA ELETTRICA",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "id_categoria": "OS16",
+            "descrizione": "OS16 - IMPIANTI PER CENTRALI PRODUZIONE ENERGIA ELETTRICA"
+          }
+        },
+        {
+          "code": "OS18",
+          "label": "OS18 - COMPONENTI STRUTTURALI IN ACCIAIO O METALLO",
+          "attributes": {},
+          "usage_count": 6,
+          "raw": {
+            "id_categoria": "OS18",
+            "descrizione": "OS18 - COMPONENTI STRUTTURALI IN ACCIAIO O METALLO"
+          }
+        },
+        {
+          "code": "OS19",
+          "label": "OS19 - IMPIANTI DI RETI DI TELECOMUNICAZIONE E DI TRASMISSIONE DATI",
+          "attributes": {},
+          "usage_count": 3,
+          "raw": {
+            "id_categoria": "OS19",
+            "descrizione": "OS19 - IMPIANTI DI RETI DI TELECOMUNICAZIONE E DI TRASMISSIONE DATI"
+          }
+        },
+        {
+          "code": "OS2",
+          "label": "OS2 - SUPERFICI DECORATE E BENI MOBILI DI INTERESSE STORICO E ARTISTICO",
+          "attributes": {},
+          "usage_count": 2,
+          "raw": {
+            "id_categoria": "OS2",
+            "descrizione": "OS2 - SUPERFICI DECORATE E BENI MOBILI DI INTERESSE STORICO E ARTISTICO"
+          }
+        },
+        {
+          "code": "OS20",
+          "label": "OS20 - RILEVAMENTI TOPOGRAFICI",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "id_categoria": "OS20",
+            "descrizione": "OS20 - RILEVAMENTI TOPOGRAFICI"
+          }
+        },
+        {
+          "code": "OS21",
+          "label": "OS21 - OPERE STRUTTURALI SPECIALI",
+          "attributes": {},
+          "usage_count": 12,
+          "raw": {
+            "id_categoria": "OS21",
+            "descrizione": "OS21 - OPERE STRUTTURALI SPECIALI"
+          }
+        },
+        {
+          "code": "OS22",
+          "label": "OS22 - IMPIANTI DI POTABILIZZAZIONE E DEPURAZIONE",
+          "attributes": {},
+          "usage_count": 7,
+          "raw": {
+            "id_categoria": "OS22",
+            "descrizione": "OS22 - IMPIANTI DI POTABILIZZAZIONE E DEPURAZIONE"
+          }
+        },
+        {
+          "code": "OS24",
+          "label": "OS24 - VERDE E ARREDO URBANO",
+          "attributes": {},
+          "usage_count": 7,
+          "raw": {
+            "id_categoria": "OS24",
+            "descrizione": "OS24 - VERDE E ARREDO URBANO"
+          }
+        },
+        {
+          "code": "OS26",
+          "label": "OS26 - PAVIMENTAZIONI E SOVRASTRUTTURE SPECIALI",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "id_categoria": "OS26",
+            "descrizione": "OS26 - PAVIMENTAZIONI E SOVRASTRUTTURE SPECIALI"
+          }
+        },
+        {
+          "code": "OS28",
+          "label": "OS28 - IMPIANTI TERMICI E DI CONDIZIONAMENTO",
+          "attributes": {},
+          "usage_count": 10,
+          "raw": {
+            "id_categoria": "OS28",
+            "descrizione": "OS28 - IMPIANTI TERMICI E DI CONDIZIONAMENTO"
+          }
+        },
+        {
+          "code": "OS29",
+          "label": "OS29 - ARMAMENTO FERROVIARIO",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "id_categoria": "OS29",
+            "descrizione": "OS29 - ARMAMENTO FERROVIARIO"
+          }
+        },
+        {
+          "code": "OS3",
+          "label": "OS3 - IMPIANTI IDRICO - SANITARIO, CUCINE, LAVANDERIE",
+          "attributes": {},
+          "usage_count": 5,
+          "raw": {
+            "id_categoria": "OS3",
+            "descrizione": "OS3 - IMPIANTI IDRICO - SANITARIO, CUCINE, LAVANDERIE"
+          }
+        },
+        {
+          "code": "OS30",
+          "label": "OS30 - IMPIANTI INTERNI ELETTRICI, TELEFONICI, RADIOTELEFONICI E TELEVISIVI",
+          "attributes": {},
+          "usage_count": 9,
+          "raw": {
+            "id_categoria": "OS30",
+            "descrizione": "OS30 - IMPIANTI INTERNI ELETTRICI, TELEFONICI, RADIOTELEFONICI E TELEVISIVI"
+          }
+        },
+        {
+          "code": "OS34",
+          "label": "OS34 - SISTEMI ANTIRUMORE PER INFRASTRUTTURE DI MOBILITA'",
+          "attributes": {},
+          "usage_count": 2,
+          "raw": {
+            "id_categoria": "OS34",
+            "descrizione": "OS34 - SISTEMI ANTIRUMORE PER INFRASTRUTTURE DI MOBILITA'"
+          }
+        },
+        {
+          "code": "OS4",
+          "label": "OS4 - IMPIANTI ELETTROMECCANICI TRASPORTATORI",
+          "attributes": {},
+          "usage_count": 8,
+          "raw": {
+            "id_categoria": "OS4",
+            "descrizione": "OS4 - IMPIANTI ELETTROMECCANICI TRASPORTATORI"
+          }
+        },
+        {
+          "code": "OS6",
+          "label": "OS6 - FINITURE DI OPERE GENERALI IN MATERIALI LIGNEI, PLASTICI, METALLICI E VETROSI",
+          "attributes": {},
+          "usage_count": 5,
+          "raw": {
+            "id_categoria": "OS6",
+            "descrizione": "OS6 - FINITURE DI OPERE GENERALI IN MATERIALI LIGNEI, PLASTICI, METALLICI E VETROSI"
+          }
+        },
+        {
+          "code": "OS7",
+          "label": "OS7 - FINITURE DI OPERE GENERALI DI NATURA EDILE",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "id_categoria": "OS7",
+            "descrizione": "OS7 - FINITURE DI OPERE GENERALI DI NATURA EDILE"
+          }
+        },
+        {
+          "code": "OS8",
+          "label": "OS8 - FINITURE DI OPERE GENERALI DI NATURA TECNICA",
+          "attributes": {},
+          "usage_count": 1,
+          "raw": {
+            "id_categoria": "OS8",
+            "descrizione": "OS8 - FINITURE DI OPERE GENERALI DI NATURA TECNICA"
+          }
+        },
+        {
+          "code": "SS",
+          "label": "LAVORI, FORNITURE E SERVIZI IN SETTORI SPECIALI",
+          "attributes": {},
+          "usage_count": 7,
+          "raw": {
+            "id_categoria": "SS",
+            "descrizione": "LAVORI, FORNITURE E SERVIZI IN SETTORI SPECIALI"
+          }
+        }
+      ]
+    },
+    {
+      "name": "categorie_opera_varianti",
+      "description": "Unique work-category variants including category type and import class.",
+      "resolved_fields": [
+        "id_categoria",
+        "descrizione",
+        "cod_tipo_categoria",
+        "descrizione_tipo_categoria",
+        "classe_importo"
+      ],
+      "source_columns": [
+        "id_categoria",
+        "descrizione",
+        "cod_tipo_categoria",
+        "descrizione_tipo_categoria",
+        "classe_importo"
+      ],
+      "code_column": "id_categoria",
+      "label_column": "descrizione",
+      "extra_columns": [
+        "cod_tipo_categoria",
+        "descrizione_tipo_categoria",
+        "classe_importo"
+      ],
+      "entry_count": 176,
+      "entries": [
+        {
+          "code": "999",
+          "label": "* OO.CC. - CATEGORIA NON DEFINITA",
+          "attributes": {
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          },
+          "usage_count": 1,
+          "raw": {
+            "id_categoria": "999",
+            "descrizione": "* OO.CC. - CATEGORIA NON DEFINITA",
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "999",
+          "label": "* OO.CC. - CATEGORIA NON DEFINITA",
+          "attributes": {
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          },
+          "usage_count": 2,
+          "raw": {
+            "id_categoria": "999",
+            "descrizione": "* OO.CC. - CATEGORIA NON DEFINITA",
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "999",
+          "label": "OO.CC. - CATEGORIA NON DEFINITA",
+          "attributes": {
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          },
+          "usage_count": 2882,
+          "raw": {
+            "id_categoria": "999",
+            "descrizione": "OO.CC. - CATEGORIA NON DEFINITA",
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "999",
+          "label": "OO.CC. - CATEGORIA NON DEFINITA",
+          "attributes": {
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          },
+          "usage_count": 766,
+          "raw": {
+            "id_categoria": "999",
+            "descrizione": "OO.CC. - CATEGORIA NON DEFINITA",
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "999",
+          "label": "OO.CC. - Categoria non definita",
+          "attributes": {
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          },
+          "usage_count": 55513,
+          "raw": {
+            "id_categoria": "999",
+            "descrizione": "OO.CC. - Categoria non definita",
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "AA",
+          "label": "ALTRO (STAZIONI APPALTANTI CON SISTEMA DI QUALIFICAZIONE PROPRIO)",
+          "attributes": {
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          },
+          "usage_count": 8222,
+          "raw": {
+            "id_categoria": "AA",
+            "descrizione": "ALTRO (STAZIONI APPALTANTI CON SISTEMA DI QUALIFICAZIONE PROPRIO)",
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "AA",
+          "label": "ALTRO (STAZIONI APPALTANTI CON SISTEMA DI QUALIFICAZIONE PROPRIO)",
+          "attributes": {
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          },
+          "usage_count": 414,
+          "raw": {
+            "id_categoria": "AA",
+            "descrizione": "ALTRO (STAZIONI APPALTANTI CON SISTEMA DI QUALIFICAZIONE PROPRIO)",
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "AA",
+          "label": "ALTRO (Stazioni appaltanti con sistema di qualificazione proprio)",
+          "attributes": {
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          },
+          "usage_count": 1,
+          "raw": {
+            "id_categoria": "AA",
+            "descrizione": "ALTRO (Stazioni appaltanti con sistema di qualificazione proprio)",
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "FB",
+          "label": "FORNITURA DI BENI",
+          "attributes": {
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          },
+          "usage_count": 201696,
+          "raw": {
+            "id_categoria": "FB",
+            "descrizione": "FORNITURA DI BENI",
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "FB",
+          "label": "FORNITURA DI BENI",
+          "attributes": {
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          },
+          "usage_count": 11006,
+          "raw": {
+            "id_categoria": "FB",
+            "descrizione": "FORNITURA DI BENI",
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "FS",
+          "label": "FORNITURA DI SERVIZI",
+          "attributes": {
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          },
+          "usage_count": 193518,
+          "raw": {
+            "id_categoria": "FS",
+            "descrizione": "FORNITURA DI SERVIZI",
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "FS",
+          "label": "FORNITURA DI SERVIZI",
+          "attributes": {
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          },
+          "usage_count": 15397,
+          "raw": {
+            "id_categoria": "FS",
+            "descrizione": "FORNITURA DI SERVIZI",
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OG 1",
+          "label": "OG 1 - EDIFICI CIVILI E INDUSTRIALI",
+          "attributes": {
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          },
+          "usage_count": 17428,
+          "raw": {
+            "id_categoria": "OG 1",
+            "descrizione": "OG 1 - EDIFICI CIVILI E INDUSTRIALI",
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OG 1",
+          "label": "OG 1 - EDIFICI CIVILI E INDUSTRIALI",
+          "attributes": {
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          },
+          "usage_count": 2488,
+          "raw": {
+            "id_categoria": "OG 1",
+            "descrizione": "OG 1 - EDIFICI CIVILI E INDUSTRIALI",
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OG 10",
+          "label": "OG 10 - IMPIANTI PER LA TRASFORMAZIONE ALTA/MEDIA TENSIONE E PER LA DISTRIBUZIONE DI ENERGIA ELETTRICA IN CORRENTE ALTERNATA E CONTINUA ED IMPIANTI DI PUBBLICA ILLUMINAZIONE",
+          "attributes": {
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          },
+          "usage_count": 2844,
+          "raw": {
+            "id_categoria": "OG 10",
+            "descrizione": "OG 10 - IMPIANTI PER LA TRASFORMAZIONE ALTA/MEDIA TENSIONE E PER LA DISTRIBUZIONE DI ENERGIA ELETTRICA IN CORRENTE ALTERNATA E CONTINUA ED IMPIANTI DI PUBBLICA ILLUMINAZIONE",
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OG 10",
+          "label": "OG 10 - IMPIANTI PER LA TRASFORMAZIONE ALTA/MEDIA TENSIONE E PER LA DISTRIBUZIONE DI ENERGIA ELETTRICA IN CORRENTE ALTERNATA E CONTINUA ED IMPIANTI DI PUBBLICA ILLUMINAZIONE",
+          "attributes": {
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          },
+          "usage_count": 874,
+          "raw": {
+            "id_categoria": "OG 10",
+            "descrizione": "OG 10 - IMPIANTI PER LA TRASFORMAZIONE ALTA/MEDIA TENSIONE E PER LA DISTRIBUZIONE DI ENERGIA ELETTRICA IN CORRENTE ALTERNATA E CONTINUA ED IMPIANTI DI PUBBLICA ILLUMINAZIONE",
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OG 11",
+          "label": "OG 11 - IMPIANTI TECNOLOGICI",
+          "attributes": {
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          },
+          "usage_count": 2968,
+          "raw": {
+            "id_categoria": "OG 11",
+            "descrizione": "OG 11 - IMPIANTI TECNOLOGICI",
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OG 11",
+          "label": "OG 11 - IMPIANTI TECNOLOGICI",
+          "attributes": {
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          },
+          "usage_count": 2827,
+          "raw": {
+            "id_categoria": "OG 11",
+            "descrizione": "OG 11 - IMPIANTI TECNOLOGICI",
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OG 12",
+          "label": "OG 12 - OPERE ED IMPIANTI DI BONIFICA E PROTEZIONE AMBIENTALE",
+          "attributes": {
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          },
+          "usage_count": 366,
+          "raw": {
+            "id_categoria": "OG 12",
+            "descrizione": "OG 12 - OPERE ED IMPIANTI DI BONIFICA E PROTEZIONE AMBIENTALE",
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OG 12",
+          "label": "OG 12 - OPERE ED IMPIANTI DI BONIFICA E PROTEZIONE AMBIENTALE",
+          "attributes": {
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          },
+          "usage_count": 356,
+          "raw": {
+            "id_categoria": "OG 12",
+            "descrizione": "OG 12 - OPERE ED IMPIANTI DI BONIFICA E PROTEZIONE AMBIENTALE",
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OG 13",
+          "label": "OG 13 - OPERE DI INGEGNERIA NATURALISTICA",
+          "attributes": {
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          },
+          "usage_count": 355,
+          "raw": {
+            "id_categoria": "OG 13",
+            "descrizione": "OG 13 - OPERE DI INGEGNERIA NATURALISTICA",
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OG 13",
+          "label": "OG 13 - OPERE DI INGEGNERIA NATURALISTICA",
+          "attributes": {
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          },
+          "usage_count": 176,
+          "raw": {
+            "id_categoria": "OG 13",
+            "descrizione": "OG 13 - OPERE DI INGEGNERIA NATURALISTICA",
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OG 2",
+          "label": "OG 2 - RESTAURO E MANUTENZIONE DEI BENI IMMOBILI SOTTOPOSTI A TUTELA",
+          "attributes": {
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          },
+          "usage_count": 3248,
+          "raw": {
+            "id_categoria": "OG 2",
+            "descrizione": "OG 2 - RESTAURO E MANUTENZIONE DEI BENI IMMOBILI SOTTOPOSTI A TUTELA",
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OG 2",
+          "label": "OG 2 - RESTAURO E MANUTENZIONE DEI BENI IMMOBILI SOTTOPOSTI A TUTELA",
+          "attributes": {
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          },
+          "usage_count": 678,
+          "raw": {
+            "id_categoria": "OG 2",
+            "descrizione": "OG 2 - RESTAURO E MANUTENZIONE DEI BENI IMMOBILI SOTTOPOSTI A TUTELA",
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OG 3",
+          "label": "OG 3 - STRADE, AUTOSTRADE, PONTI, VIADOTTI, FERROVIE, METROPOLITANE",
+          "attributes": {
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          },
+          "usage_count": 12248,
+          "raw": {
+            "id_categoria": "OG 3",
+            "descrizione": "OG 3 - STRADE, AUTOSTRADE, PONTI, VIADOTTI, FERROVIE, METROPOLITANE",
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OG 3",
+          "label": "OG 3 - STRADE, AUTOSTRADE, PONTI, VIADOTTI, FERROVIE, METROPOLITANE",
+          "attributes": {
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          },
+          "usage_count": 2388,
+          "raw": {
+            "id_categoria": "OG 3",
+            "descrizione": "OG 3 - STRADE, AUTOSTRADE, PONTI, VIADOTTI, FERROVIE, METROPOLITANE",
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OG 4",
+          "label": "OG 4 - OPERE D'ARTE NEL SOTTOSUOLO",
+          "attributes": {
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          },
+          "usage_count": 69,
+          "raw": {
+            "id_categoria": "OG 4",
+            "descrizione": "OG 4 - OPERE D'ARTE NEL SOTTOSUOLO",
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OG 4",
+          "label": "OG 4 - OPERE D'ARTE NEL SOTTOSUOLO",
+          "attributes": {
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          },
+          "usage_count": 28,
+          "raw": {
+            "id_categoria": "OG 4",
+            "descrizione": "OG 4 - OPERE D'ARTE NEL SOTTOSUOLO",
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OG 4",
+          "label": "OG 4 - OPERE D’ARTE NEL SOTTOSUOLO",
+          "attributes": {
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          },
+          "usage_count": 42,
+          "raw": {
+            "id_categoria": "OG 4",
+            "descrizione": "OG 4 - OPERE D’ARTE NEL SOTTOSUOLO",
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OG 4",
+          "label": "OG 4 - OPERE D’ARTE NEL SOTTOSUOLO",
+          "attributes": {
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          },
+          "usage_count": 9,
+          "raw": {
+            "id_categoria": "OG 4",
+            "descrizione": "OG 4 - OPERE D’ARTE NEL SOTTOSUOLO",
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OG 5",
+          "label": "OG 5 - DIGHE",
+          "attributes": {
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          },
+          "usage_count": 16,
+          "raw": {
+            "id_categoria": "OG 5",
+            "descrizione": "OG 5 - DIGHE",
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OG 5",
+          "label": "OG 5 - DIGHE",
+          "attributes": {
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          },
+          "usage_count": 3,
+          "raw": {
+            "id_categoria": "OG 5",
+            "descrizione": "OG 5 - DIGHE",
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OG 6",
+          "label": "OG 6 - ACQUEDOTTI, GASDOTTI , OLEODOTTI, OPERE DI IRRIGAZIONE E DI EVACUAZIONE",
+          "attributes": {
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          },
+          "usage_count": 3790,
+          "raw": {
+            "id_categoria": "OG 6",
+            "descrizione": "OG 6 - ACQUEDOTTI, GASDOTTI , OLEODOTTI, OPERE DI IRRIGAZIONE E DI EVACUAZIONE",
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OG 6",
+          "label": "OG 6 - ACQUEDOTTI, GASDOTTI , OLEODOTTI, OPERE DI IRRIGAZIONE E DI EVACUAZIONE",
+          "attributes": {
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          },
+          "usage_count": 757,
+          "raw": {
+            "id_categoria": "OG 6",
+            "descrizione": "OG 6 - ACQUEDOTTI, GASDOTTI , OLEODOTTI, OPERE DI IRRIGAZIONE E DI EVACUAZIONE",
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OG 7",
+          "label": "OG 7 - OPERE MARITTIME E LAVORI DI DRAGAGGIO",
+          "attributes": {
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          },
+          "usage_count": 273,
+          "raw": {
+            "id_categoria": "OG 7",
+            "descrizione": "OG 7 - OPERE MARITTIME E LAVORI DI DRAGAGGIO",
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OG 7",
+          "label": "OG 7 - OPERE MARITTIME E LAVORI DI DRAGAGGIO",
+          "attributes": {
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          },
+          "usage_count": 51,
+          "raw": {
+            "id_categoria": "OG 7",
+            "descrizione": "OG 7 - OPERE MARITTIME E LAVORI DI DRAGAGGIO",
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OG 8",
+          "label": "OG 8 - OPERE FLUVIALI, DI DIFESA, DI SISTEMAZIONE IDRAULICA E DI BONIFICA",
+          "attributes": {
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          },
+          "usage_count": 1855,
+          "raw": {
+            "id_categoria": "OG 8",
+            "descrizione": "OG 8 - OPERE FLUVIALI, DI DIFESA, DI SISTEMAZIONE IDRAULICA E DI BONIFICA",
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OG 8",
+          "label": "OG 8 - OPERE FLUVIALI, DI DIFESA, DI SISTEMAZIONE IDRAULICA E DI BONIFICA",
+          "attributes": {
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          },
+          "usage_count": 286,
+          "raw": {
+            "id_categoria": "OG 8",
+            "descrizione": "OG 8 - OPERE FLUVIALI, DI DIFESA, DI SISTEMAZIONE IDRAULICA E DI BONIFICA",
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OG 9",
+          "label": "OG 9 - IMPIANTI PER LA PRODUZIONE DI ENERGIA ELETTRICA",
+          "attributes": {
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          },
+          "usage_count": 632,
+          "raw": {
+            "id_categoria": "OG 9",
+            "descrizione": "OG 9 - IMPIANTI PER LA PRODUZIONE DI ENERGIA ELETTRICA",
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OG 9",
+          "label": "OG 9 - IMPIANTI PER LA PRODUZIONE DI ENERGIA ELETTRICA",
+          "attributes": {
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          },
+          "usage_count": 291,
+          "raw": {
+            "id_categoria": "OG 9",
+            "descrizione": "OG 9 - IMPIANTI PER LA PRODUZIONE DI ENERGIA ELETTRICA",
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OG1",
+          "label": "OG1 - EDIFICI CIVILI E INDUSTRIALI",
+          "attributes": {
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          },
+          "usage_count": 57,
+          "raw": {
+            "id_categoria": "OG1",
+            "descrizione": "OG1 - EDIFICI CIVILI E INDUSTRIALI",
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OG1",
+          "label": "OG1 - EDIFICI CIVILI E INDUSTRIALI",
+          "attributes": {
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          },
+          "usage_count": 8,
+          "raw": {
+            "id_categoria": "OG1",
+            "descrizione": "OG1 - EDIFICI CIVILI E INDUSTRIALI",
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OG10",
+          "label": "OG10 - IMPIANTI PER LA TRASFORMAZIONE ALTA/MEDIA TENSIONE E PER LA DISTRIBUZIONE DI ENERGIA ELETTRICA IN CORRENTE ALTERNATA E CONTINUA",
+          "attributes": {
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          },
+          "usage_count": 29,
+          "raw": {
+            "id_categoria": "OG10",
+            "descrizione": "OG10 - IMPIANTI PER LA TRASFORMAZIONE ALTA/MEDIA TENSIONE E PER LA DISTRIBUZIONE DI ENERGIA ELETTRICA IN CORRENTE ALTERNATA E CONTINUA",
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OG10",
+          "label": "OG10 - IMPIANTI PER LA TRASFORMAZIONE ALTA/MEDIA TENSIONE E PER LA DISTRIBUZIONE DI ENERGIA ELETTRICA IN CORRENTE ALTERNATA E CONTINUA",
+          "attributes": {
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          },
+          "usage_count": 2,
+          "raw": {
+            "id_categoria": "OG10",
+            "descrizione": "OG10 - IMPIANTI PER LA TRASFORMAZIONE ALTA/MEDIA TENSIONE E PER LA DISTRIBUZIONE DI ENERGIA ELETTRICA IN CORRENTE ALTERNATA E CONTINUA",
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OG11",
+          "label": "OG11 - IMPIANTI TECNOLOGICI",
+          "attributes": {
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          },
+          "usage_count": 6,
+          "raw": {
+            "id_categoria": "OG11",
+            "descrizione": "OG11 - IMPIANTI TECNOLOGICI",
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OG11",
+          "label": "OG11 - IMPIANTI TECNOLOGICI",
+          "attributes": {
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          },
+          "usage_count": 24,
+          "raw": {
+            "id_categoria": "OG11",
+            "descrizione": "OG11 - IMPIANTI TECNOLOGICI",
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OG12",
+          "label": "OG12 - OPERE ED IMPIANTI DI BONIFICA E PROTEZIONE AMBIENTALE",
+          "attributes": {
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          },
+          "usage_count": 2,
+          "raw": {
+            "id_categoria": "OG12",
+            "descrizione": "OG12 - OPERE ED IMPIANTI DI BONIFICA E PROTEZIONE AMBIENTALE",
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OG13",
+          "label": "OG13 - OPERE DI INGEGNERIA NATURALISTICA",
+          "attributes": {
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          },
+          "usage_count": 2,
+          "raw": {
+            "id_categoria": "OG13",
+            "descrizione": "OG13 - OPERE DI INGEGNERIA NATURALISTICA",
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OG13",
+          "label": "OG13 - OPERE DI INGEGNERIA NATURALISTICA",
+          "attributes": {
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          },
+          "usage_count": 1,
+          "raw": {
+            "id_categoria": "OG13",
+            "descrizione": "OG13 - OPERE DI INGEGNERIA NATURALISTICA",
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OG2",
+          "label": "OG2 - RESTAURO E MANUTENZIONE DEI BENI IMMOBILI SOTTOPOSTI A TUTELA AI SENSI DELLE DISPOSIZIONI IN MATERIA DI BENI CULTURALI E AMBIENTALI",
+          "attributes": {
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          },
+          "usage_count": 17,
+          "raw": {
+            "id_categoria": "OG2",
+            "descrizione": "OG2 - RESTAURO E MANUTENZIONE DEI BENI IMMOBILI SOTTOPOSTI A TUTELA AI SENSI DELLE DISPOSIZIONI IN MATERIA DI BENI CULTURALI E AMBIENTALI",
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OG2",
+          "label": "OG2 - RESTAURO E MANUTENZIONE DEI BENI IMMOBILI SOTTOPOSTI A TUTELA AI SENSI DELLE DISPOSIZIONI IN MATERIA DI BENI CULTURALI E AMBIENTALI",
+          "attributes": {
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          },
+          "usage_count": 1,
+          "raw": {
+            "id_categoria": "OG2",
+            "descrizione": "OG2 - RESTAURO E MANUTENZIONE DEI BENI IMMOBILI SOTTOPOSTI A TUTELA AI SENSI DELLE DISPOSIZIONI IN MATERIA DI BENI CULTURALI E AMBIENTALI",
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OG3",
+          "label": "OG3 - STRADE, AUTOSTRADE, PONTI, VIADOTTI, FERROVIE, METROPOLITANE, FUNICOLARI, PISTE AEROPORTUALI E RELATIVE OPERE COMPLEMENTARI",
+          "attributes": {
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          },
+          "usage_count": 51,
+          "raw": {
+            "id_categoria": "OG3",
+            "descrizione": "OG3 - STRADE, AUTOSTRADE, PONTI, VIADOTTI, FERROVIE, METROPOLITANE, FUNICOLARI, PISTE AEROPORTUALI E RELATIVE OPERE COMPLEMENTARI",
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OG3",
+          "label": "OG3 - STRADE, AUTOSTRADE, PONTI, VIADOTTI, FERROVIE, METROPOLITANE, FUNICOLARI, PISTE AEROPORTUALI E RELATIVE OPERE COMPLEMENTARI",
+          "attributes": {
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          },
+          "usage_count": 10,
+          "raw": {
+            "id_categoria": "OG3",
+            "descrizione": "OG3 - STRADE, AUTOSTRADE, PONTI, VIADOTTI, FERROVIE, METROPOLITANE, FUNICOLARI, PISTE AEROPORTUALI E RELATIVE OPERE COMPLEMENTARI",
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OG4",
+          "label": "OG4 - OPERE D'ARTE NEL SOTTOSUOLO",
+          "attributes": {
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          },
+          "usage_count": 3,
+          "raw": {
+            "id_categoria": "OG4",
+            "descrizione": "OG4 - OPERE D'ARTE NEL SOTTOSUOLO",
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OG4",
+          "label": "OG4 - OPERE D'ARTE NEL SOTTOSUOLO",
+          "attributes": {
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          },
+          "usage_count": 1,
+          "raw": {
+            "id_categoria": "OG4",
+            "descrizione": "OG4 - OPERE D'ARTE NEL SOTTOSUOLO",
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OG5",
+          "label": "OG5 - DIGHE",
+          "attributes": {
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          },
+          "usage_count": 1,
+          "raw": {
+            "id_categoria": "OG5",
+            "descrizione": "OG5 - DIGHE",
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OG6",
+          "label": "OG6 - ACQUEDOTTI, GASDOTTI, OLEODOTTI, OPERE DI IRRIGAZIONE E DI EVACUAZIONE",
+          "attributes": {
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          },
+          "usage_count": 16,
+          "raw": {
+            "id_categoria": "OG6",
+            "descrizione": "OG6 - ACQUEDOTTI, GASDOTTI, OLEODOTTI, OPERE DI IRRIGAZIONE E DI EVACUAZIONE",
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OG6",
+          "label": "OG6 - ACQUEDOTTI, GASDOTTI, OLEODOTTI, OPERE DI IRRIGAZIONE E DI EVACUAZIONE",
+          "attributes": {
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          },
+          "usage_count": 9,
+          "raw": {
+            "id_categoria": "OG6",
+            "descrizione": "OG6 - ACQUEDOTTI, GASDOTTI, OLEODOTTI, OPERE DI IRRIGAZIONE E DI EVACUAZIONE",
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OG7",
+          "label": "OG7 - OPERE MARITTIME E LAVORI DI DRAGAGGIO",
+          "attributes": {
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          },
+          "usage_count": 2,
+          "raw": {
+            "id_categoria": "OG7",
+            "descrizione": "OG7 - OPERE MARITTIME E LAVORI DI DRAGAGGIO",
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OG8",
+          "label": "OG8 - OPERE FLUVIALI, DI DIFESA, DI SISTEMAZIONE IDRAULICA E DI BONIFICA",
+          "attributes": {
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          },
+          "usage_count": 6,
+          "raw": {
+            "id_categoria": "OG8",
+            "descrizione": "OG8 - OPERE FLUVIALI, DI DIFESA, DI SISTEMAZIONE IDRAULICA E DI BONIFICA",
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OG8",
+          "label": "OG8 - OPERE FLUVIALI, DI DIFESA, DI SISTEMAZIONE IDRAULICA E DI BONIFICA",
+          "attributes": {
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          },
+          "usage_count": 3,
+          "raw": {
+            "id_categoria": "OG8",
+            "descrizione": "OG8 - OPERE FLUVIALI, DI DIFESA, DI SISTEMAZIONE IDRAULICA E DI BONIFICA",
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OG9",
+          "label": "OG9 - IMPIANTI PER LA PRODUZIONE DI ENERGIA ELETTRICA",
+          "attributes": {
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          },
+          "usage_count": 3,
+          "raw": {
+            "id_categoria": "OG9",
+            "descrizione": "OG9 - IMPIANTI PER LA PRODUZIONE DI ENERGIA ELETTRICA",
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS 1",
+          "label": "OS 1 - LAVORI IN TERRA",
+          "attributes": {
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          },
+          "usage_count": 329,
+          "raw": {
+            "id_categoria": "OS 1",
+            "descrizione": "OS 1 - LAVORI IN TERRA",
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS 1",
+          "label": "OS 1 - LAVORI IN TERRA",
+          "attributes": {
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          },
+          "usage_count": 236,
+          "raw": {
+            "id_categoria": "OS 1",
+            "descrizione": "OS 1 - LAVORI IN TERRA",
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS 10",
+          "label": "OS 10 - SEGNALETICA STRADALE NON LUMINOSA",
+          "attributes": {
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          },
+          "usage_count": 626,
+          "raw": {
+            "id_categoria": "OS 10",
+            "descrizione": "OS 10 - SEGNALETICA STRADALE NON LUMINOSA",
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS 10",
+          "label": "OS 10 - SEGNALETICA STRADALE NON LUMINOSA",
+          "attributes": {
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          },
+          "usage_count": 645,
+          "raw": {
+            "id_categoria": "OS 10",
+            "descrizione": "OS 10 - SEGNALETICA STRADALE NON LUMINOSA",
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS 11",
+          "label": "OS 11 - APPARECCHIATURE STRUTTURALI SPECIALI",
+          "attributes": {
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          },
+          "usage_count": 76,
+          "raw": {
+            "id_categoria": "OS 11",
+            "descrizione": "OS 11 - APPARECCHIATURE STRUTTURALI SPECIALI",
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS 11",
+          "label": "OS 11 - APPARECCHIATURE STRUTTURALI SPECIALI",
+          "attributes": {
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          },
+          "usage_count": 284,
+          "raw": {
+            "id_categoria": "OS 11",
+            "descrizione": "OS 11 - APPARECCHIATURE STRUTTURALI SPECIALI",
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS 12-A",
+          "label": "OS 12-A - BARRIERE STRADALI DI SICUREZZA",
+          "attributes": {
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          },
+          "usage_count": 285,
+          "raw": {
+            "id_categoria": "OS 12-A",
+            "descrizione": "OS 12-A - BARRIERE STRADALI DI SICUREZZA",
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS 12-A",
+          "label": "OS 12-A - BARRIERE STRADALI DI SICUREZZA",
+          "attributes": {
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          },
+          "usage_count": 713,
+          "raw": {
+            "id_categoria": "OS 12-A",
+            "descrizione": "OS 12-A - BARRIERE STRADALI DI SICUREZZA",
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS 12-B",
+          "label": "OS 12-B - BARRIERE PARAMASSI, FERMANEVE E SIMILI",
+          "attributes": {
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          },
+          "usage_count": 316,
+          "raw": {
+            "id_categoria": "OS 12-B",
+            "descrizione": "OS 12-B - BARRIERE PARAMASSI, FERMANEVE E SIMILI",
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS 12-B",
+          "label": "OS 12-B - BARRIERE PARAMASSI, FERMANEVE E SIMILI",
+          "attributes": {
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          },
+          "usage_count": 115,
+          "raw": {
+            "id_categoria": "OS 12-B",
+            "descrizione": "OS 12-B - BARRIERE PARAMASSI, FERMANEVE E SIMILI",
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS 13",
+          "label": "OS 13 - STRUTTURE PREFABBRICATE IN CEMENTO ARMATO",
+          "attributes": {
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          },
+          "usage_count": 33,
+          "raw": {
+            "id_categoria": "OS 13",
+            "descrizione": "OS 13 - STRUTTURE PREFABBRICATE IN CEMENTO ARMATO",
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS 13",
+          "label": "OS 13 - STRUTTURE PREFABBRICATE IN CEMENTO ARMATO",
+          "attributes": {
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          },
+          "usage_count": 165,
+          "raw": {
+            "id_categoria": "OS 13",
+            "descrizione": "OS 13 - STRUTTURE PREFABBRICATE IN CEMENTO ARMATO",
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS 14",
+          "label": "OS 14 - IMPIANTI DI SMALTIMENTO E RECUPERO RIFIUTI",
+          "attributes": {
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          },
+          "usage_count": 103,
+          "raw": {
+            "id_categoria": "OS 14",
+            "descrizione": "OS 14 - IMPIANTI DI SMALTIMENTO E RECUPERO RIFIUTI",
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS 14",
+          "label": "OS 14 - IMPIANTI DI SMALTIMENTO E RECUPERO RIFIUTI",
+          "attributes": {
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          },
+          "usage_count": 17,
+          "raw": {
+            "id_categoria": "OS 14",
+            "descrizione": "OS 14 - IMPIANTI DI SMALTIMENTO E RECUPERO RIFIUTI",
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS 15",
+          "label": "OS 15 - PULIZIA DI ACQUE MARINE, LACUSTRI, FLUVIALI",
+          "attributes": {
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          },
+          "usage_count": 9,
+          "raw": {
+            "id_categoria": "OS 15",
+            "descrizione": "OS 15 - PULIZIA DI ACQUE MARINE, LACUSTRI, FLUVIALI",
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS 16",
+          "label": "OS 16 - IMPIANTI PER CENTRALI PRODUZIONE ENERGIA ELETTRICA",
+          "attributes": {
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          },
+          "usage_count": 14,
+          "raw": {
+            "id_categoria": "OS 16",
+            "descrizione": "OS 16 - IMPIANTI PER CENTRALI PRODUZIONE ENERGIA ELETTRICA",
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS 16",
+          "label": "OS 16 - IMPIANTI PER CENTRALI PRODUZIONE ENERGIA ELETTRICA",
+          "attributes": {
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          },
+          "usage_count": 13,
+          "raw": {
+            "id_categoria": "OS 16",
+            "descrizione": "OS 16 - IMPIANTI PER CENTRALI PRODUZIONE ENERGIA ELETTRICA",
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS 17",
+          "label": "OS 17 - LINEE TELEFONICHE ED IMPIANTI DI TELEFONIA",
+          "attributes": {
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          },
+          "usage_count": 57,
+          "raw": {
+            "id_categoria": "OS 17",
+            "descrizione": "OS 17 - LINEE TELEFONICHE ED IMPIANTI DI TELEFONIA",
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS 17",
+          "label": "OS 17 - LINEE TELEFONICHE ED IMPIANTI DI TELEFONIA",
+          "attributes": {
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          },
+          "usage_count": 17,
+          "raw": {
+            "id_categoria": "OS 17",
+            "descrizione": "OS 17 - LINEE TELEFONICHE ED IMPIANTI DI TELEFONIA",
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS 18-A",
+          "label": "OS 18-A - COMPONENTI STRUTTURALI IN ACCIAIO",
+          "attributes": {
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          },
+          "usage_count": 260,
+          "raw": {
+            "id_categoria": "OS 18-A",
+            "descrizione": "OS 18-A - COMPONENTI STRUTTURALI IN ACCIAIO",
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS 18-A",
+          "label": "OS 18-A - COMPONENTI STRUTTURALI IN ACCIAIO",
+          "attributes": {
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          },
+          "usage_count": 619,
+          "raw": {
+            "id_categoria": "OS 18-A",
+            "descrizione": "OS 18-A - COMPONENTI STRUTTURALI IN ACCIAIO",
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS 18-B",
+          "label": "OS 18-B - COMPONENTI PER FACCIATE CONTINUE",
+          "attributes": {
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          },
+          "usage_count": 14,
+          "raw": {
+            "id_categoria": "OS 18-B",
+            "descrizione": "OS 18-B - COMPONENTI PER FACCIATE CONTINUE",
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS 18-B",
+          "label": "OS 18-B - COMPONENTI PER FACCIATE CONTINUE",
+          "attributes": {
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          },
+          "usage_count": 102,
+          "raw": {
+            "id_categoria": "OS 18-B",
+            "descrizione": "OS 18-B - COMPONENTI PER FACCIATE CONTINUE",
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS 19",
+          "label": "OS 19 - IMPIANTI DI RETI DI TELECOMUNICAZIONE E DI TRASMISSIONI E TRATTAMENTO",
+          "attributes": {
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          },
+          "usage_count": 755,
+          "raw": {
+            "id_categoria": "OS 19",
+            "descrizione": "OS 19 - IMPIANTI DI RETI DI TELECOMUNICAZIONE E DI TRASMISSIONI E TRATTAMENTO",
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS 19",
+          "label": "OS 19 - IMPIANTI DI RETI DI TELECOMUNICAZIONE E DI TRASMISSIONI E TRATTAMENTO",
+          "attributes": {
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          },
+          "usage_count": 255,
+          "raw": {
+            "id_categoria": "OS 19",
+            "descrizione": "OS 19 - IMPIANTI DI RETI DI TELECOMUNICAZIONE E DI TRASMISSIONI E TRATTAMENTO",
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS 2-A",
+          "label": "OS 2-A - SUPERFICI DECORATE DI BENI IMMOBILI DEL PATRIMONIO CULTURALE E BENI CULTURALI MOBILI DI INTERESSE STORICO, ARTISTICO, ARCHEOLOGICO ED ETNOANTROPOLOGICO",
+          "attributes": {
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          },
+          "usage_count": 286,
+          "raw": {
+            "id_categoria": "OS 2-A",
+            "descrizione": "OS 2-A - SUPERFICI DECORATE DI BENI IMMOBILI DEL PATRIMONIO CULTURALE E BENI CULTURALI MOBILI DI INTERESSE STORICO, ARTISTICO, ARCHEOLOGICO ED ETNOANTROPOLOGICO",
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS 2-A",
+          "label": "OS 2-A - SUPERFICI DECORATE DI BENI IMMOBILI DEL PATRIMONIO CULTURALE E BENI CULTURALI MOBILI DI INTERESSE STORICO, ARTISTICO, ARCHEOLOGICO ED ETNOANTROPOLOGICO",
+          "attributes": {
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          },
+          "usage_count": 316,
+          "raw": {
+            "id_categoria": "OS 2-A",
+            "descrizione": "OS 2-A - SUPERFICI DECORATE DI BENI IMMOBILI DEL PATRIMONIO CULTURALE E BENI CULTURALI MOBILI DI INTERESSE STORICO, ARTISTICO, ARCHEOLOGICO ED ETNOANTROPOLOGICO",
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS 2-B",
+          "label": "OS 2-B - BENI CULTURALI MOBILI DI INTERESSE ARCHIVISTICO E LIBRARIO",
+          "attributes": {
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          },
+          "usage_count": 25,
+          "raw": {
+            "id_categoria": "OS 2-B",
+            "descrizione": "OS 2-B - BENI CULTURALI MOBILI DI INTERESSE ARCHIVISTICO E LIBRARIO",
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS 2-B",
+          "label": "OS 2-B - BENI CULTURALI MOBILI DI INTERESSE ARCHIVISTICO E LIBRARIO",
+          "attributes": {
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          },
+          "usage_count": 8,
+          "raw": {
+            "id_categoria": "OS 2-B",
+            "descrizione": "OS 2-B - BENI CULTURALI MOBILI DI INTERESSE ARCHIVISTICO E LIBRARIO",
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS 20-A",
+          "label": "OS 20-A - RILEVAMENTI TOPOGRAFICI",
+          "attributes": {
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          },
+          "usage_count": 6,
+          "raw": {
+            "id_categoria": "OS 20-A",
+            "descrizione": "OS 20-A - RILEVAMENTI TOPOGRAFICI",
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS 20-A",
+          "label": "OS 20-A - RILEVAMENTI TOPOGRAFICI",
+          "attributes": {
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          },
+          "usage_count": 26,
+          "raw": {
+            "id_categoria": "OS 20-A",
+            "descrizione": "OS 20-A - RILEVAMENTI TOPOGRAFICI",
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS 20-B",
+          "label": "OS 20-B - INDAGINI GEOGNOSTICHE",
+          "attributes": {
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          },
+          "usage_count": 233,
+          "raw": {
+            "id_categoria": "OS 20-B",
+            "descrizione": "OS 20-B - INDAGINI GEOGNOSTICHE",
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS 20-B",
+          "label": "OS 20-B - INDAGINI GEOGNOSTICHE",
+          "attributes": {
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          },
+          "usage_count": 74,
+          "raw": {
+            "id_categoria": "OS 20-B",
+            "descrizione": "OS 20-B - INDAGINI GEOGNOSTICHE",
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS 21",
+          "label": "OS 21 - OPERE STRUTTURALI SPECIALI",
+          "attributes": {
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          },
+          "usage_count": 811,
+          "raw": {
+            "id_categoria": "OS 21",
+            "descrizione": "OS 21 - OPERE STRUTTURALI SPECIALI",
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS 21",
+          "label": "OS 21 - OPERE STRUTTURALI SPECIALI",
+          "attributes": {
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          },
+          "usage_count": 1089,
+          "raw": {
+            "id_categoria": "OS 21",
+            "descrizione": "OS 21 - OPERE STRUTTURALI SPECIALI",
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS 22",
+          "label": "OS 22 - IMPIANTI DI POTABILIZZAZIONE E DEPURAZIONE",
+          "attributes": {
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          },
+          "usage_count": 436,
+          "raw": {
+            "id_categoria": "OS 22",
+            "descrizione": "OS 22 - IMPIANTI DI POTABILIZZAZIONE E DEPURAZIONE",
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS 22",
+          "label": "OS 22 - IMPIANTI DI POTABILIZZAZIONE E DEPURAZIONE",
+          "attributes": {
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          },
+          "usage_count": 133,
+          "raw": {
+            "id_categoria": "OS 22",
+            "descrizione": "OS 22 - IMPIANTI DI POTABILIZZAZIONE E DEPURAZIONE",
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS 23",
+          "label": "OS 23 - DEMOLIZIONE DI OPERE",
+          "attributes": {
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          },
+          "usage_count": 141,
+          "raw": {
+            "id_categoria": "OS 23",
+            "descrizione": "OS 23 - DEMOLIZIONE DI OPERE",
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS 23",
+          "label": "OS 23 - DEMOLIZIONE DI OPERE",
+          "attributes": {
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          },
+          "usage_count": 286,
+          "raw": {
+            "id_categoria": "OS 23",
+            "descrizione": "OS 23 - DEMOLIZIONE DI OPERE",
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS 24",
+          "label": "OS 24 - VERDE E ARREDO URBANO",
+          "attributes": {
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          },
+          "usage_count": 1463,
+          "raw": {
+            "id_categoria": "OS 24",
+            "descrizione": "OS 24 - VERDE E ARREDO URBANO",
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS 24",
+          "label": "OS 24 - VERDE E ARREDO URBANO",
+          "attributes": {
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          },
+          "usage_count": 604,
+          "raw": {
+            "id_categoria": "OS 24",
+            "descrizione": "OS 24 - VERDE E ARREDO URBANO",
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS 25",
+          "label": "OS 25 - SCAVI ARCHEOLOGICI",
+          "attributes": {
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          },
+          "usage_count": 91,
+          "raw": {
+            "id_categoria": "OS 25",
+            "descrizione": "OS 25 - SCAVI ARCHEOLOGICI",
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS 25",
+          "label": "OS 25 - SCAVI ARCHEOLOGICI",
+          "attributes": {
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          },
+          "usage_count": 84,
+          "raw": {
+            "id_categoria": "OS 25",
+            "descrizione": "OS 25 - SCAVI ARCHEOLOGICI",
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS 26",
+          "label": "OS 26 - PAVIMENTAZIONI E SOVRASTRUTTURE SPECIALI",
+          "attributes": {
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          },
+          "usage_count": 88,
+          "raw": {
+            "id_categoria": "OS 26",
+            "descrizione": "OS 26 - PAVIMENTAZIONI E SOVRASTRUTTURE SPECIALI",
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS 26",
+          "label": "OS 26 - PAVIMENTAZIONI E SOVRASTRUTTURE SPECIALI",
+          "attributes": {
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          },
+          "usage_count": 25,
+          "raw": {
+            "id_categoria": "OS 26",
+            "descrizione": "OS 26 - PAVIMENTAZIONI E SOVRASTRUTTURE SPECIALI",
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS 27",
+          "label": "OS 27 - IMPIANTI PER LA TRAZIONE ELETTRICA",
+          "attributes": {
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          },
+          "usage_count": 59,
+          "raw": {
+            "id_categoria": "OS 27",
+            "descrizione": "OS 27 - IMPIANTI PER LA TRAZIONE ELETTRICA",
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS 27",
+          "label": "OS 27 - IMPIANTI PER LA TRAZIONE ELETTRICA",
+          "attributes": {
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          },
+          "usage_count": 38,
+          "raw": {
+            "id_categoria": "OS 27",
+            "descrizione": "OS 27 - IMPIANTI PER LA TRAZIONE ELETTRICA",
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS 28",
+          "label": "OS 28 - IMPIANTI TERMICI E DI CONDIZIONAMENTO",
+          "attributes": {
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          },
+          "usage_count": 1576,
+          "raw": {
+            "id_categoria": "OS 28",
+            "descrizione": "OS 28 - IMPIANTI TERMICI E DI CONDIZIONAMENTO",
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS 28",
+          "label": "OS 28 - IMPIANTI TERMICI E DI CONDIZIONAMENTO",
+          "attributes": {
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          },
+          "usage_count": 2211,
+          "raw": {
+            "id_categoria": "OS 28",
+            "descrizione": "OS 28 - IMPIANTI TERMICI E DI CONDIZIONAMENTO",
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS 29",
+          "label": "OS 29 - ARMAMENTO FERROVIARIO",
+          "attributes": {
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          },
+          "usage_count": 88,
+          "raw": {
+            "id_categoria": "OS 29",
+            "descrizione": "OS 29 - ARMAMENTO FERROVIARIO",
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS 29",
+          "label": "OS 29 - ARMAMENTO FERROVIARIO",
+          "attributes": {
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          },
+          "usage_count": 51,
+          "raw": {
+            "id_categoria": "OS 29",
+            "descrizione": "OS 29 - ARMAMENTO FERROVIARIO",
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS 3",
+          "label": "OS 3 - IMPIANTI IDRICO-SANITARIO, CUCINE, LAVANDERIE",
+          "attributes": {
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          },
+          "usage_count": 525,
+          "raw": {
+            "id_categoria": "OS 3",
+            "descrizione": "OS 3 - IMPIANTI IDRICO-SANITARIO, CUCINE, LAVANDERIE",
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS 3",
+          "label": "OS 3 - IMPIANTI IDRICO-SANITARIO, CUCINE, LAVANDERIE",
+          "attributes": {
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          },
+          "usage_count": 1458,
+          "raw": {
+            "id_categoria": "OS 3",
+            "descrizione": "OS 3 - IMPIANTI IDRICO-SANITARIO, CUCINE, LAVANDERIE",
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS 30",
+          "label": "OS 30 - IMPIANTI INTERNI ELETTRICI, TELEFONICI, RADIOTELEFONICI E TELEVISIVI",
+          "attributes": {
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          },
+          "usage_count": 1914,
+          "raw": {
+            "id_categoria": "OS 30",
+            "descrizione": "OS 30 - IMPIANTI INTERNI ELETTRICI, TELEFONICI, RADIOTELEFONICI E TELEVISIVI",
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS 30",
+          "label": "OS 30 - IMPIANTI INTERNI ELETTRICI, TELEFONICI, RADIOTELEFONICI E TELEVISIVI",
+          "attributes": {
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          },
+          "usage_count": 3050,
+          "raw": {
+            "id_categoria": "OS 30",
+            "descrizione": "OS 30 - IMPIANTI INTERNI ELETTRICI, TELEFONICI, RADIOTELEFONICI E TELEVISIVI",
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS 31",
+          "label": "OS 31 - IMPIANTI PER LA MOBILITÀ SOSPESA",
+          "attributes": {
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          },
+          "usage_count": 55,
+          "raw": {
+            "id_categoria": "OS 31",
+            "descrizione": "OS 31 - IMPIANTI PER LA MOBILITÀ SOSPESA",
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS 31",
+          "label": "OS 31 - IMPIANTI PER LA MOBILITÀ SOSPESA",
+          "attributes": {
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          },
+          "usage_count": 12,
+          "raw": {
+            "id_categoria": "OS 31",
+            "descrizione": "OS 31 - IMPIANTI PER LA MOBILITÀ SOSPESA",
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS 32",
+          "label": "OS 32 - STRUTTURE IN LEGNO",
+          "attributes": {
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          },
+          "usage_count": 107,
+          "raw": {
+            "id_categoria": "OS 32",
+            "descrizione": "OS 32 - STRUTTURE IN LEGNO",
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS 32",
+          "label": "OS 32 - STRUTTURE IN LEGNO",
+          "attributes": {
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          },
+          "usage_count": 251,
+          "raw": {
+            "id_categoria": "OS 32",
+            "descrizione": "OS 32 - STRUTTURE IN LEGNO",
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS 33",
+          "label": "OS 33 - COPERTURE SPECIALI",
+          "attributes": {
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          },
+          "usage_count": 57,
+          "raw": {
+            "id_categoria": "OS 33",
+            "descrizione": "OS 33 - COPERTURE SPECIALI",
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS 33",
+          "label": "OS 33 - COPERTURE SPECIALI",
+          "attributes": {
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          },
+          "usage_count": 19,
+          "raw": {
+            "id_categoria": "OS 33",
+            "descrizione": "OS 33 - COPERTURE SPECIALI",
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS 34",
+          "label": "OS 34 - SISTEMI ANTIRUMORE PER INFRASTRUTTURE DI MOBILITÀ",
+          "attributes": {
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          },
+          "usage_count": 38,
+          "raw": {
+            "id_categoria": "OS 34",
+            "descrizione": "OS 34 - SISTEMI ANTIRUMORE PER INFRASTRUTTURE DI MOBILITÀ",
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS 34",
+          "label": "OS 34 - SISTEMI ANTIRUMORE PER INFRASTRUTTURE DI MOBILITÀ",
+          "attributes": {
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          },
+          "usage_count": 104,
+          "raw": {
+            "id_categoria": "OS 34",
+            "descrizione": "OS 34 - SISTEMI ANTIRUMORE PER INFRASTRUTTURE DI MOBILITÀ",
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS 35",
+          "label": "OS 35 - INTERVENTI A BASSO IMPATTO AMBIENTALE",
+          "attributes": {
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          },
+          "usage_count": 57,
+          "raw": {
+            "id_categoria": "OS 35",
+            "descrizione": "OS 35 - INTERVENTI A BASSO IMPATTO AMBIENTALE",
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS 35",
+          "label": "OS 35 - INTERVENTI A BASSO IMPATTO AMBIENTALE",
+          "attributes": {
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          },
+          "usage_count": 113,
+          "raw": {
+            "id_categoria": "OS 35",
+            "descrizione": "OS 35 - INTERVENTI A BASSO IMPATTO AMBIENTALE",
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS 4",
+          "label": "OS 4 - IMPIANTI ELETTROMECCANICI TRASPORTATORI",
+          "attributes": {
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          },
+          "usage_count": 355,
+          "raw": {
+            "id_categoria": "OS 4",
+            "descrizione": "OS 4 - IMPIANTI ELETTROMECCANICI TRASPORTATORI",
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS 4",
+          "label": "OS 4 - IMPIANTI ELETTROMECCANICI TRASPORTATORI",
+          "attributes": {
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          },
+          "usage_count": 348,
+          "raw": {
+            "id_categoria": "OS 4",
+            "descrizione": "OS 4 - IMPIANTI ELETTROMECCANICI TRASPORTATORI",
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS 5",
+          "label": "OS 5 - IMPIANTI PNEUMATICI E ANTINTRUSIONE",
+          "attributes": {
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          },
+          "usage_count": 54,
+          "raw": {
+            "id_categoria": "OS 5",
+            "descrizione": "OS 5 - IMPIANTI PNEUMATICI E ANTINTRUSIONE",
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS 5",
+          "label": "OS 5 - IMPIANTI PNEUMATICI E ANTINTRUSIONE",
+          "attributes": {
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          },
+          "usage_count": 29,
+          "raw": {
+            "id_categoria": "OS 5",
+            "descrizione": "OS 5 - IMPIANTI PNEUMATICI E ANTINTRUSIONE",
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS 6",
+          "label": "OS 6 - FINITURE DI OPERE GENERALI IN MATERIALI LIGNEI, PLASTICI, METALLICI E VETROSI",
+          "attributes": {
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          },
+          "usage_count": 1543,
+          "raw": {
+            "id_categoria": "OS 6",
+            "descrizione": "OS 6 - FINITURE DI OPERE GENERALI IN MATERIALI LIGNEI, PLASTICI, METALLICI E VETROSI",
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS 6",
+          "label": "OS 6 - FINITURE DI OPERE GENERALI IN MATERIALI LIGNEI, PLASTICI, METALLICI E VETROSI",
+          "attributes": {
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          },
+          "usage_count": 1100,
+          "raw": {
+            "id_categoria": "OS 6",
+            "descrizione": "OS 6 - FINITURE DI OPERE GENERALI IN MATERIALI LIGNEI, PLASTICI, METALLICI E VETROSI",
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS 7",
+          "label": "OS 7 - FINITURE DI OPERE GENERALI DI NATURA EDILE E TECNICA",
+          "attributes": {
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          },
+          "usage_count": 486,
+          "raw": {
+            "id_categoria": "OS 7",
+            "descrizione": "OS 7 - FINITURE DI OPERE GENERALI DI NATURA EDILE E TECNICA",
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS 7",
+          "label": "OS 7 - FINITURE DI OPERE GENERALI DI NATURA EDILE E TECNICA",
+          "attributes": {
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          },
+          "usage_count": 548,
+          "raw": {
+            "id_categoria": "OS 7",
+            "descrizione": "OS 7 - FINITURE DI OPERE GENERALI DI NATURA EDILE E TECNICA",
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS 8",
+          "label": "OS 8 - OPERE DI IMPERMEABILIZZAZIONE",
+          "attributes": {
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          },
+          "usage_count": 140,
+          "raw": {
+            "id_categoria": "OS 8",
+            "descrizione": "OS 8 - OPERE DI IMPERMEABILIZZAZIONE",
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS 8",
+          "label": "OS 8 - OPERE DI IMPERMEABILIZZAZIONE",
+          "attributes": {
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          },
+          "usage_count": 338,
+          "raw": {
+            "id_categoria": "OS 8",
+            "descrizione": "OS 8 - OPERE DI IMPERMEABILIZZAZIONE",
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS 9",
+          "label": "OS 9 - IMPIANTI PER LA SEGNALETICA LUMINOSA E LA SICUREZZA DEL TRAFFICO",
+          "attributes": {
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          },
+          "usage_count": 239,
+          "raw": {
+            "id_categoria": "OS 9",
+            "descrizione": "OS 9 - IMPIANTI PER LA SEGNALETICA LUMINOSA E LA SICUREZZA DEL TRAFFICO",
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS 9",
+          "label": "OS 9 - IMPIANTI PER LA SEGNALETICA LUMINOSA E LA SICUREZZA DEL TRAFFICO",
+          "attributes": {
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          },
+          "usage_count": 140,
+          "raw": {
+            "id_categoria": "OS 9",
+            "descrizione": "OS 9 - IMPIANTI PER LA SEGNALETICA LUMINOSA E LA SICUREZZA DEL TRAFFICO",
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS1",
+          "label": "OS1 - LAVORI IN TERRA",
+          "attributes": {
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          },
+          "usage_count": 3,
+          "raw": {
+            "id_categoria": "OS1",
+            "descrizione": "OS1 - LAVORI IN TERRA",
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS1",
+          "label": "OS1 - LAVORI IN TERRA",
+          "attributes": {
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          },
+          "usage_count": 4,
+          "raw": {
+            "id_categoria": "OS1",
+            "descrizione": "OS1 - LAVORI IN TERRA",
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS10",
+          "label": "OS10 - SEGNALETICA STRADALE NON LUMINOSA",
+          "attributes": {
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          },
+          "usage_count": 1,
+          "raw": {
+            "id_categoria": "OS10",
+            "descrizione": "OS10 - SEGNALETICA STRADALE NON LUMINOSA",
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS10",
+          "label": "OS10 - SEGNALETICA STRADALE NON LUMINOSA",
+          "attributes": {
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          },
+          "usage_count": 5,
+          "raw": {
+            "id_categoria": "OS10",
+            "descrizione": "OS10 - SEGNALETICA STRADALE NON LUMINOSA",
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS11",
+          "label": "OS11 - APPARECCHIATURE STRUTTURALI SPECIALI",
+          "attributes": {
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          },
+          "usage_count": 3,
+          "raw": {
+            "id_categoria": "OS11",
+            "descrizione": "OS11 - APPARECCHIATURE STRUTTURALI SPECIALI",
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS12",
+          "label": "OS12 - BARRIERE E PROTEZIONI STRADALI",
+          "attributes": {
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          },
+          "usage_count": 1,
+          "raw": {
+            "id_categoria": "OS12",
+            "descrizione": "OS12 - BARRIERE E PROTEZIONI STRADALI",
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS12",
+          "label": "OS12 - BARRIERE E PROTEZIONI STRADALI",
+          "attributes": {
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          },
+          "usage_count": 7,
+          "raw": {
+            "id_categoria": "OS12",
+            "descrizione": "OS12 - BARRIERE E PROTEZIONI STRADALI",
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS13",
+          "label": "OS13 - STRUTTURE PREFABBRICATE IN CEMENTO ARMATO",
+          "attributes": {
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          },
+          "usage_count": 1,
+          "raw": {
+            "id_categoria": "OS13",
+            "descrizione": "OS13 - STRUTTURE PREFABBRICATE IN CEMENTO ARMATO",
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS16",
+          "label": "OS16 - IMPIANTI PER CENTRALI PRODUZIONE ENERGIA ELETTRICA",
+          "attributes": {
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          },
+          "usage_count": 1,
+          "raw": {
+            "id_categoria": "OS16",
+            "descrizione": "OS16 - IMPIANTI PER CENTRALI PRODUZIONE ENERGIA ELETTRICA",
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS18",
+          "label": "OS18 - COMPONENTI STRUTTURALI IN ACCIAIO O METALLO",
+          "attributes": {
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          },
+          "usage_count": 1,
+          "raw": {
+            "id_categoria": "OS18",
+            "descrizione": "OS18 - COMPONENTI STRUTTURALI IN ACCIAIO O METALLO",
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS18",
+          "label": "OS18 - COMPONENTI STRUTTURALI IN ACCIAIO O METALLO",
+          "attributes": {
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          },
+          "usage_count": 5,
+          "raw": {
+            "id_categoria": "OS18",
+            "descrizione": "OS18 - COMPONENTI STRUTTURALI IN ACCIAIO O METALLO",
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS19",
+          "label": "OS19 - IMPIANTI DI RETI DI TELECOMUNICAZIONE E DI TRASMISSIONE DATI",
+          "attributes": {
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          },
+          "usage_count": 2,
+          "raw": {
+            "id_categoria": "OS19",
+            "descrizione": "OS19 - IMPIANTI DI RETI DI TELECOMUNICAZIONE E DI TRASMISSIONE DATI",
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS19",
+          "label": "OS19 - IMPIANTI DI RETI DI TELECOMUNICAZIONE E DI TRASMISSIONE DATI",
+          "attributes": {
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          },
+          "usage_count": 1,
+          "raw": {
+            "id_categoria": "OS19",
+            "descrizione": "OS19 - IMPIANTI DI RETI DI TELECOMUNICAZIONE E DI TRASMISSIONE DATI",
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS2",
+          "label": "OS2 - SUPERFICI DECORATE E BENI MOBILI DI INTERESSE STORICO E ARTISTICO",
+          "attributes": {
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          },
+          "usage_count": 1,
+          "raw": {
+            "id_categoria": "OS2",
+            "descrizione": "OS2 - SUPERFICI DECORATE E BENI MOBILI DI INTERESSE STORICO E ARTISTICO",
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS2",
+          "label": "OS2 - SUPERFICI DECORATE E BENI MOBILI DI INTERESSE STORICO E ARTISTICO",
+          "attributes": {
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          },
+          "usage_count": 1,
+          "raw": {
+            "id_categoria": "OS2",
+            "descrizione": "OS2 - SUPERFICI DECORATE E BENI MOBILI DI INTERESSE STORICO E ARTISTICO",
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS20",
+          "label": "OS20 - RILEVAMENTI TOPOGRAFICI",
+          "attributes": {
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          },
+          "usage_count": 1,
+          "raw": {
+            "id_categoria": "OS20",
+            "descrizione": "OS20 - RILEVAMENTI TOPOGRAFICI",
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS21",
+          "label": "OS21 - OPERE STRUTTURALI SPECIALI",
+          "attributes": {
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          },
+          "usage_count": 12,
+          "raw": {
+            "id_categoria": "OS21",
+            "descrizione": "OS21 - OPERE STRUTTURALI SPECIALI",
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS22",
+          "label": "OS22 - IMPIANTI DI POTABILIZZAZIONE E DEPURAZIONE",
+          "attributes": {
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          },
+          "usage_count": 5,
+          "raw": {
+            "id_categoria": "OS22",
+            "descrizione": "OS22 - IMPIANTI DI POTABILIZZAZIONE E DEPURAZIONE",
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS22",
+          "label": "OS22 - IMPIANTI DI POTABILIZZAZIONE E DEPURAZIONE",
+          "attributes": {
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          },
+          "usage_count": 2,
+          "raw": {
+            "id_categoria": "OS22",
+            "descrizione": "OS22 - IMPIANTI DI POTABILIZZAZIONE E DEPURAZIONE",
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS24",
+          "label": "OS24 - VERDE E ARREDO URBANO",
+          "attributes": {
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          },
+          "usage_count": 5,
+          "raw": {
+            "id_categoria": "OS24",
+            "descrizione": "OS24 - VERDE E ARREDO URBANO",
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS24",
+          "label": "OS24 - VERDE E ARREDO URBANO",
+          "attributes": {
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          },
+          "usage_count": 2,
+          "raw": {
+            "id_categoria": "OS24",
+            "descrizione": "OS24 - VERDE E ARREDO URBANO",
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS26",
+          "label": "OS26 - PAVIMENTAZIONI E SOVRASTRUTTURE SPECIALI",
+          "attributes": {
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          },
+          "usage_count": 1,
+          "raw": {
+            "id_categoria": "OS26",
+            "descrizione": "OS26 - PAVIMENTAZIONI E SOVRASTRUTTURE SPECIALI",
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS28",
+          "label": "OS28 - IMPIANTI TERMICI E DI CONDIZIONAMENTO",
+          "attributes": {
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          },
+          "usage_count": 1,
+          "raw": {
+            "id_categoria": "OS28",
+            "descrizione": "OS28 - IMPIANTI TERMICI E DI CONDIZIONAMENTO",
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS28",
+          "label": "OS28 - IMPIANTI TERMICI E DI CONDIZIONAMENTO",
+          "attributes": {
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          },
+          "usage_count": 9,
+          "raw": {
+            "id_categoria": "OS28",
+            "descrizione": "OS28 - IMPIANTI TERMICI E DI CONDIZIONAMENTO",
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS29",
+          "label": "OS29 - ARMAMENTO FERROVIARIO",
+          "attributes": {
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          },
+          "usage_count": 1,
+          "raw": {
+            "id_categoria": "OS29",
+            "descrizione": "OS29 - ARMAMENTO FERROVIARIO",
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS3",
+          "label": "OS3 - IMPIANTI IDRICO - SANITARIO, CUCINE, LAVANDERIE",
+          "attributes": {
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          },
+          "usage_count": 5,
+          "raw": {
+            "id_categoria": "OS3",
+            "descrizione": "OS3 - IMPIANTI IDRICO - SANITARIO, CUCINE, LAVANDERIE",
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS30",
+          "label": "OS30 - IMPIANTI INTERNI ELETTRICI, TELEFONICI, RADIOTELEFONICI E TELEVISIVI",
+          "attributes": {
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          },
+          "usage_count": 3,
+          "raw": {
+            "id_categoria": "OS30",
+            "descrizione": "OS30 - IMPIANTI INTERNI ELETTRICI, TELEFONICI, RADIOTELEFONICI E TELEVISIVI",
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS30",
+          "label": "OS30 - IMPIANTI INTERNI ELETTRICI, TELEFONICI, RADIOTELEFONICI E TELEVISIVI",
+          "attributes": {
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          },
+          "usage_count": 6,
+          "raw": {
+            "id_categoria": "OS30",
+            "descrizione": "OS30 - IMPIANTI INTERNI ELETTRICI, TELEFONICI, RADIOTELEFONICI E TELEVISIVI",
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS34",
+          "label": "OS34 - SISTEMI ANTIRUMORE PER INFRASTRUTTURE DI MOBILITA'",
+          "attributes": {
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          },
+          "usage_count": 2,
+          "raw": {
+            "id_categoria": "OS34",
+            "descrizione": "OS34 - SISTEMI ANTIRUMORE PER INFRASTRUTTURE DI MOBILITA'",
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS4",
+          "label": "OS4 - IMPIANTI ELETTROMECCANICI TRASPORTATORI",
+          "attributes": {
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          },
+          "usage_count": 2,
+          "raw": {
+            "id_categoria": "OS4",
+            "descrizione": "OS4 - IMPIANTI ELETTROMECCANICI TRASPORTATORI",
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS4",
+          "label": "OS4 - IMPIANTI ELETTROMECCANICI TRASPORTATORI",
+          "attributes": {
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          },
+          "usage_count": 6,
+          "raw": {
+            "id_categoria": "OS4",
+            "descrizione": "OS4 - IMPIANTI ELETTROMECCANICI TRASPORTATORI",
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS6",
+          "label": "OS6 - FINITURE DI OPERE GENERALI IN MATERIALI LIGNEI, PLASTICI, METALLICI E VETROSI",
+          "attributes": {
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          },
+          "usage_count": 2,
+          "raw": {
+            "id_categoria": "OS6",
+            "descrizione": "OS6 - FINITURE DI OPERE GENERALI IN MATERIALI LIGNEI, PLASTICI, METALLICI E VETROSI",
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS6",
+          "label": "OS6 - FINITURE DI OPERE GENERALI IN MATERIALI LIGNEI, PLASTICI, METALLICI E VETROSI",
+          "attributes": {
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          },
+          "usage_count": 3,
+          "raw": {
+            "id_categoria": "OS6",
+            "descrizione": "OS6 - FINITURE DI OPERE GENERALI IN MATERIALI LIGNEI, PLASTICI, METALLICI E VETROSI",
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS7",
+          "label": "OS7 - FINITURE DI OPERE GENERALI DI NATURA EDILE",
+          "attributes": {
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          },
+          "usage_count": 1,
+          "raw": {
+            "id_categoria": "OS7",
+            "descrizione": "OS7 - FINITURE DI OPERE GENERALI DI NATURA EDILE",
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "OS8",
+          "label": "OS8 - FINITURE DI OPERE GENERALI DI NATURA TECNICA",
+          "attributes": {
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          },
+          "usage_count": 1,
+          "raw": {
+            "id_categoria": "OS8",
+            "descrizione": "OS8 - FINITURE DI OPERE GENERALI DI NATURA TECNICA",
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "SS",
+          "label": "LAVORI, FORNITURE E SERVIZI IN SETTORI SPECIALI",
+          "attributes": {
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          },
+          "usage_count": 6,
+          "raw": {
+            "id_categoria": "SS",
+            "descrizione": "LAVORI, FORNITURE E SERVIZI IN SETTORI SPECIALI",
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE",
+            "classe_importo": ""
+          }
+        },
+        {
+          "code": "SS",
+          "label": "LAVORI, FORNITURE E SERVIZI IN SETTORI SPECIALI",
+          "attributes": {
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          },
+          "usage_count": 1,
+          "raw": {
+            "id_categoria": "SS",
+            "descrizione": "LAVORI, FORNITURE E SERVIZI IN SETTORI SPECIALI",
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE",
+            "classe_importo": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "tipi_categoria_opera",
+      "description": "Unique category-type codes reused within the work-category dataset.",
+      "resolved_fields": [
+        "cod_tipo_categoria",
+        "descrizione_tipo_categoria"
+      ],
+      "source_columns": [
+        "cod_tipo_categoria",
+        "descrizione_tipo_categoria"
+      ],
+      "code_column": "cod_tipo_categoria",
+      "label_column": "descrizione_tipo_categoria",
+      "extra_columns": [],
+      "entry_count": 2,
+      "entries": [
+        {
+          "code": "P",
+          "label": "PREVALENTE",
+          "attributes": {},
+          "usage_count": 521943,
+          "raw": {
+            "cod_tipo_categoria": "P",
+            "descrizione_tipo_categoria": "PREVALENTE"
+          }
+        },
+        {
+          "code": "S",
+          "label": "SCORPORABILE",
+          "attributes": {},
+          "usage_count": 54575,
+          "raw": {
+            "cod_tipo_categoria": "S",
+            "descrizione_tipo_categoria": "SCORPORABILE"
+          }
+        }
+      ]
+    }
+  ]
+}

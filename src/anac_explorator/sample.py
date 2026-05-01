@@ -1,16 +1,17 @@
-"""@notice Helpers for resolving and downloading monthly CIG sample files.
+"""@notice Helpers for resolving and downloading CKAN CSV resources.
 
-@dev This module implements the completed Phase 1 sample workflow: choose one
-monthly CIG CSV resource from live CKAN metadata, download its ZIP archive,
-and extract the CSV payload locally.
+@dev This module now supports both completed Phase 1 workflows:
+1. monthly CIG sample download and extraction
+2. reference-data CSV download for controlled vocabulary datasets
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
+from shutil import copyfile
 from urllib import request
-from zipfile import ZipFile
+from zipfile import ZipFile, is_zipfile
 
 from anac_explorator.browser import BrowserFetchError, PlaywrightFetcher
 from anac_explorator.ckan import CkanClient, CkanClientError
@@ -22,32 +23,69 @@ class SampleDownloadError(RuntimeError):
 
 
 @dataclass(slots=True)
-class DownloadedSample:
-    """@notice Capture the local outputs of one downloaded monthly CIG sample.
+class DownloadedCsvResource:
+    """@notice Capture the local outputs of one downloaded CKAN CSV resource.
 
     @param dataset_id CKAN dataset identifier used for resolution.
     @param resource_name CKAN resource name that was selected.
     @param resource_url Direct resource URL.
-    @param zip_path Local path of the downloaded ZIP archive.
+    @param archive_path Local path of the downloaded ZIP archive, when applicable.
     @param csv_path Local path of the extracted CSV file.
     """
 
     dataset_id: str
     resource_name: str
     resource_url: str
-    zip_path: str
+    archive_path: str | None
     csv_path: str
 
     def to_dict(self) -> dict[str, str]:
-        """@notice Convert the downloaded sample to a JSON-serializable dictionary."""
+        """@notice Convert the downloaded resource to a JSON-serializable dictionary."""
 
-        return {
+        payload = {
             "dataset_id": self.dataset_id,
             "resource_name": self.resource_name,
             "resource_url": self.resource_url,
-            "zip_path": self.zip_path,
             "csv_path": self.csv_path,
         }
+        if self.archive_path is not None:
+            payload["archive_path"] = self.archive_path
+            payload["zip_path"] = self.archive_path
+        return payload
+
+
+DownloadedSample = DownloadedCsvResource
+
+
+def select_csv_resource(
+    resource_list: list[CkanResource],
+    *,
+    preferred_name: str | None = None,
+) -> CkanResource:
+    """@notice Select a downloadable CSV resource from CKAN package metadata.
+
+    @param resource_list Resource list from the CKAN dataset metadata.
+    @param preferred_name Exact resource name to prefer when present.
+    @return Matching CSV resource.
+    @raises SampleDownloadError If no suitable CSV resource is present.
+    """
+
+    if preferred_name is not None:
+        for resource in resource_list:
+            if resource.name == preferred_name:
+                return resource
+        raise SampleDownloadError(f"Could not find CSV resource {preferred_name!r}.")
+
+    csv_resources = [
+        resource
+        for resource in resource_list
+        if resource.format.upper() == "CSV" and "logcsv" not in resource.name.lower()
+    ]
+    if not csv_resources:
+        raise SampleDownloadError("Could not find a downloadable CSV resource.")
+
+    csv_resources.sort(key=lambda resource: (resource.name.count("_"), resource.name))
+    return csv_resources[0]
 
 
 def select_cig_monthly_resource(resource_list: list[CkanResource], year: int, month: int) -> CkanResource:
@@ -61,10 +99,73 @@ def select_cig_monthly_resource(resource_list: list[CkanResource], year: int, mo
     """
 
     expected_name = f"cig_csv_{year}_{month:02d}"
-    for resource in resource_list:
-        if resource.name == expected_name:
-            return resource
-    raise SampleDownloadError(f"Could not find monthly resource {expected_name!r}.")
+    return select_csv_resource(resource_list, preferred_name=expected_name)
+
+
+def download_dataset_csv_resource(
+    client: CkanClient,
+    *,
+    dataset_id: str,
+    output_dir: str | Path,
+    preferred_resource_name: str | None = None,
+) -> DownloadedCsvResource:
+    """@notice Resolve, download, and materialize one CKAN CSV resource.
+
+    @param client Configured CKAN client used for dataset metadata resolution.
+    @param dataset_id CKAN dataset slug.
+    @param output_dir Base output directory for the downloaded archive and CSV.
+    @param preferred_resource_name Exact resource name to choose when the dataset has multiple CSV resources.
+    @return Local artifact paths for the downloaded CSV resource.
+    @raises SampleDownloadError If metadata, download, or extraction fails.
+    """
+
+    try:
+        package = client.package_show(dataset_id)
+    except CkanClientError as exc:
+        raise SampleDownloadError(str(exc)) from exc
+
+    resource = select_csv_resource(package.resources, preferred_name=preferred_resource_name)
+    base_output_dir = Path(output_dir) / dataset_id / resource.name
+
+    if resource.url.lower().endswith(".zip"):
+        archive_path = base_output_dir / f"{resource.name}.zip"
+        extracted_dir = base_output_dir / "extracted"
+        cached_csv_path = extracted_dir / f"{resource.name}.csv"
+        if cached_csv_path.exists():
+            return DownloadedCsvResource(
+                dataset_id=dataset_id,
+                resource_name=resource.name,
+                resource_url=resource.url,
+                archive_path=str(archive_path) if archive_path.exists() else None,
+                csv_path=str(cached_csv_path),
+            )
+        _download_resource(client, resource.url, archive_path)
+        csv_path = _materialize_csv(archive_path, extracted_dir)
+        return DownloadedCsvResource(
+            dataset_id=dataset_id,
+            resource_name=resource.name,
+            resource_url=resource.url,
+            archive_path=str(archive_path),
+            csv_path=str(csv_path),
+        )
+
+    csv_path = base_output_dir / f"{resource.name}.csv"
+    if csv_path.exists():
+        return DownloadedCsvResource(
+            dataset_id=dataset_id,
+            resource_name=resource.name,
+            resource_url=resource.url,
+            archive_path=None,
+            csv_path=str(csv_path),
+        )
+    _download_resource(client, resource.url, csv_path)
+    return DownloadedCsvResource(
+        dataset_id=dataset_id,
+        resource_name=resource.name,
+        resource_url=resource.url,
+        archive_path=None,
+        csv_path=str(csv_path),
+    )
 
 
 def download_cig_monthly_sample(
@@ -73,7 +174,7 @@ def download_cig_monthly_sample(
     year: int,
     month: int,
     output_dir: str | Path,
-) -> DownloadedSample:
+) -> DownloadedCsvResource:
     """@notice Resolve, download, and extract one monthly CIG CSV sample.
 
     @param client Configured CKAN client used for dataset metadata resolution.
@@ -85,23 +186,12 @@ def download_cig_monthly_sample(
     """
 
     dataset_id = f"cig-{year}"
-    try:
-        package = client.package_show(dataset_id)
-    except CkanClientError as exc:
-        raise SampleDownloadError(str(exc)) from exc
-
-    resource = select_cig_monthly_resource(package.resources, year, month)
-    base_output_dir = Path(output_dir) / dataset_id / resource.name
-    zip_path = base_output_dir / f"{resource.name}.zip"
-
-    _download_resource(client, resource.url, zip_path)
-    csv_path = _extract_first_csv(zip_path, base_output_dir / "extracted")
-    return DownloadedSample(
+    preferred_resource_name = f"cig_csv_{year}_{month:02d}"
+    return download_dataset_csv_resource(
+        client,
         dataset_id=dataset_id,
-        resource_name=resource.name,
-        resource_url=resource.url,
-        zip_path=str(zip_path),
-        csv_path=str(csv_path),
+        output_dir=output_dir,
+        preferred_resource_name=preferred_resource_name,
     )
 
 
@@ -129,6 +219,23 @@ def _download_resource(client: CkanClient, url: str, destination: Path) -> None:
             destination.write_bytes(response.read())
     except OSError as exc:
         raise SampleDownloadError(f"Failed to download resource via HTTP: {exc}") from exc
+
+
+def _materialize_csv(download_path: Path, output_dir: Path) -> Path:
+    """@notice Materialize a CSV from a downloaded CKAN resource path.
+
+    @dev Some CKAN resources are named like ZIP archives but actually contain a
+    plain CSV body. This helper handles both the real ZIP case and the mislabeled
+    plain-CSV case using the same output convention.
+    """
+
+    if is_zipfile(download_path):
+        return _extract_first_csv(download_path, output_dir)
+
+    output_dir.mkdir(parents=True, exist_ok=True)
+    csv_path = output_dir / f"{download_path.stem}.csv"
+    copyfile(download_path, csv_path)
+    return csv_path
 
 
 def _extract_first_csv(zip_path: Path, output_dir: Path) -> Path:

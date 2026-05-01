@@ -200,8 +200,8 @@ All downloads are ZIP archives. CSV uses `;` (semicolon) delimiter.
 ### Phase 1: Research & Schema Mapping (Week 1–2)
 - [x] Discover all 70 datasets and their metadata via CKAN API
 - [x] Verify API access and download capability
-- [ ] Download sample data (1 month of CIG) and map complete column schemas
-- [ ] Identify schema variations across years (2007 vs 2025)
+- [x] Download sample data (1 month of CIG) and map complete column schemas
+- [x] Identify schema variations across years (2007 vs 2025)
 - [ ] Build controlled vocabulary cross-reference tables
 - [ ] Create comprehensive data dictionary with column descriptions and code meanings
 

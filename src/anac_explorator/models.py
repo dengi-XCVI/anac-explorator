@@ -1,7 +1,8 @@
-"""@notice Shared data models for metadata and schema inspection.
+"""@notice Shared data models for metadata, schema inspection, and dictionary generation.
 
 @dev These dataclasses back the completed Phase 1 workflow: CKAN metadata
-lookup, sample download reporting, and raw CSV schema mapping.
+lookup, dataset download reporting, raw CSV schema mapping, and data-dictionary
+generation.
 """
 
 from __future__ import annotations
@@ -142,3 +143,115 @@ class SchemaMapping:
             row_length_mismatches=int(payload["row_length_mismatches"]),
             columns=columns,
         )
+
+
+@dataclass(slots=True)
+class DataDictionaryCodeReference:
+    """@notice Describe a vocabulary or code-meaning link for one field.
+
+    @param dataset_id Vocabulary dataset identifier.
+    @param table_name Vocabulary table name inside the generated artifact.
+    @param resolved_fields Fields covered by this vocabulary table.
+    @param notes Human-readable note about the scope of the link.
+    @param artifact_path Path to the generated vocabulary artifact.
+    @param entry_count Number of available code/label entries in the linked table.
+    @param preview_entries Small preview of code meanings for quick inspection.
+    """
+
+    dataset_id: str
+    table_name: str
+    resolved_fields: list[str] = field(default_factory=list)
+    notes: str = ""
+    artifact_path: str | None = None
+    entry_count: int | None = None
+    preview_entries: list[dict[str, str]] = field(default_factory=list)
+
+    def to_dict(self) -> dict[str, object]:
+        """@notice Convert the code reference into a serializable dictionary."""
+
+        return asdict(self)
+
+
+@dataclass(slots=True)
+class DataDictionaryEntry:
+    """@notice Describe one field in the generated data dictionary.
+
+    @param name Raw source field name.
+    @param section Logical section used in the human-readable dictionary.
+    @param description Human-readable field description.
+    @param inferred_type Current inferred type from the schema artifact.
+    @param nullable Whether the field is nullable in the current schema artifact.
+    @param non_empty_samples Representative sample values from the schema artifact.
+    @param related_fields Other fields closely tied to this one.
+    @param code_meaning_status Whether code meanings are linked, missing, or not applicable.
+    @param code_reference Linked vocabulary reference when available.
+    @param cross_year_notes Cross-year notes derived from the comparison artifact.
+    @param notes Additional field-specific notes or caveats.
+    """
+
+    name: str
+    section: str
+    description: str
+    inferred_type: str
+    nullable: bool
+    non_empty_samples: list[str] = field(default_factory=list)
+    related_fields: list[str] = field(default_factory=list)
+    code_meaning_status: str = "not_applicable"
+    code_reference: DataDictionaryCodeReference | None = None
+    cross_year_notes: list[str] = field(default_factory=list)
+    notes: list[str] = field(default_factory=list)
+
+    def to_dict(self) -> dict[str, object]:
+        """@notice Convert the dictionary entry into a serializable dictionary."""
+
+        payload = {
+            "name": self.name,
+            "section": self.section,
+            "description": self.description,
+            "inferred_type": self.inferred_type,
+            "nullable": self.nullable,
+            "non_empty_samples": self.non_empty_samples,
+            "related_fields": self.related_fields,
+            "code_meaning_status": self.code_meaning_status,
+            "cross_year_notes": self.cross_year_notes,
+            "notes": self.notes,
+        }
+        payload["code_reference"] = None if self.code_reference is None else self.code_reference.to_dict()
+        return payload
+
+
+@dataclass(slots=True)
+class DataDictionaryArtifact:
+    """@notice Capture the generated field dictionary for one schema surface.
+
+    @param dictionary_name Stable dictionary artifact name.
+    @param dataset_id Dataset identifier represented by the dictionary.
+    @param source_schema_path Source schema artifact path.
+    @param comparison_path Optional comparison artifact path used for cross-year notes.
+    @param vocabulary_index_path Optional vocabulary index path used for code links.
+    @param sections Ordered section names present in the dictionary.
+    @param entries Field-level dictionary entries.
+    """
+
+    dictionary_name: str
+    dataset_id: str
+    source_schema_path: str
+    comparison_path: str | None = None
+    vocabulary_index_path: str | None = None
+    sections: list[str] = field(default_factory=list)
+    entries: list[DataDictionaryEntry] = field(default_factory=list)
+
+    def to_dict(self) -> dict[str, object]:
+        """@notice Convert the dictionary artifact into a serializable dictionary."""
+
+        return {
+            "dictionary_name": self.dictionary_name,
+            "dataset_id": self.dataset_id,
+            "source_schema_path": self.source_schema_path,
+            "comparison_path": self.comparison_path,
+            "vocabulary_index_path": self.vocabulary_index_path,
+            "section_count": len(self.sections),
+            "entry_count": len(self.entries),
+            "sections": self.sections,
+            "entries": [entry.to_dict() for entry in self.entries],
+        }

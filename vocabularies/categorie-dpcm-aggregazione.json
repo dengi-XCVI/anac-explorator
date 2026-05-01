@@ -1,0 +1,387 @@
+{
+  "dataset_id": "categorie-dpcm-aggregazione",
+  "description": "Per-CIG mappings that expose DPCM aggregation categories and derogation codes.",
+  "resource_name": "20260401-categorie-dpcm-aggregazione_csv",
+  "resource_url": "https://dati.anticorruzione.it/opendata/download/dataset/categorie-dpcm-aggregazione/filesystem/20260401-categorie-dpcm-aggregazione_csv.zip",
+  "csv_path": "data/raw/categorie-dpcm-aggregazione/20260401-categorie-dpcm-aggregazione_csv/extracted/20260401-categorie-dpcm-aggregazione_csv.csv",
+  "archive_path": "data/raw/categorie-dpcm-aggregazione/20260401-categorie-dpcm-aggregazione_csv/20260401-categorie-dpcm-aggregazione_csv.zip",
+  "schema_path": "schemas/categorie-dpcm-aggregazione.schema.json",
+  "tables": [
+    {
+      "name": "categorie_dpcm_aggregazione",
+      "description": "Unique DPCM aggregation category codes observed in the source dataset.",
+      "resolved_fields": [
+        "cod_categoria_merceologica_dpcm_aggregazione",
+        "categoria_merceologica_dpcm_aggregazione"
+      ],
+      "source_columns": [
+        "cod_categoria_merceologica_dpcm_aggregazione",
+        "categoria_merceologica_dpcm_aggregazione"
+      ],
+      "code_column": "cod_categoria_merceologica_dpcm_aggregazione",
+      "label_column": "categoria_merceologica_dpcm_aggregazione",
+      "extra_columns": [],
+      "entry_count": 27,
+      "entries": [
+        {
+          "code": "1",
+          "label": "FARMACI",
+          "attributes": {},
+          "usage_count": 31900,
+          "raw": {
+            "cod_categoria_merceologica_dpcm_aggregazione": "1",
+            "categoria_merceologica_dpcm_aggregazione": "FARMACI"
+          }
+        },
+        {
+          "code": "2",
+          "label": "VACCINI",
+          "attributes": {},
+          "usage_count": 640,
+          "raw": {
+            "cod_categoria_merceologica_dpcm_aggregazione": "2",
+            "categoria_merceologica_dpcm_aggregazione": "VACCINI"
+          }
+        },
+        {
+          "code": "3",
+          "label": "STENT",
+          "attributes": {},
+          "usage_count": 329,
+          "raw": {
+            "cod_categoria_merceologica_dpcm_aggregazione": "3",
+            "categoria_merceologica_dpcm_aggregazione": "STENT"
+          }
+        },
+        {
+          "code": "4",
+          "label": "AUSILI PER INCONTINENZA (OSPEDALIERI E TERRITORIALI)",
+          "attributes": {},
+          "usage_count": 102,
+          "raw": {
+            "cod_categoria_merceologica_dpcm_aggregazione": "4",
+            "categoria_merceologica_dpcm_aggregazione": "AUSILI PER INCONTINENZA (OSPEDALIERI E TERRITORIALI)"
+          }
+        },
+        {
+          "code": "5",
+          "label": "PROTESI D'ANCA",
+          "attributes": {},
+          "usage_count": 207,
+          "raw": {
+            "cod_categoria_merceologica_dpcm_aggregazione": "5",
+            "categoria_merceologica_dpcm_aggregazione": "PROTESI D'ANCA"
+          }
+        },
+        {
+          "code": "6",
+          "label": "MEDICAZIONI GENERALI",
+          "attributes": {},
+          "usage_count": 1097,
+          "raw": {
+            "cod_categoria_merceologica_dpcm_aggregazione": "6",
+            "categoria_merceologica_dpcm_aggregazione": "MEDICAZIONI GENERALI"
+          }
+        },
+        {
+          "code": "7",
+          "label": "DEFIBRILLATORI",
+          "attributes": {},
+          "usage_count": 297,
+          "raw": {
+            "cod_categoria_merceologica_dpcm_aggregazione": "7",
+            "categoria_merceologica_dpcm_aggregazione": "DEFIBRILLATORI"
+          }
+        },
+        {
+          "code": "8",
+          "label": "PACE-MAKER",
+          "attributes": {},
+          "usage_count": 228,
+          "raw": {
+            "cod_categoria_merceologica_dpcm_aggregazione": "8",
+            "categoria_merceologica_dpcm_aggregazione": "PACE-MAKER"
+          }
+        },
+        {
+          "code": "9",
+          "label": "AGHI E SIRINGHE",
+          "attributes": {},
+          "usage_count": 657,
+          "raw": {
+            "cod_categoria_merceologica_dpcm_aggregazione": "9",
+            "categoria_merceologica_dpcm_aggregazione": "AGHI E SIRINGHE"
+          }
+        },
+        {
+          "code": "10",
+          "label": "SERVIZI INTEGRATI PER LA GESTIONE DELLE APPARECCHIATURE ELETTROMEDICALI",
+          "attributes": {},
+          "usage_count": 114,
+          "raw": {
+            "cod_categoria_merceologica_dpcm_aggregazione": "10",
+            "categoria_merceologica_dpcm_aggregazione": "SERVIZI INTEGRATI PER LA GESTIONE DELLE APPARECCHIATURE ELETTROMEDICALI"
+          }
+        },
+        {
+          "code": "11",
+          "label": "SERVIZI DI PULIZIA PER GLI ENTI DEL SERVIZIO SANITARIO NAZIONALE",
+          "attributes": {},
+          "usage_count": 77,
+          "raw": {
+            "cod_categoria_merceologica_dpcm_aggregazione": "11",
+            "categoria_merceologica_dpcm_aggregazione": "SERVIZI DI PULIZIA PER GLI ENTI DEL SERVIZIO SANITARIO NAZIONALE"
+          }
+        },
+        {
+          "code": "12",
+          "label": "SERVIZI DI RISTORAZIONE PER GLI ENTI DEL SERVIZIO SANITARIO NAZIONALE",
+          "attributes": {},
+          "usage_count": 64,
+          "raw": {
+            "cod_categoria_merceologica_dpcm_aggregazione": "12",
+            "categoria_merceologica_dpcm_aggregazione": "SERVIZI DI RISTORAZIONE PER GLI ENTI DEL SERVIZIO SANITARIO NAZIONALE"
+          }
+        },
+        {
+          "code": "13",
+          "label": "SERVIZI DI LAVANDERIA PER GLI ENTI DEL SERVIZIO SANITARIO NAZIONALE",
+          "attributes": {},
+          "usage_count": 56,
+          "raw": {
+            "cod_categoria_merceologica_dpcm_aggregazione": "13",
+            "categoria_merceologica_dpcm_aggregazione": "SERVIZI DI LAVANDERIA PER GLI ENTI DEL SERVIZIO SANITARIO NAZIONALE"
+          }
+        },
+        {
+          "code": "14",
+          "label": "SERVIZI DI SMALTIMENTO RIFIUTI SANITARI",
+          "attributes": {},
+          "usage_count": 47,
+          "raw": {
+            "cod_categoria_merceologica_dpcm_aggregazione": "14",
+            "categoria_merceologica_dpcm_aggregazione": "SERVIZI DI SMALTIMENTO RIFIUTI SANITARI"
+          }
+        },
+        {
+          "code": "15",
+          "label": "VIGILANZA ARMATA",
+          "attributes": {},
+          "usage_count": 193,
+          "raw": {
+            "cod_categoria_merceologica_dpcm_aggregazione": "15",
+            "categoria_merceologica_dpcm_aggregazione": "VIGILANZA ARMATA"
+          }
+        },
+        {
+          "code": "16",
+          "label": "FACILITY MANAGEMENT IMMOBILI",
+          "attributes": {},
+          "usage_count": 122,
+          "raw": {
+            "cod_categoria_merceologica_dpcm_aggregazione": "16",
+            "categoria_merceologica_dpcm_aggregazione": "FACILITY MANAGEMENT IMMOBILI"
+          }
+        },
+        {
+          "code": "17",
+          "label": "PULIZIA IMMOBILI",
+          "attributes": {},
+          "usage_count": 362,
+          "raw": {
+            "cod_categoria_merceologica_dpcm_aggregazione": "17",
+            "categoria_merceologica_dpcm_aggregazione": "PULIZIA IMMOBILI"
+          }
+        },
+        {
+          "code": "18",
+          "label": "GUARDIANIA",
+          "attributes": {},
+          "usage_count": 135,
+          "raw": {
+            "cod_categoria_merceologica_dpcm_aggregazione": "18",
+            "categoria_merceologica_dpcm_aggregazione": "GUARDIANIA"
+          }
+        },
+        {
+          "code": "19",
+          "label": "MANUTENZIONE IMMOBILI E IMPIANTI",
+          "attributes": {},
+          "usage_count": 2646,
+          "raw": {
+            "cod_categoria_merceologica_dpcm_aggregazione": "19",
+            "categoria_merceologica_dpcm_aggregazione": "MANUTENZIONE IMMOBILI E IMPIANTI"
+          }
+        },
+        {
+          "code": "20",
+          "label": "GUANTI (CHIRURGICI E NON)",
+          "attributes": {},
+          "usage_count": 220,
+          "raw": {
+            "cod_categoria_merceologica_dpcm_aggregazione": "20",
+            "categoria_merceologica_dpcm_aggregazione": "GUANTI (CHIRURGICI E NON)"
+          }
+        },
+        {
+          "code": "21",
+          "label": "SUTURE",
+          "attributes": {},
+          "usage_count": 249,
+          "raw": {
+            "cod_categoria_merceologica_dpcm_aggregazione": "21",
+            "categoria_merceologica_dpcm_aggregazione": "SUTURE"
+          }
+        },
+        {
+          "code": "22",
+          "label": "OSSIGENOTERAPIA",
+          "attributes": {},
+          "usage_count": 46,
+          "raw": {
+            "cod_categoria_merceologica_dpcm_aggregazione": "22",
+            "categoria_merceologica_dpcm_aggregazione": "OSSIGENOTERAPIA"
+          }
+        },
+        {
+          "code": "23",
+          "label": "DIABETOLOGIA TERRITORIALE",
+          "attributes": {},
+          "usage_count": 168,
+          "raw": {
+            "cod_categoria_merceologica_dpcm_aggregazione": "23",
+            "categoria_merceologica_dpcm_aggregazione": "DIABETOLOGIA TERRITORIALE"
+          }
+        },
+        {
+          "code": "24",
+          "label": "SERVIZIO DI TRASPORTO SCOLASTICO",
+          "attributes": {},
+          "usage_count": 547,
+          "raw": {
+            "cod_categoria_merceologica_dpcm_aggregazione": "24",
+            "categoria_merceologica_dpcm_aggregazione": "SERVIZIO DI TRASPORTO SCOLASTICO"
+          }
+        },
+        {
+          "code": "25",
+          "label": "MANUTENZIONE STRADE (SERVIZI E FORNITURE)",
+          "attributes": {},
+          "usage_count": 651,
+          "raw": {
+            "cod_categoria_merceologica_dpcm_aggregazione": "25",
+            "categoria_merceologica_dpcm_aggregazione": "MANUTENZIONE STRADE (SERVIZI E FORNITURE)"
+          }
+        },
+        {
+          "code": "999",
+          "label": "LAVORI OPPURE BENI E SERVIZI NON ELENCATI NELL'ART. 1 DPCM 24 DICEMBRE 2015",
+          "attributes": {},
+          "usage_count": 93748,
+          "raw": {
+            "cod_categoria_merceologica_dpcm_aggregazione": "999",
+            "categoria_merceologica_dpcm_aggregazione": "LAVORI OPPURE BENI E SERVIZI NON ELENCATI NELL'ART. 1 DPCM 24 DICEMBRE 2015"
+          }
+        },
+        {
+          "code": "999",
+          "label": "Lavori oppure beni e servizi non elencati nell'art. 1 dPCM 24 dicembre 2015",
+          "attributes": {},
+          "usage_count": 2,
+          "raw": {
+            "cod_categoria_merceologica_dpcm_aggregazione": "999",
+            "categoria_merceologica_dpcm_aggregazione": "Lavori oppure beni e servizi non elencati nell'art. 1 dPCM 24 dicembre 2015"
+          }
+        }
+      ]
+    },
+    {
+      "name": "deroghe_soggetto_aggregatore",
+      "description": "Unique derogation codes associated with DPCM aggregation obligations.",
+      "resolved_fields": [
+        "cod_deroga_soggetto_aggregatore",
+        "deroga_dpcm_soggetto_aggregatore"
+      ],
+      "source_columns": [
+        "cod_deroga_soggetto_aggregatore",
+        "deroga_dpcm_soggetto_aggregatore"
+      ],
+      "code_column": "cod_deroga_soggetto_aggregatore",
+      "label_column": "deroga_dpcm_soggetto_aggregatore",
+      "extra_columns": [],
+      "entry_count": 7,
+      "entries": [
+        {
+          "code": "1",
+          "label": "STAZIONE APPALTANTE NON SOGGETTA AGLI OBBLIGHI DI CUI AL DPCM 24 DICEMBRE 2015",
+          "attributes": {},
+          "usage_count": 24832,
+          "raw": {
+            "cod_deroga_soggetto_aggregatore": "1",
+            "deroga_dpcm_soggetto_aggregatore": "STAZIONE APPALTANTE NON SOGGETTA AGLI OBBLIGHI DI CUI AL DPCM 24 DICEMBRE 2015"
+          }
+        },
+        {
+          "code": "2",
+          "label": "ACQUISTO ESPLETATO MEDIANTE ADESIONE A CONTRATTO DI SOGGETTO AGGREGATORE ISCRITTO NELL'ELENCO DI CUI ALLA DELIBERA DELL'AUTORITA'NAZIONALE ANTICORRUZIONE N. 784 DEL 20 LUGLIO 2016",
+          "attributes": {},
+          "usage_count": 14922,
+          "raw": {
+            "cod_deroga_soggetto_aggregatore": "2",
+            "deroga_dpcm_soggetto_aggregatore": "ACQUISTO ESPLETATO MEDIANTE ADESIONE A CONTRATTO DI SOGGETTO AGGREGATORE ISCRITTO NELL'ELENCO DI CUI ALLA DELIBERA DELL'AUTORITA'NAZIONALE ANTICORRUZIONE N. 784 DEL 20 LUGLIO 2016"
+          }
+        },
+        {
+          "code": "3",
+          "label": "SOGGETTO AGGREGATORE ISCRITTO NELL'ELENCO DI CUI ALLA DELIBERA DELL'AUTORITA' NAZIONALE ANTICORRUZIONE N. 784 DEL 20 LUGLIO 2016",
+          "attributes": {},
+          "usage_count": 3772,
+          "raw": {
+            "cod_deroga_soggetto_aggregatore": "3",
+            "deroga_dpcm_soggetto_aggregatore": "SOGGETTO AGGREGATORE ISCRITTO NELL'ELENCO DI CUI ALLA DELIBERA DELL'AUTORITA' NAZIONALE ANTICORRUZIONE N. 784 DEL 20 LUGLIO 2016"
+          }
+        },
+        {
+          "code": "4",
+          "label": "SOGLIE MASSIME ANNUALI DI CUI ALL'ART. 1 DEL DPCM 24 DICEMBRE 2015 NON RAGGIUNTE PER LA CATEGORIA MERCEOLOGICA D'INTERESSE",
+          "attributes": {},
+          "usage_count": 907,
+          "raw": {
+            "cod_deroga_soggetto_aggregatore": "4",
+            "deroga_dpcm_soggetto_aggregatore": "SOGLIE MASSIME ANNUALI DI CUI ALL'ART. 1 DEL DPCM 24 DICEMBRE 2015 NON RAGGIUNTE PER LA CATEGORIA MERCEOLOGICA D'INTERESSE"
+          }
+        },
+        {
+          "code": "5",
+          "label": "CONTRATTO NON ATTIVO PRESSO IL SOGGETTO AGGREGATORE (DI CUI ALL'ART. 9, COMMI 1 E 2 DEL DL 66/2014) DI RIFERIMENTO O CONSIP E MANCANZA DI ACCORDI DI COLLABORAZIONE TRA QUESTI AL MOMENTO DELLA RICHIESTA DEL RILASCIO DEL CIG",
+          "attributes": {},
+          "usage_count": 6166,
+          "raw": {
+            "cod_deroga_soggetto_aggregatore": "5",
+            "deroga_dpcm_soggetto_aggregatore": "CONTRATTO NON ATTIVO PRESSO IL SOGGETTO AGGREGATORE (DI CUI ALL'ART. 9, COMMI 1 E 2 DEL DL 66/2014) DI RIFERIMENTO O CONSIP E MANCANZA DI ACCORDI DI COLLABORAZIONE TRA QUESTI AL MOMENTO DELLA RICHIESTA DEL RILASCIO DEL CIG"
+          }
+        },
+        {
+          "code": "6",
+          "label": "IL FORNITORE NON HA ACCETTATO ORDINATIVI DI IMPORTI MINIMI PREVISTI DAI CONTRATTI ATTIVI",
+          "attributes": {},
+          "usage_count": 13,
+          "raw": {
+            "cod_deroga_soggetto_aggregatore": "6",
+            "deroga_dpcm_soggetto_aggregatore": "IL FORNITORE NON HA ACCETTATO ORDINATIVI DI IMPORTI MINIMI PREVISTI DAI CONTRATTI ATTIVI"
+          }
+        },
+        {
+          "code": "7",
+          "label": "PROCEDURA AVVIATA PRIMA DELL'ENTRATA IN VIGORE DEL DPCM 24 DICEMBRE 2015",
+          "attributes": {},
+          "usage_count": 807,
+          "raw": {
+            "cod_deroga_soggetto_aggregatore": "7",
+            "deroga_dpcm_soggetto_aggregatore": "PROCEDURA AVVIATA PRIMA DELL'ENTRATA IN VIGORE DEL DPCM 24 DICEMBRE 2015"
+          }
+        }
+      ]
+    }
+  ]
+}

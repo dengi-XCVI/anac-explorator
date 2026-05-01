@@ -1,0 +1,33 @@
+{
+  "source_path": "data/raw/bandi-cig-modalita-realizzazione/bandi-cig-modalita-realizzazione_csv/extracted/bandi-cig-modalita-realizzazione_csv.csv",
+  "delimiter": ";",
+  "encoding": "utf-8-sig",
+  "rows_sampled": 28,
+  "row_length_mismatches": 0,
+  "columns": [
+    {
+      "name": "modalita-realizzazione_codice",
+      "inferred_type": "integer",
+      "nullable": false,
+      "non_empty_samples": [
+        "01",
+        "90",
+        "12",
+        "19",
+        "1"
+      ]
+    },
+    {
+      "name": "modalita-realizzazione_denominazione",
+      "inferred_type": "text",
+      "nullable": false,
+      "non_empty_samples": [
+        "APPALTO",
+        "SOLA TRACCIABILITA'",
+        "SCELTA DEL SOCIO PRIVATO NELLA SOCIETA' MISTA",
+        "APPALTO PRE-COMMERCIALE",
+        "CONTRATTO D'APPALTO"
+      ]
+    }
+  ]
+}

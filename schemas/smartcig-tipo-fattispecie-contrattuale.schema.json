@@ -1,0 +1,33 @@
+{
+  "source_path": "data/raw/smartcig-tipo-fattispecie-contrattuale/smartcig-tipo-fattispecie-contrattuale_csv/extracted/smartcig-tipo-fattispecie-contrattuale_csv.csv",
+  "delimiter": ";",
+  "encoding": "utf-8-sig",
+  "rows_sampled": 78,
+  "row_length_mismatches": 0,
+  "columns": [
+    {
+      "name": "tipo-fattispecie-contrattuale_id",
+      "inferred_type": "integer",
+      "nullable": false,
+      "non_empty_samples": [
+        "00685986281",
+        "00912999862",
+        "00258143298",
+        "01680966500",
+        "01071616727"
+      ]
+    },
+    {
+      "name": "tipo-fattispecie-contrattuale_denominazione",
+      "inferred_type": "text",
+      "nullable": false,
+      "non_empty_samples": [
+        "SERVIZI LEGALI FINO A € 40.000 ESCLUSI DALLAPPLICAZIONE DEL CODICE",
+        "COPROGETTAZIONE FINO A € 40.000",
+        "CONTRATTI DI ACQUISTO E LOCAZIONE DI IMMOBILI",
+        "CONTRATTI FINO A € 40.000 ESCLUSI EX ART. 24 DEL CODICE",
+        "CONTRATTI FINO A € 150.000 ESCLUSI EX ART. 26 DEL CODICE"
+      ]
+    }
+  ]
+}

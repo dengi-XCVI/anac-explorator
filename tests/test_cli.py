@@ -32,3 +32,20 @@ class CliTests(unittest.TestCase):
         self.assertEqual(payload["rows_sampled"], 2)
         self.assertEqual(payload["columns"][1]["inferred_type"], "decimal")
         self.assertTrue(payload["columns"][1]["nullable"])
+
+    def test_download_dataset_csv_parser_accepts_dataset_slug(self) -> None:
+        """@notice Parse the generic dataset-download subcommand without execution."""
+
+        parser = main.__globals__["build_parser"]()
+        args = parser.parse_args(["download-dataset-csv", "bandi-cig-tipo-scelta-contraente"])
+
+        self.assertEqual(args.dataset_id, "bandi-cig-tipo-scelta-contraente")
+
+    def test_build_data_dictionary_parser_uses_default_artifacts(self) -> None:
+        """@notice Parse the data-dictionary subcommand with its default artifact paths."""
+
+        parser = main.__globals__["build_parser"]()
+        args = parser.parse_args(["build-data-dictionary"])
+
+        self.assertEqual(args.schema_path, "schemas/cig_2025_01.schema.json")
+        self.assertEqual(args.vocabulary_index_path, "vocabularies/index.json")
