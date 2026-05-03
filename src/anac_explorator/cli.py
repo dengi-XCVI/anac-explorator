@@ -1,12 +1,16 @@
 """@notice Command-line entry points for the ANAC explorator project.
 
-@dev The current CLI covers the completed Phase 1 workflow:
+@dev The CLI now covers the completed Phase 1 workflow plus the first Phase 2
+pipeline surface:
 1. query live CKAN package metadata
 2. download and extract one CKAN CSV resource
 3. inspect a local CSV and map its schema
 4. compare schema artifacts
 5. build normalized vocabulary cross-reference tables
 6. build a structured field dictionary for the January 2025 CIG schema
+7. download manifest-backed CKAN CSV or JSON resources
+8. parse local CSV or JSON resources into structured payloads
+9. clean parsed resources for later database loading
 """
 
 from __future__ import annotations
@@ -26,12 +30,15 @@ from anac_explorator.ckan import (
     DEFAULT_TRANSPORT,
     DEFAULT_USER_AGENT,
 )
+from anac_explorator.cleaner import clean_csv_resource, clean_json_resource
 from anac_explorator.comparison import compare_schema_mappings, load_schema_mapping
 from anac_explorator.dictionary import build_cig_data_dictionary
+from anac_explorator.parsing import parse_csv_resource, parse_json_resource
 from anac_explorator.sample import (
     SampleDownloadError,
     download_cig_monthly_sample,
     download_dataset_csv_resource,
+    download_dataset_resource,
 )
 from anac_explorator.schema import map_csv_schema
 from anac_explorator.vocabulary import VOCABULARY_DATASET_CONFIGS, build_vocabulary_crosswalks
@@ -139,6 +146,65 @@ def build_parser() -> argparse.ArgumentParser:
         help="Transport used for CKAN and download requests.",
     )
     download_dataset_csv.set_defaults(handler=_handle_download_dataset_csv)
+
+    download_dataset_resource_parser = subparsers.add_parser(
+        "download-dataset-resource",
+        help="Resolve one CKAN CSV or JSON resource, download it, and persist a download manifest.",
+    )
+    download_dataset_resource_parser.add_argument("dataset_id", help="CKAN dataset slug to resolve.")
+    download_dataset_resource_parser.add_argument(
+        "--resource-name",
+        help="Exact CKAN resource name to choose when a dataset exposes multiple matching resources.",
+    )
+    download_dataset_resource_parser.add_argument(
+        "--resource-format",
+        choices=["csv", "json"],
+        default="csv",
+        help="High-level resource format to download.",
+    )
+    download_dataset_resource_parser.add_argument(
+        "--output-dir",
+        default="data/raw",
+        help="Base directory used for downloaded archives and materialized files.",
+    )
+    download_dataset_resource_parser.add_argument(
+        "--base-url",
+        default=DEFAULT_CKAN_BASE_URL,
+        help="CKAN action API base URL.",
+    )
+    download_dataset_resource_parser.add_argument(
+        "--timeout",
+        type=int,
+        default=30,
+        help="Request timeout in seconds.",
+    )
+    download_dataset_resource_parser.add_argument(
+        "--user-agent",
+        default=os.getenv("ANAC_EXPLORATOR_USER_AGENT", DEFAULT_USER_AGENT),
+        help="User-Agent header for CKAN and download requests.",
+    )
+    download_dataset_resource_parser.add_argument(
+        "--accept-language",
+        default=os.getenv("ANAC_EXPLORATOR_ACCEPT_LANGUAGE", DEFAULT_ACCEPT_LANGUAGE),
+        help="Accept-Language header for CKAN and download requests.",
+    )
+    download_dataset_resource_parser.add_argument(
+        "--referer",
+        default=os.getenv("ANAC_EXPLORATOR_REFERER", DEFAULT_REFERER),
+        help="Referer header for CKAN and download requests.",
+    )
+    download_dataset_resource_parser.add_argument(
+        "--proxy-url",
+        default=os.getenv("ANAC_EXPLORATOR_PROXY_URL"),
+        help="Optional HTTP(S) proxy URL used for CKAN and download requests.",
+    )
+    download_dataset_resource_parser.add_argument(
+        "--transport",
+        choices=["auto", "http", "playwright"],
+        default=os.getenv("ANAC_EXPLORATOR_TRANSPORT", "playwright"),
+        help="Transport used for CKAN and download requests.",
+    )
+    download_dataset_resource_parser.set_defaults(handler=_handle_download_dataset_resource)
 
     download_cig_sample = subparsers.add_parser(
         "download-cig-sample",
@@ -325,6 +391,66 @@ def build_parser() -> argparse.ArgumentParser:
     )
     inspect_csv_schema.set_defaults(handler=_handle_inspect_csv_schema)
 
+    parse_resource = subparsers.add_parser(
+        "parse-resource",
+        help="Parse a local CSV or JSON resource into a structured machine-readable payload.",
+    )
+    parse_resource.add_argument("resource_path", help="Path to the local CSV or JSON resource.")
+    parse_resource.add_argument(
+        "--format",
+        choices=["csv", "json"],
+        required=True,
+        help="Resource format to parse.",
+    )
+    parse_resource.add_argument(
+        "--delimiter",
+        default=";",
+        help="CSV delimiter used when parsing CSV resources.",
+    )
+    parse_resource.add_argument(
+        "--encoding",
+        help="Optional text encoding override. Defaults to utf-8-sig for CSV and utf-8 for JSON.",
+    )
+    parse_resource.add_argument(
+        "--record-limit",
+        type=int,
+        default=100,
+        help="Maximum number of records or items retained in memory. Use 0 to retain all.",
+    )
+    parse_resource.set_defaults(handler=_handle_parse_resource)
+
+    clean_resource = subparsers.add_parser(
+        "clean-resource",
+        help="Parse and clean a local CSV or JSON resource for later database loading.",
+    )
+    clean_resource.add_argument("resource_path", help="Path to the local CSV or JSON resource.")
+    clean_resource.add_argument(
+        "--format",
+        choices=["csv", "json"],
+        required=True,
+        help="Resource format to clean.",
+    )
+    clean_resource.add_argument(
+        "--schema-path",
+        help="Optional schema artifact used to drive CSV type coercion.",
+    )
+    clean_resource.add_argument(
+        "--delimiter",
+        default=";",
+        help="CSV delimiter used when parsing CSV resources.",
+    )
+    clean_resource.add_argument(
+        "--encoding",
+        help="Optional text encoding override. Defaults to utf-8-sig for CSV and utf-8 for JSON.",
+    )
+    clean_resource.add_argument(
+        "--record-limit",
+        type=int,
+        default=100,
+        help="Maximum number of records or items retained in memory. Use 0 to retain all.",
+    )
+    clean_resource.set_defaults(handler=_handle_clean_resource)
+
     return parser
 
 
@@ -419,6 +545,28 @@ def _handle_download_dataset_csv(args: argparse.Namespace) -> dict[str, object]:
     return resource.to_dict()
 
 
+def _handle_download_dataset_resource(args: argparse.Namespace) -> dict[str, object]:
+    """@notice Execute the `download-dataset-resource` CLI subcommand."""
+
+    client = CkanClient(
+        base_url=args.base_url,
+        timeout=args.timeout,
+        user_agent=args.user_agent,
+        accept_language=args.accept_language,
+        referer=args.referer,
+        proxy_url=args.proxy_url,
+        transport=args.transport,
+    )
+    resource = download_dataset_resource(
+        client,
+        dataset_id=args.dataset_id,
+        preferred_resource_name=args.resource_name,
+        preferred_format=args.resource_format,
+        output_dir=Path(args.output_dir),
+    )
+    return resource.to_dict()
+
+
 def _handle_compare_schema_files(args: argparse.Namespace) -> dict[str, object]:
     """@notice Execute the `compare-schema-files` CLI subcommand."""
 
@@ -459,3 +607,48 @@ def _handle_build_data_dictionary(args: argparse.Namespace) -> dict[str, object]
         vocabulary_dir=Path(args.vocabulary_dir),
         output_dir=Path(args.output_dir),
     )
+
+
+def _handle_parse_resource(args: argparse.Namespace) -> dict[str, object]:
+    """@notice Execute the `parse-resource` CLI subcommand."""
+
+    encoding = args.encoding or ("utf-8-sig" if args.format == "csv" else "utf-8")
+    if args.format == "csv":
+        return parse_csv_resource(
+            Path(args.resource_path),
+            delimiter=args.delimiter,
+            encoding=encoding,
+            row_limit=args.record_limit,
+        ).to_dict()
+
+    return parse_json_resource(
+        Path(args.resource_path),
+        encoding=encoding,
+        item_limit=args.record_limit,
+    ).to_dict()
+
+
+def _handle_clean_resource(args: argparse.Namespace) -> dict[str, object]:
+    """@notice Execute the `clean-resource` CLI subcommand."""
+
+    encoding = args.encoding or ("utf-8-sig" if args.format == "csv" else "utf-8")
+    if args.format == "csv":
+        parsed_resource = parse_csv_resource(
+            Path(args.resource_path),
+            delimiter=args.delimiter,
+            encoding=encoding,
+            row_limit=args.record_limit,
+        )
+        schema_mapping = None if args.schema_path is None else load_schema_mapping(Path(args.schema_path))
+        return clean_csv_resource(parsed_resource, schema_mapping=schema_mapping).to_dict()
+
+    parsed_resource = parse_json_resource(
+        Path(args.resource_path),
+        encoding=encoding,
+        item_limit=args.record_limit,
+    )
+    return clean_json_resource(parsed_resource).to_dict()
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

@@ -1,7 +1,7 @@
 # Progress
 
 ## Current phase
-- Phase 1: semantic vocabulary metadata
+- Phase 2: downloader, parser, and cleaner baseline
 
 ## Current status
 - Bootstrap implementation complete:
@@ -57,14 +57,36 @@
   - vocabulary tables now publish conservative normalization metadata instead of guessed canonical codes
   - `bandi-cig-modalita-realizzazione` explicitly records unsafe leading-zero collisions such as `01 -> APPALTO` versus `1 -> CONTRATTO D'APPALTO`
   - `build-vocabulary-crosswalks` now reuses cached local CSVs before falling back to CKAN resolution
+- Phase 2 baseline completed for the first three planned items:
+  - smart downloader support:
+    - generic `download-dataset-resource` command added for CSV and JSON resources
+    - `manifest.json` persisted next to materialized resources
+    - manifest-backed cache reuse implemented
+    - legacy Phase 1 cache layouts can now be adopted without re-downloading
+    - HTTP transport now supports partial-download resume
+    - Playwright transport now uses restart-safe temporary files
+  - parser support:
+    - `src/anac_explorator/parsing.py` added
+    - `parse-resource` command added for CSV and JSON resources
+    - parsed row/document dataclasses added for structured downstream handling
+  - cleaner support:
+    - `src/anac_explorator/cleaner.py` added
+    - `clean-resource` command added
+    - central cleaning rules added for BOM/whitespace normalization, conservative NULL handling, and scalar coercion
+    - CSV cleaning can now use schema artifacts to drive typed coercion
+  - hardening pass:
+    - key local CIG and vocabulary resources now have manifest files written by the Phase 2 downloader path
+    - integration tests now cover download -> parse -> clean flows for both CSV and JSON resources
+    - direct `python -m anac_explorator.cli ...` execution now works and is tested
+    - the January 2025 CIG sample was re-parsed and re-cleaned through the CLI as a smoke pass
 - Research references reviewed: `research/ANAC-data.md`, `research/ANAC-data-research.md`
 - Live network access is no longer blocked when using Playwright transport
 
 ## Planned milestones
-1. Resolve the remaining coded fields through dedicated external vocabularies where available
-2. Expand the cross-year comparison beyond January 2007 vs January 2025
-3. Extend the loader path toward DuckDB/Parquet-ready ingestion
-4. Reuse the generated semantic metadata in later CLI and query surfaces
+1. Build the Phase 2 loader from cleaned records into DuckDB/Parquet
+2. Handle incremental delta updates beyond one-off resource materialization
+3. Validate data integrity and vocabulary-linked referential expectations
+4. Resolve the remaining coded fields through dedicated external vocabularies where available
 
 ## Known risks
 - Direct HTTP access to the ANAC API and portal is rejected from this runtime; Playwright is the validated access path

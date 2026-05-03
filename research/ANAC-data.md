@@ -206,9 +206,9 @@ All downloads are ZIP archives. CSV uses `;` (semicolon) delimiter.
 - [x] Create comprehensive data dictionary with column descriptions and code meanings
 
 ### Phase 2: Data Pipeline (Week 2–3)
-- [ ] Build CKAN downloader with smart caching and resume support
-- [ ] Build CSV/JSON parser → Python dataclasses/Pydantic models
-- [ ] Build data cleaner: handle encoding, NULLs, type coercion
+- [x] Build CKAN downloader with smart caching and resume support
+- [x] Build CSV/JSON parser → Python dataclasses/Pydantic models
+- [x] Build data cleaner: handle encoding, NULLs, type coercion
 - [ ] Build loader: CSV → DuckDB/Parquet with proper indexes
 - [ ] Handle incremental delta updates (merging into full datasets)
 - [ ] Validate data integrity (row counts, referential integrity with vocabularies)

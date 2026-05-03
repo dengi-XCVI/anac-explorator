@@ -17,7 +17,10 @@ The current implementation slice now covers:
 6. building controlled vocabulary cross-reference tables
 7. building a comprehensive field dictionary for the January 2025 CIG schema
 8. publishing semantic metadata for coded fields, join contracts, and conservative normalization
-9. documenting the result for later ingestion and querying phases
+9. downloading CKAN CSV and JSON resources with manifest-backed caching
+10. parsing local CSV and JSON resources into structured Python models
+11. cleaning parsed records for later database loading
+12. documenting the result for later ingestion and querying phases
 
 ## Architectural baseline
 - ANAC CKAN metadata is the source of truth for dataset and resource discovery
@@ -34,9 +37,36 @@ The current implementation slice now covers:
 - `anac-explorator compare-schema-files <left> <right>` for schema-diff reporting
 - `anac-explorator build-vocabulary-crosswalks` for normalized vocabulary artifact generation
 - `anac-explorator build-data-dictionary` for January 2025 CIG field-dictionary generation
+- `anac-explorator download-dataset-resource <dataset>` for manifest-backed CSV/JSON acquisition
+- `anac-explorator parse-resource <path>` for structured CSV/JSON parsing
+- `anac-explorator clean-resource <path>` for schema-aware cleaning before loading
+- `python -m anac_explorator.cli ...` for direct module execution of the same CLI surface
 - configurable proxy and request-header support for CKAN access hardening
 - Playwright transport for WAF-protected ANAC access
-- unit coverage for CKAN response parsing, schema inference, and CLI JSON output
+- automated coverage for CKAN response parsing, schema inference, CLI JSON output, and Phase 2 end-to-end pipeline flows
+
+## Phase 2 baseline: downloader, parser, and cleaner
+- The downloader now persists `manifest.json` files beside materialized resources.
+- The downloader behavior now distinguishes:
+  - `cache_hit` when a manifest-backed local artifact can be reused directly
+  - `legacy_cache_hit` when an older Phase 1 cache layout is adopted and wrapped in a new manifest
+  - `fresh`, `resumed`, and `restarted` download states during active fetches
+- Resume behavior:
+  - plain HTTP transport supports byte-range resume for partial downloads
+  - Playwright transport remains the WAF-safe default and now uses restart-safe temporary files when resume is not available
+- The current local cache tree for the main CIG and vocabulary resources has been brought under manifest tracking by rerunning those resources through the Phase 2 downloader path.
+- New structured models now exist for:
+  - download manifests and downloaded resources
+  - parsed CSV rows and parsed JSON resources
+  - cleaned tabular records and cleaned JSON resources
+- Cleaning behavior now centralizes:
+  - BOM and whitespace normalization
+  - conservative NULL-marker normalization
+  - schema-driven scalar coercion for booleans, integers, decimals, dates, and datetimes
+- Integration validation now covers:
+  - CSV resource download -> manifest creation -> parse -> clean -> manifest cache reuse
+  - JSON resource download -> parse -> clean
+  - CLI execution through both the imported `main(...)` function and `python -m anac_explorator.cli`
 
 ## Access hardening knobs
 - `ANAC_EXPLORATOR_PROXY_URL` or `--proxy-url`

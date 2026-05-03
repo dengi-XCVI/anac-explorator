@@ -1,12 +1,14 @@
-"""@notice Shared data models for metadata, schema inspection, and dictionary generation.
+"""@notice Shared data models for metadata, schema inspection, dictionary generation, and pipeline parsing.
 
 @dev These dataclasses back the completed Phase 1 workflow: CKAN metadata
-lookup, dataset download reporting, raw CSV schema mapping, and data-dictionary
-generation.
+lookup, dataset download reporting, raw CSV schema mapping, data-dictionary
+generation, and the first Phase 2 downloader/parser/cleaner pipeline pieces.
 """
 
 from __future__ import annotations
 
+from datetime import date, datetime
+from decimal import Decimal
 from dataclasses import asdict, dataclass, field
 
 
@@ -315,3 +317,335 @@ class DataDictionaryArtifact:
             "sections": self.sections,
             "entries": [entry.to_dict() for entry in self.entries],
         }
+
+
+@dataclass(slots=True)
+class DownloadManifest:
+    """@notice Persist cache and resume metadata for one downloaded resource.
+
+    @param dataset_id CKAN dataset slug used for resolution.
+    @param resource_id CKAN resource identifier when known.
+    @param resource_name CKAN resource name selected for download.
+    @param resource_format CKAN format string for the selected resource.
+    @param resource_url Direct resource URL used for download.
+    @param transport Transport used for the completed download.
+    @param archive_path Local archive path when the source resource was materialized as an archive.
+    @param materialized_path Local path of the extracted or downloaded working file.
+    @param materialized_kind Working file kind such as `csv` or `json`.
+    @param cache_status Whether the current result was freshly downloaded, resumed, restarted, or reused from cache.
+    @param resume_supported Whether the chosen transport can resume partial downloads.
+    @param source_size Size reported by CKAN when available.
+    @param source_last_modified CKAN last-modified timestamp when available.
+    @param downloaded_at ISO timestamp for the completed local materialization.
+    """
+
+    dataset_id: str
+    resource_id: str | None
+    resource_name: str
+    resource_format: str
+    resource_url: str
+    transport: str
+    archive_path: str | None
+    materialized_path: str
+    materialized_kind: str
+    cache_status: str
+    resume_supported: bool
+    source_size: int | None = None
+    source_last_modified: str | None = None
+    downloaded_at: str | None = None
+
+    def to_dict(self) -> dict[str, object]:
+        """@notice Convert the manifest into a serializable dictionary."""
+
+        return asdict(self)
+
+    @classmethod
+    def from_dict(cls, payload: dict[str, object]) -> "DownloadManifest":
+        """@notice Rebuild a manifest from a serialized dictionary."""
+
+        return cls(
+            dataset_id=str(payload["dataset_id"]),
+            resource_id=None if payload.get("resource_id") in (None, "") else str(payload["resource_id"]),
+            resource_name=str(payload["resource_name"]),
+            resource_format=str(payload["resource_format"]),
+            resource_url=str(payload["resource_url"]),
+            transport=str(payload["transport"]),
+            archive_path=None if payload.get("archive_path") in (None, "") else str(payload["archive_path"]),
+            materialized_path=str(payload["materialized_path"]),
+            materialized_kind=str(payload["materialized_kind"]),
+            cache_status=str(payload["cache_status"]),
+            resume_supported=bool(payload["resume_supported"]),
+            source_size=None if payload.get("source_size") in (None, "") else int(payload["source_size"]),
+            source_last_modified=None
+            if payload.get("source_last_modified") in (None, "")
+            else str(payload["source_last_modified"]),
+            downloaded_at=None if payload.get("downloaded_at") in (None, "") else str(payload["downloaded_at"]),
+        )
+
+
+@dataclass(slots=True)
+class DownloadedResourceArtifact:
+    """@notice Capture the local outputs and manifest for one downloaded resource.
+
+    @param manifest Resolved manifest for the downloaded resource.
+    @param manifest_path Path to the persisted manifest JSON file.
+    """
+
+    manifest: DownloadManifest
+    manifest_path: str
+
+    def to_dict(self) -> dict[str, object]:
+        """@notice Convert the downloaded resource artifact into a serializable dictionary."""
+
+        payload = self.manifest.to_dict()
+        payload["manifest_path"] = self.manifest_path
+        return payload
+
+
+@dataclass(slots=True)
+class DownloadedCsvResource:
+    """@notice Capture the local outputs of one downloaded CKAN CSV resource.
+
+    @param artifact Generic downloaded resource artifact.
+    """
+
+    artifact: DownloadedResourceArtifact
+
+    @property
+    def dataset_id(self) -> str:
+        """@notice Dataset identifier used for resolution."""
+
+        return self.artifact.manifest.dataset_id
+
+    @property
+    def resource_name(self) -> str:
+        """@notice CKAN resource name that was selected."""
+
+        return self.artifact.manifest.resource_name
+
+    @property
+    def resource_url(self) -> str:
+        """@notice Direct resource URL used for download."""
+
+        return self.artifact.manifest.resource_url
+
+    @property
+    def archive_path(self) -> str | None:
+        """@notice Local archive path when the source resource was zipped."""
+
+        return self.artifact.manifest.archive_path
+
+    @property
+    def csv_path(self) -> str:
+        """@notice Local materialized CSV path."""
+
+        return self.artifact.manifest.materialized_path
+
+    def to_dict(self) -> dict[str, object]:
+        """@notice Convert the downloaded CSV resource into a serializable dictionary."""
+
+        payload = self.artifact.to_dict()
+        payload["csv_path"] = self.csv_path
+        payload["zip_path"] = self.archive_path
+        return payload
+
+
+@dataclass(slots=True)
+class ParsedCsvRow:
+    """@notice Represent one parsed CSV row before cleaning.
+
+    @param row_number One-based row number excluding the header.
+    @param values Raw string values keyed by preserved source column name.
+    """
+
+    row_number: int
+    values: dict[str, str] = field(default_factory=dict)
+
+    def to_dict(self) -> dict[str, object]:
+        """@notice Convert the parsed row into a serializable dictionary."""
+
+        return asdict(self)
+
+
+@dataclass(slots=True)
+class ParsedCsvResource:
+    """@notice Capture parsed CSV records for a local resource.
+
+    @param source_path Path to the parsed CSV file.
+    @param delimiter CSV delimiter used for parsing.
+    @param encoding Text encoding used for parsing.
+    @param field_names Ordered header names from the source file.
+    @param row_count Total data rows parsed.
+    @param rows Parsed records retained in memory for inspection or downstream work.
+    """
+
+    source_path: str
+    delimiter: str
+    encoding: str
+    field_names: list[str] = field(default_factory=list)
+    row_count: int = 0
+    rows: list[ParsedCsvRow] = field(default_factory=list)
+
+    def to_dict(self) -> dict[str, object]:
+        """@notice Convert the parsed CSV resource into a serializable dictionary."""
+
+        return {
+            "source_path": self.source_path,
+            "delimiter": self.delimiter,
+            "encoding": self.encoding,
+            "field_names": self.field_names,
+            "row_count": self.row_count,
+            "rows": [row.to_dict() for row in self.rows],
+        }
+
+
+@dataclass(slots=True)
+class ParsedJsonResource:
+    """@notice Capture a parsed JSON resource before cleaning.
+
+    @param source_path Path to the parsed JSON file.
+    @param encoding Text encoding used for parsing.
+    @param top_level_type Top-level JSON container type such as `object` or `array`.
+    @param item_count Number of top-level items when countable.
+    @param payload Full parsed JSON payload retained for downstream cleaning.
+    @param sample_items Small sample of parsed top-level items.
+    """
+
+    source_path: str
+    encoding: str
+    top_level_type: str
+    item_count: int | None = None
+    payload: object | None = None
+    sample_items: list[object] = field(default_factory=list)
+
+    def to_dict(self) -> dict[str, object]:
+        """@notice Convert the parsed JSON resource into a serializable dictionary."""
+
+        return {
+            "source_path": self.source_path,
+            "encoding": self.encoding,
+            "top_level_type": self.top_level_type,
+            "item_count": self.item_count,
+            "sample_items": [_to_json_compatible(item) for item in self.sample_items],
+        }
+
+
+@dataclass(slots=True)
+class CleaningIssue:
+    """@notice Describe one cleaning or coercion issue for a parsed field.
+
+    @param field_name Field name affected by the issue.
+    @param raw_value Raw source value before cleaning.
+    @param target_type Target scalar type requested for coercion.
+    @param message Human-readable explanation of the issue.
+    """
+
+    field_name: str
+    raw_value: object
+    target_type: str
+    message: str
+
+    def to_dict(self) -> dict[str, object]:
+        """@notice Convert the cleaning issue into a serializable dictionary."""
+
+        return {
+            "field_name": self.field_name,
+            "raw_value": _to_json_compatible(self.raw_value),
+            "target_type": self.target_type,
+            "message": self.message,
+        }
+
+
+@dataclass(slots=True)
+class CleanedRecord:
+    """@notice Capture one cleaned record ready for downstream loading.
+
+    @param row_number One-based row number when available.
+    @param raw_values Original parsed values before cleaning.
+    @param cleaned_values Cleaned and coerced values.
+    @param issues Cleaning issues observed while normalizing the record.
+    """
+
+    row_number: int | None
+    raw_values: dict[str, object] = field(default_factory=dict)
+    cleaned_values: dict[str, object] = field(default_factory=dict)
+    issues: list[CleaningIssue] = field(default_factory=list)
+
+    def to_dict(self) -> dict[str, object]:
+        """@notice Convert the cleaned record into a serializable dictionary."""
+
+        return {
+            "row_number": self.row_number,
+            "raw_values": {key: _to_json_compatible(value) for key, value in self.raw_values.items()},
+            "cleaned_values": {key: _to_json_compatible(value) for key, value in self.cleaned_values.items()},
+            "issues": [issue.to_dict() for issue in self.issues],
+        }
+
+
+@dataclass(slots=True)
+class CleanedTabularResource:
+    """@notice Capture cleaned tabular records for later loading.
+
+    @param source_path Path to the cleaned source file.
+    @param format_name Resource format such as `csv`.
+    @param record_count Number of parsed records processed.
+    @param cleaned_records Cleaned records retained in memory.
+    @param type_hints Type hints applied during coercion.
+    """
+
+    source_path: str
+    format_name: str
+    record_count: int
+    cleaned_records: list[CleanedRecord] = field(default_factory=list)
+    type_hints: dict[str, str] = field(default_factory=dict)
+
+    def to_dict(self) -> dict[str, object]:
+        """@notice Convert the cleaned tabular resource into a serializable dictionary."""
+
+        return {
+            "source_path": self.source_path,
+            "format_name": self.format_name,
+            "record_count": self.record_count,
+            "type_hints": self.type_hints,
+            "cleaned_records": [record.to_dict() for record in self.cleaned_records],
+        }
+
+
+@dataclass(slots=True)
+class CleanedJsonResource:
+    """@notice Capture a cleaned JSON document for later loading.
+
+    @param source_path Path to the cleaned JSON source.
+    @param top_level_type Top-level JSON container type.
+    @param cleaned_payload Cleaned JSON-compatible payload.
+    @param issues Cleaning issues observed while normalizing the document.
+    """
+
+    source_path: str
+    top_level_type: str
+    cleaned_payload: object
+    issues: list[CleaningIssue] = field(default_factory=list)
+
+    def to_dict(self) -> dict[str, object]:
+        """@notice Convert the cleaned JSON resource into a serializable dictionary."""
+
+        return {
+            "source_path": self.source_path,
+            "top_level_type": self.top_level_type,
+            "cleaned_payload": _to_json_compatible(self.cleaned_payload),
+            "issues": [issue.to_dict() for issue in self.issues],
+        }
+
+
+def _to_json_compatible(value: object) -> object:
+    """@notice Convert richer Python scalars into JSON-compatible values."""
+
+    if isinstance(value, Decimal):
+        return str(value)
+    if isinstance(value, (date, datetime)):
+        return value.isoformat()
+    if isinstance(value, dict):
+        return {str(key): _to_json_compatible(item) for key, item in value.items()}
+    if isinstance(value, list):
+        return [_to_json_compatible(item) for item in value]
+    return value
