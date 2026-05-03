@@ -22,6 +22,12 @@
       "label_column": "tipo-scelta-contraente_denominazione",
       "extra_columns": [],
       "entry_count": 46,
+      "normalization": {
+        "canonicalization_strategy": "preserve_raw",
+        "canonicalization_safe": true,
+        "unsafe_rules": [],
+        "label_alias_groups": []
+      },
       "entries": [
         {
           "code": "1",

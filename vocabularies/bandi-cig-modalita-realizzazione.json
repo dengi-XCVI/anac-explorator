@@ -22,6 +22,83 @@
       "label_column": "modalita-realizzazione_denominazione",
       "extra_columns": [],
       "entry_count": 28,
+      "normalization": {
+        "canonicalization_strategy": "preserve_raw",
+        "canonicalization_safe": false,
+        "unsafe_rules": [
+          {
+            "rule": "strip_leading_zeroes",
+            "canonical_code": "1",
+            "variants": [
+              {
+                "code": "01",
+                "label": "APPALTO"
+              },
+              {
+                "code": "1",
+                "label": "CONTRATTO D'APPALTO"
+              }
+            ]
+          },
+          {
+            "rule": "strip_leading_zeroes",
+            "canonical_code": "2",
+            "variants": [
+              {
+                "code": "02",
+                "label": "APPALTO SU PROGETTO ESECUTIVO"
+              },
+              {
+                "code": "2",
+                "label": "CONTRATTO D'APPALTO DISCENDENTE DA ACCORDO QUADRO/CONVENZIONE CON SUCCESSIVO CONFRONTO COMPETITIVO"
+              }
+            ]
+          },
+          {
+            "rule": "strip_leading_zeroes",
+            "canonical_code": "3",
+            "variants": [
+              {
+                "code": "03",
+                "label": "APPALTO SU PROGETTO DEFINITIVO"
+              },
+              {
+                "code": "3",
+                "label": "CONTRATTO DI CONCESSIONE DI LAVORI"
+              }
+            ]
+          },
+          {
+            "rule": "strip_leading_zeroes",
+            "canonical_code": "6",
+            "variants": [
+              {
+                "code": "06",
+                "label": "ACCORDO QUADRO"
+              },
+              {
+                "code": "6",
+                "label": "AFFIDAMENTO A CONTRAENTE GENERALE"
+              }
+            ]
+          },
+          {
+            "rule": "strip_leading_zeroes",
+            "canonical_code": "9",
+            "variants": [
+              {
+                "code": "09",
+                "label": "IN ECONOMIA"
+              },
+              {
+                "code": "9",
+                "label": "ACCORDO QUADRO/CONVENZIONE"
+              }
+            ]
+          }
+        ],
+        "label_alias_groups": []
+      },
       "entries": [
         {
           "code": "01",

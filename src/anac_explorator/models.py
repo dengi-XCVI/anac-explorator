@@ -146,21 +146,67 @@ class SchemaMapping:
 
 
 @dataclass(slots=True)
-class DataDictionaryCodeReference:
-    """@notice Describe a vocabulary or code-meaning link for one field.
+class JoinContract:
+    """@notice Describe how a source field joins to a vocabulary table.
 
-    @param dataset_id Vocabulary dataset identifier.
+    @param target_dataset Dataset identifier that owns the target table.
+    @param target_table Logical target table name inside the generated artifact.
+    @param source_field Source field name from the dictionary surface.
+    @param target_field Target field name used as the join key.
+    @param target_label_field Target field name that carries the human-readable label.
+    @param join_type Recommended SQL join type.
+    """
+
+    target_dataset: str
+    target_table: str
+    source_field: str
+    target_field: str
+    target_label_field: str
+    join_type: str = "left"
+
+    def to_dict(self) -> dict[str, object]:
+        """@notice Convert the join contract into a serializable dictionary."""
+
+        return asdict(self)
+
+
+@dataclass(slots=True)
+class DataDictionaryCodeReference:
+    """@notice Describe how one field can be decoded as a code/label concept.
+
+    @param reference_kind Whether the field resolves through an external vocabulary
+    dataset or an inline label field.
+    @param dataset_id Vocabulary dataset identifier when an external table exists.
     @param table_name Vocabulary table name inside the generated artifact.
-    @param resolved_fields Fields covered by this vocabulary table.
+    @param source_code_field Source field that carries the coded value.
+    @param source_label_field Source field that carries the human-readable label.
+    @param target_code_field Target field name used as the code key in the
+    normalized vocabulary table.
+    @param target_label_field Target field name used as the label in the normalized
+    vocabulary table.
+    @param table_code_column Raw source code column preserved by the vocabulary table.
+    @param table_label_column Raw source label column preserved by the vocabulary table.
+    @param resolved_fields Fields covered by this reference.
+    @param external_vocabulary_status Whether a dedicated external vocabulary exists.
+    @param join_contract Explicit join contract for SQL generation when applicable.
     @param notes Human-readable note about the scope of the link.
     @param artifact_path Path to the generated vocabulary artifact.
     @param entry_count Number of available code/label entries in the linked table.
     @param preview_entries Small preview of code meanings for quick inspection.
     """
 
-    dataset_id: str
-    table_name: str
+    reference_kind: str
+    dataset_id: str | None = None
+    table_name: str | None = None
+    source_code_field: str | None = None
+    source_label_field: str | None = None
+    target_code_field: str | None = None
+    target_label_field: str | None = None
+    table_code_column: str | None = None
+    table_label_column: str | None = None
     resolved_fields: list[str] = field(default_factory=list)
+    external_vocabulary_status: str = "unknown"
+    join_contract: JoinContract | None = None
     notes: str = ""
     artifact_path: str | None = None
     entry_count: int | None = None
@@ -169,7 +215,9 @@ class DataDictionaryCodeReference:
     def to_dict(self) -> dict[str, object]:
         """@notice Convert the code reference into a serializable dictionary."""
 
-        return asdict(self)
+        payload = asdict(self)
+        payload["join_contract"] = None if self.join_contract is None else self.join_contract.to_dict()
+        return payload
 
 
 @dataclass(slots=True)
@@ -179,11 +227,15 @@ class DataDictionaryEntry:
     @param name Raw source field name.
     @param section Logical section used in the human-readable dictionary.
     @param description Human-readable field description.
+    @param semantic_type High-level semantic category used by downstream tools.
+    @param value_pattern Pragmatic pattern summary for the observed values.
     @param inferred_type Current inferred type from the schema artifact.
     @param nullable Whether the field is nullable in the current schema artifact.
     @param non_empty_samples Representative sample values from the schema artifact.
     @param related_fields Other fields closely tied to this one.
-    @param code_meaning_status Whether code meanings are linked, missing, or not applicable.
+    @param paired_field Sibling field that carries the paired code or label meaning.
+    @param code_meaning_status Systematic status describing how coded values are resolved.
+    @param external_vocabulary_status Whether a dedicated external vocabulary exists.
     @param code_reference Linked vocabulary reference when available.
     @param cross_year_notes Cross-year notes derived from the comparison artifact.
     @param notes Additional field-specific notes or caveats.
@@ -192,11 +244,15 @@ class DataDictionaryEntry:
     name: str
     section: str
     description: str
+    semantic_type: str
+    value_pattern: str
     inferred_type: str
     nullable: bool
     non_empty_samples: list[str] = field(default_factory=list)
     related_fields: list[str] = field(default_factory=list)
-    code_meaning_status: str = "not_applicable"
+    paired_field: str | None = None
+    code_meaning_status: str = "unknown"
+    external_vocabulary_status: str = "not_applicable"
     code_reference: DataDictionaryCodeReference | None = None
     cross_year_notes: list[str] = field(default_factory=list)
     notes: list[str] = field(default_factory=list)
@@ -208,11 +264,15 @@ class DataDictionaryEntry:
             "name": self.name,
             "section": self.section,
             "description": self.description,
+            "semantic_type": self.semantic_type,
+            "value_pattern": self.value_pattern,
             "inferred_type": self.inferred_type,
             "nullable": self.nullable,
             "non_empty_samples": self.non_empty_samples,
             "related_fields": self.related_fields,
+            "paired_field": self.paired_field,
             "code_meaning_status": self.code_meaning_status,
+            "external_vocabulary_status": self.external_vocabulary_status,
             "cross_year_notes": self.cross_year_notes,
             "notes": self.notes,
         }

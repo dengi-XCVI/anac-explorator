@@ -1,7 +1,7 @@
 # Progress
 
 ## Current phase
-- Phase 1: comprehensive data dictionary
+- Phase 1: semantic vocabulary metadata
 
 ## Current status
 - Bootstrap implementation complete:
@@ -47,16 +47,24 @@
   - field entries published: `61`
   - logical sections published: `9`
   - resolved code-meaning links: `cod_tipo_scelta_contraente`, `tipo_scelta_contraente`, `cod_modalita_realizzazione`, `modalita_realizzazione`
-  - unresolved current code fields now surfaced directly in dictionary notes: `COD_MODALITA_INDIZIONE_SPECIALI`, `COD_MODALITA_INDIZIONE_SERVIZI`, `COD_STRUMENTO_SVOLGIMENTO`, `COD_MOTIVO_URGENZA`, `COD_IPOTESI_COLLEGAMENTO`, `COD_ESITO`
+  - inline-resolved current code fields now surfaced directly in the dictionary: `COD_MODALITA_INDIZIONE_SPECIALI`, `COD_MODALITA_INDIZIONE_SERVIZI`, `COD_STRUMENTO_SVOLGIMENTO`, `COD_MOTIVO_URGENZA`, `COD_IPOTESI_COLLEGAMENTO`, `COD_ESITO`
   - cross-year notes now embedded where January 2007 vs January 2025 differences already exist, including `numero_gara`, `CUI_PROGRAMMA`, delegation fields, and current nullability shifts
+- Semantic metadata refinement completed:
+  - `vocabularies/index.json` now publishes a machine-readable `code_meaning_status` taxonomy
+  - external code fields now expose explicit join contracts through both `field_links` and dictionary `code_reference` entries
+  - the previously opaque coded-field gaps are now classified as `resolved_inline` plus `missing_dataset`
+  - dictionary entries now include `semantic_type`, `value_pattern`, `paired_field`, and `external_vocabulary_status`
+  - vocabulary tables now publish conservative normalization metadata instead of guessed canonical codes
+  - `bandi-cig-modalita-realizzazione` explicitly records unsafe leading-zero collisions such as `01 -> APPALTO` versus `1 -> CONTRATTO D'APPALTO`
+  - `build-vocabulary-crosswalks` now reuses cached local CSVs before falling back to CKAN resolution
 - Research references reviewed: `research/ANAC-data.md`, `research/ANAC-data-research.md`
 - Live network access is no longer blocked when using Playwright transport
 
 ## Planned milestones
-1. Expand the cross-year comparison beyond January 2007 vs January 2025
-2. Resolve the remaining coded fields not yet covered by controlled vocabularies
+1. Resolve the remaining coded fields through dedicated external vocabularies where available
+2. Expand the cross-year comparison beyond January 2007 vs January 2025
 3. Extend the loader path toward DuckDB/Parquet-ready ingestion
-4. Reuse the generated dictionary artifacts in later CLI and query surfaces
+4. Reuse the generated semantic metadata in later CLI and query surfaces
 
 ## Known risks
 - Direct HTTP access to the ANAC API and portal is rejected from this runtime; Playwright is the validated access path

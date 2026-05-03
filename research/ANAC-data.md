@@ -202,8 +202,8 @@ All downloads are ZIP archives. CSV uses `;` (semicolon) delimiter.
 - [x] Verify API access and download capability
 - [x] Download sample data (1 month of CIG) and map complete column schemas
 - [x] Identify schema variations across years (2007 vs 2025)
-- [ ] Build controlled vocabulary cross-reference tables
-- [ ] Create comprehensive data dictionary with column descriptions and code meanings
+- [x] Build controlled vocabulary cross-reference tables
+- [x] Create comprehensive data dictionary with column descriptions and code meanings
 
 ### Phase 2: Data Pipeline (Week 2–3)
 - [ ] Build CKAN downloader with smart caching and resume support

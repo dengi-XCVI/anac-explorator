@@ -16,7 +16,8 @@ The current implementation slice now covers:
 5. comparing schema variations across years
 6. building controlled vocabulary cross-reference tables
 7. building a comprehensive field dictionary for the January 2025 CIG schema
-8. documenting the result for later ingestion and querying phases
+8. publishing semantic metadata for coded fields, join contracts, and conservative normalization
+9. documenting the result for later ingestion and querying phases
 
 ## Architectural baseline
 - ANAC CKAN metadata is the source of truth for dataset and resource discovery
@@ -136,6 +137,16 @@ validated working path is `--transport playwright`.
   - table: `tipo_fattispecie_contrattuale` → `78` entries
   - resolves SMARTCIG contract-type identifiers
 
+## Conservative normalization findings
+- Vocabulary artifacts now publish explicit normalization metadata instead of guessed canonical codes.
+- `vocabularies/bandi-cig-modalita-realizzazione.json` records that stripping leading zeroes would be unsafe because it would wrongly merge:
+  - `01 -> APPALTO` with `1 -> CONTRATTO D'APPALTO`
+  - `02 -> APPALTO SU PROGETTO ESECUTIVO` with `2 -> CONTRATTO D'APPALTO DISCENDENTE DA ACCORDO QUADRO/CONVENZIONE CON SUCCESSIVO CONFRONTO COMPETITIVO`
+  - `03 -> APPALTO SU PROGETTO DEFINITIVO` with `3 -> CONTRATTO DI CONCESSIONE DI LAVORI`
+  - `06 -> ACCORDO QUADRO` with `6 -> AFFIDAMENTO A CONTRAENTE GENERALE`
+  - `09 -> IN ECONOMIA` with `9 -> ACCORDO QUADRO/CONVENZIONE`
+- The repository therefore preserves raw values and publishes collision evidence rather than inventing a canonical merged code.
+
 ## Current CIG field coverage and gaps
 - Covered directly in the current January 2025 CIG schema:
   - `cod_tipo_scelta_contraente` ↔ `tipo_scelta_contraente`
@@ -144,13 +155,13 @@ validated working path is `--transport playwright`.
   - DPCM aggregation category and derogation fields
   - work-category identifiers, type codes, and import-class variants
   - SMARTCIG contract-type identifiers
-- Still unresolved for the current January 2025 CIG schema:
-  - `cod_modalita_indizione_speciali`
-  - `cod_modalita_indizione_servizi`
-  - `cod_strumento_svolgimento`
-  - `cod_motivo_urgenza`
-  - `cod_ipotesi_collegamento`
-  - `cod_esito`
+- Inline-resolved but still missing a dedicated external dataset:
+  - `cod_modalita_indizione_speciali` ↔ `MODALITA_INDIZIONE_SPECIALI`
+  - `cod_modalita_indizione_servizi` ↔ `MODALITA_INDIZIONE_SERVIZI`
+  - `cod_strumento_svolgimento` ↔ `STRUMENTO_SVOLGIMENTO`
+  - `cod_motivo_urgenza` ↔ `MOTIVO_URGENZA`
+  - `cod_ipotesi_collegamento` ↔ `IPOTESI_COLLEGAMENTO`
+  - `cod_esito` ↔ `ESITO`
 
 ## Data dictionary outputs
 - Machine-readable artifact: `dictionaries/cig_2025_01.dictionary.json`
@@ -165,18 +176,44 @@ validated working path is `--transport playwright`.
   - resolved through live vocabulary artifacts:
     - `cod_tipo_scelta_contraente` ↔ `tipo_scelta_contraente`
     - `cod_modalita_realizzazione` ↔ `modalita_realizzazione`
-  - surfaced as explicit unresolved gaps inside the dictionary:
-    - `COD_MODALITA_INDIZIONE_SPECIALI`
-    - `COD_MODALITA_INDIZIONE_SERVIZI`
-    - `COD_STRUMENTO_SVOLGIMENTO`
-    - `COD_MOTIVO_URGENZA`
-    - `COD_IPOTESI_COLLEGAMENTO`
-    - `COD_ESITO`
+  - resolved inline from the January 2025 extract while still marked `missing_dataset` externally:
+    - `COD_MODALITA_INDIZIONE_SPECIALI` ↔ `MODALITA_INDIZIONE_SPECIALI`
+    - `COD_MODALITA_INDIZIONE_SERVIZI` ↔ `MODALITA_INDIZIONE_SERVIZI`
+    - `COD_STRUMENTO_SVOLGIMENTO` ↔ `STRUMENTO_SVOLGIMENTO`
+    - `COD_MOTIVO_URGENZA` ↔ `MOTIVO_URGENZA`
+    - `COD_IPOTESI_COLLEGAMENTO` ↔ `IPOTESI_COLLEGAMENTO`
+    - `COD_ESITO` ↔ `ESITO`
 - Cross-year notes currently embedded for:
   - type shifts such as `numero_gara` and `CUI_PROGRAMMA`
   - delegation/linkage fields that were empty in January 2007 but typed in January 2025
   - nullability shifts such as `FLAG_PNRR_PNC`, `n_lotti_componenti`, `descrizione_cpv`, `id_centro_costo`, and `sezione_regionale`
 
+## Semantic metadata model
+- `vocabularies/index.json` now publishes a machine-readable `code_meaning_status` taxonomy:
+  - `resolved_external`
+  - `resolved_inline`
+  - `missing_dataset`
+  - `free_text`
+  - `not_coded`
+  - `unknown`
+- `field_links` now include explicit join contracts for the current externally resolved fields:
+  - `cod_tipo_scelta_contraente` -> `bandi-cig-tipo-scelta-contraente.tipo_scelta_contraente`
+  - `cod_modalita_realizzazione` -> `bandi-cig-modalita-realizzazione.modalita_realizzazione`
+- `current_cig_schema_gaps` is now a richer analysis surface rather than a flat note list. Each entry includes:
+  - `observed_pattern`
+  - unique value and label samples
+  - inline paired code/label samples
+  - `hypothesis`
+  - `normalization`
+- Dictionary entries now carry:
+  - `semantic_type`
+  - `value_pattern`
+  - `paired_field`
+  - `external_vocabulary_status`
+  - richer `code_reference` objects with either:
+    - `reference_kind = external_vocabulary`
+    - `reference_kind = inline_label_field`
+
 ## Open questions
 - Compare additional months and older years to see whether the January 2007 vs January 2025 alignment holds outside this month pair.
-- Resolve the remaining current CIG coded fields not yet covered by a controlled vocabulary dataset.
+- Resolve the remaining current CIG coded fields through dedicated external datasets where available, rather than only through inline label pairs.

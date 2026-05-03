@@ -42,25 +42,61 @@
       "table_count": 1
     }
   ],
+  "code_meaning_status_taxonomy": {
+    "resolved_external": "Field values can be joined to a dedicated external vocabulary artifact.",
+    "resolved_inline": "Field values are decoded by a sibling label field already present in the CIG extract.",
+    "missing_dataset": "Values look coded, but neither an external vocabulary nor an inline label is available yet.",
+    "free_text": "Values behave like natural language and no controlled vocabulary is expected.",
+    "not_coded": "The field is structured but not a controlled-vocabulary code.",
+    "unknown": "The field could not be classified confidently from the current evidence."
+  },
   "field_links": [
     {
       "scope": "current_cig_schema",
       "dataset_id": "bandi-cig-tipo-scelta-contraente",
       "table_name": "tipo_scelta_contraente",
+      "source_code_field": "cod_tipo_scelta_contraente",
+      "source_label_field": "tipo_scelta_contraente",
+      "target_code_field": "code",
+      "target_label_field": "label",
+      "code_meaning_status": "resolved_external",
+      "external_vocabulary_status": "resolved",
       "resolved_fields": [
         "cod_tipo_scelta_contraente",
         "tipo_scelta_contraente"
       ],
+      "join_contract": {
+        "target_dataset": "bandi-cig-tipo-scelta-contraente",
+        "target_table": "tipo_scelta_contraente",
+        "source_field": "cod_tipo_scelta_contraente",
+        "target_field": "code",
+        "target_label_field": "label",
+        "join_type": "left"
+      },
       "notes": "Directly resolves a code/label pair already present in the January 2025 CIG schema."
     },
     {
       "scope": "current_cig_schema",
       "dataset_id": "bandi-cig-modalita-realizzazione",
       "table_name": "modalita_realizzazione",
+      "source_code_field": "cod_modalita_realizzazione",
+      "source_label_field": "modalita_realizzazione",
+      "target_code_field": "code",
+      "target_label_field": "label",
+      "code_meaning_status": "resolved_external",
+      "external_vocabulary_status": "resolved",
       "resolved_fields": [
         "cod_modalita_realizzazione",
         "modalita_realizzazione"
       ],
+      "join_contract": {
+        "target_dataset": "bandi-cig-modalita-realizzazione",
+        "target_table": "modalita_realizzazione",
+        "source_field": "cod_modalita_realizzazione",
+        "target_field": "code",
+        "target_label_field": "label",
+        "join_type": "left"
+      },
       "notes": "Directly resolves a code/label pair already present in the January 2025 CIG schema."
     },
     {
@@ -130,27 +166,471 @@
   "current_cig_schema_gaps": [
     {
       "field": "cod_modalita_indizione_speciali",
-      "notes": "No dedicated controlled vocabulary dataset has been wired yet."
+      "label_field": "MODALITA_INDIZIONE_SPECIALI",
+      "semantic_type": "controlled_vocabulary_code",
+      "code_meaning_status": "resolved_inline",
+      "external_vocabulary_status": "missing_dataset",
+      "observed_pattern": "code_like",
+      "non_empty_row_count": 83,
+      "unique_value_count": 4,
+      "unique_values_sample": [
+        "1.0",
+        "2.0",
+        "3.0",
+        "4.0"
+      ],
+      "unique_label_count": 4,
+      "unique_labels_sample": [
+        "GARA INDETTA MEDIANTE AVVISO PERIODICO INDICATIVO",
+        "GARA INDETTA MEDIANTE AVVISO SULL'ESISTENZA DI UN SISTEMA DI QUALIFICAZIONE",
+        "GARA INDETTA MEDIANTE BANDO DI GARA",
+        "PROCEDURA CHE NON PREVEDE INDIZIONE DI GARA"
+      ],
+      "paired_values_sample": [
+        {
+          "code": "4.0",
+          "label": "PROCEDURA CHE NON PREVEDE INDIZIONE DI GARA"
+        },
+        {
+          "code": "2.0",
+          "label": "GARA INDETTA MEDIANTE AVVISO SULL'ESISTENZA DI UN SISTEMA DI QUALIFICAZIONE"
+        },
+        {
+          "code": "3.0",
+          "label": "GARA INDETTA MEDIANTE BANDO DI GARA"
+        },
+        {
+          "code": "1.0",
+          "label": "GARA INDETTA MEDIANTE AVVISO PERIODICO INDICATIVO"
+        }
+      ],
+      "normalization": {
+        "canonicalization_strategy": "preserve_raw",
+        "canonicalization_safe": false,
+        "unsafe_rules": [
+          {
+            "rule": "heuristic_code_merge",
+            "reason": "No external vocabulary dataset is wired, so canonical concepts cannot be proven yet."
+          }
+        ],
+        "label_alias_groups": []
+      },
+      "hypothesis": "Likely controlled vocabulary already embedded in the CIG extract; no dedicated external dataset is wired yet.",
+      "notes": [
+        "No dedicated controlled vocabulary dataset has been wired yet."
+      ]
     },
     {
       "field": "cod_modalita_indizione_servizi",
-      "notes": "No dedicated controlled vocabulary dataset has been wired yet."
+      "label_field": "MODALITA_INDIZIONE_SERVIZI",
+      "semantic_type": "controlled_vocabulary_code",
+      "code_meaning_status": "resolved_inline",
+      "external_vocabulary_status": "missing_dataset",
+      "observed_pattern": "code_like",
+      "non_empty_row_count": 42,
+      "unique_value_count": 5,
+      "unique_values_sample": [
+        "1.0",
+        "3.0",
+        "4.0",
+        "6.0",
+        "7.0"
+      ],
+      "unique_label_count": 5,
+      "unique_labels_sample": [
+        "GARA INDETTA MEDIANTE AVVISO DI GARA",
+        "GARA INDETTA MEDIANTE AVVISO SULL’ESISTENZA DI UN SISTEMA DI QUALIFICAZIONE",
+        "GARA INDETTA MEDIANTE BANDO DI GARA",
+        "PROCEDURA CHE NON PREVEDE INDIZIONE DI GARA",
+        "PROCEDURA NEGOZIATA SENZA PREVIO AVVISO DI GARA CONFORMEMENTE ALL'ART.63"
+      ],
+      "paired_values_sample": [
+        {
+          "code": "7.0",
+          "label": "PROCEDURA CHE NON PREVEDE INDIZIONE DI GARA"
+        },
+        {
+          "code": "6.0",
+          "label": "PROCEDURA NEGOZIATA SENZA PREVIO AVVISO DI GARA CONFORMEMENTE ALL'ART.63"
+        },
+        {
+          "code": "4.0",
+          "label": "GARA INDETTA MEDIANTE BANDO DI GARA"
+        },
+        {
+          "code": "3.0",
+          "label": "GARA INDETTA MEDIANTE AVVISO SULL’ESISTENZA DI UN SISTEMA DI QUALIFICAZIONE"
+        },
+        {
+          "code": "1.0",
+          "label": "GARA INDETTA MEDIANTE AVVISO DI GARA"
+        }
+      ],
+      "normalization": {
+        "canonicalization_strategy": "preserve_raw",
+        "canonicalization_safe": false,
+        "unsafe_rules": [
+          {
+            "rule": "heuristic_code_merge",
+            "reason": "No external vocabulary dataset is wired, so canonical concepts cannot be proven yet."
+          }
+        ],
+        "label_alias_groups": []
+      },
+      "hypothesis": "Likely controlled vocabulary already embedded in the CIG extract; no dedicated external dataset is wired yet.",
+      "notes": [
+        "No dedicated controlled vocabulary dataset has been wired yet."
+      ]
     },
     {
       "field": "cod_strumento_svolgimento",
-      "notes": "No dedicated controlled vocabulary dataset has been wired yet."
+      "label_field": "STRUMENTO_SVOLGIMENTO",
+      "semantic_type": "controlled_vocabulary_code",
+      "code_meaning_status": "resolved_inline",
+      "external_vocabulary_status": "missing_dataset",
+      "observed_pattern": "code_like",
+      "non_empty_row_count": 2726,
+      "unique_value_count": 5,
+      "unique_values_sample": [
+        "1.0",
+        "3.0",
+        "4.0",
+        "5.0",
+        "7.0"
+      ],
+      "unique_label_count": 5,
+      "unique_labels_sample": [
+        "CATALOGO ELETTRONICO ART.57: ACQUISTO DIRETTO",
+        "CATALOGO ELETTRONICO ART.57: RICHIESTA DI OFFERTA",
+        "PROCEDURA SVOLTA IN MODALITÀ TRADIZIONALE O CARTACEA",
+        "PROCEDURE SVOLTE ATTRAVERSO PIATTAFORME TELEMATICHE DI NEGOZIAZIONE ART.58",
+        "SISTEMA DINAMICO DI ACQUISIZIONE"
+      ],
+      "paired_values_sample": [
+        {
+          "code": "5.0",
+          "label": "PROCEDURE SVOLTE ATTRAVERSO PIATTAFORME TELEMATICHE DI NEGOZIAZIONE ART.58"
+        },
+        {
+          "code": "1.0",
+          "label": "PROCEDURA SVOLTA IN MODALITÀ TRADIZIONALE O CARTACEA"
+        },
+        {
+          "code": "3.0",
+          "label": "CATALOGO ELETTRONICO ART.57: ACQUISTO DIRETTO"
+        },
+        {
+          "code": "7.0",
+          "label": "SISTEMA DINAMICO DI ACQUISIZIONE"
+        },
+        {
+          "code": "4.0",
+          "label": "CATALOGO ELETTRONICO ART.57: RICHIESTA DI OFFERTA"
+        }
+      ],
+      "normalization": {
+        "canonicalization_strategy": "preserve_raw",
+        "canonicalization_safe": false,
+        "unsafe_rules": [
+          {
+            "rule": "heuristic_code_merge",
+            "reason": "No external vocabulary dataset is wired, so canonical concepts cannot be proven yet."
+          }
+        ],
+        "label_alias_groups": []
+      },
+      "hypothesis": "Likely controlled vocabulary already embedded in the CIG extract; no dedicated external dataset is wired yet.",
+      "notes": [
+        "No dedicated controlled vocabulary dataset has been wired yet."
+      ]
     },
     {
       "field": "cod_motivo_urgenza",
-      "notes": "No dedicated controlled vocabulary dataset has been wired yet."
+      "label_field": "MOTIVO_URGENZA",
+      "semantic_type": "controlled_vocabulary_code",
+      "code_meaning_status": "resolved_inline",
+      "external_vocabulary_status": "missing_dataset",
+      "observed_pattern": "code_like",
+      "non_empty_row_count": 76974,
+      "unique_value_count": 5,
+      "unique_values_sample": [
+        "1.0",
+        "2.0",
+        "4.0",
+        "5.0",
+        "7.0"
+      ],
+      "unique_label_count": 10,
+      "unique_labels_sample": [
+        "ESTREMA URGENZA PER VINCOLO IDROGEOLOGICO, NORMATIVA ANTISISMICA E MESSA IN SICUREZZA EDIFICI SCOLASTICI",
+        "Estrema urgenza per vincolo idrogeologico, normativa antisismica e messa in sicurezza edifici scolastici",
+        "NON APPLICABILE",
+        "PROCEDURA NEGOZIATA PER ESTREMA URGENZA",
+        "Procedura negoziata per estrema urgenza",
+        "SOMMA URGENZA BENI CULTURALI",
+        "SOMMA URGENZA E PROTEZIONE CIVILE",
+        "Somma urgenza beni culturali",
+        "Somma urgenza e protezione civile",
+        "non applicabile"
+      ],
+      "paired_values_sample": [
+        {
+          "code": "7.0",
+          "label": "non applicabile"
+        },
+        {
+          "code": "7.0",
+          "label": "NON APPLICABILE"
+        },
+        {
+          "code": "4.0",
+          "label": "PROCEDURA NEGOZIATA PER ESTREMA URGENZA"
+        },
+        {
+          "code": "2.0",
+          "label": "SOMMA URGENZA E PROTEZIONE CIVILE"
+        },
+        {
+          "code": "1.0",
+          "label": "SOMMA URGENZA BENI CULTURALI"
+        },
+        {
+          "code": "2.0",
+          "label": "Somma urgenza e protezione civile"
+        },
+        {
+          "code": "5.0",
+          "label": "ESTREMA URGENZA PER VINCOLO IDROGEOLOGICO, NORMATIVA ANTISISMICA E MESSA IN SICUREZZA EDIFICI SCOLASTICI"
+        },
+        {
+          "code": "4.0",
+          "label": "Procedura negoziata per estrema urgenza"
+        },
+        {
+          "code": "5.0",
+          "label": "Estrema urgenza per vincolo idrogeologico, normativa antisismica e messa in sicurezza edifici scolastici"
+        },
+        {
+          "code": "1.0",
+          "label": "Somma urgenza beni culturali"
+        }
+      ],
+      "normalization": {
+        "canonicalization_strategy": "preserve_raw",
+        "canonicalization_safe": false,
+        "unsafe_rules": [
+          {
+            "rule": "heuristic_code_merge",
+            "reason": "No external vocabulary dataset is wired, so canonical concepts cannot be proven yet."
+          }
+        ],
+        "label_alias_groups": [
+          {
+            "code": "1.0",
+            "normalized_label": "somma urgenza beni culturali",
+            "variants": [
+              "SOMMA URGENZA BENI CULTURALI",
+              "Somma urgenza beni culturali"
+            ]
+          },
+          {
+            "code": "2.0",
+            "normalized_label": "somma urgenza e protezione civile",
+            "variants": [
+              "SOMMA URGENZA E PROTEZIONE CIVILE",
+              "Somma urgenza e protezione civile"
+            ]
+          },
+          {
+            "code": "4.0",
+            "normalized_label": "procedura negoziata per estrema urgenza",
+            "variants": [
+              "PROCEDURA NEGOZIATA PER ESTREMA URGENZA",
+              "Procedura negoziata per estrema urgenza"
+            ]
+          },
+          {
+            "code": "5.0",
+            "normalized_label": "estrema urgenza per vincolo idrogeologico, normativa antisismica e messa in sicurezza edifici scolastici",
+            "variants": [
+              "ESTREMA URGENZA PER VINCOLO IDROGEOLOGICO, NORMATIVA ANTISISMICA E MESSA IN SICUREZZA EDIFICI SCOLASTICI",
+              "Estrema urgenza per vincolo idrogeologico, normativa antisismica e messa in sicurezza edifici scolastici"
+            ]
+          },
+          {
+            "code": "7.0",
+            "normalized_label": "non applicabile",
+            "variants": [
+              "NON APPLICABILE",
+              "non applicabile"
+            ]
+          }
+        ]
+      },
+      "hypothesis": "Likely controlled vocabulary already embedded in the CIG extract; no dedicated external dataset is wired yet.",
+      "notes": [
+        "No dedicated controlled vocabulary dataset has been wired yet.",
+        "Inline labels show cosmetic variants, so raw labels should be preserved and normalization should stay evidence-based."
+      ]
     },
     {
       "field": "cod_ipotesi_collegamento",
-      "notes": "No dedicated controlled vocabulary dataset has been wired yet."
+      "label_field": "IPOTESI_COLLEGAMENTO",
+      "semantic_type": "controlled_vocabulary_code",
+      "code_meaning_status": "resolved_inline",
+      "external_vocabulary_status": "missing_dataset",
+      "observed_pattern": "code_like",
+      "non_empty_row_count": 12579,
+      "unique_value_count": 9,
+      "unique_values_sample": [
+        "1.0",
+        "10.0",
+        "11.0",
+        "2.0",
+        "4.0",
+        "5.0",
+        "6.0",
+        "8.0",
+        "9.0"
+      ],
+      "unique_label_count": 10,
+      "unique_labels_sample": [
+        "AFFIDAMENTO A SEGUITO DI APPALTO PRE-COMMERCIALE",
+        "AFFIDAMENTO DELL’ESECUZIONE O DELLA PROGETTAZIONE DEI LAVORI SUCCESSIVA A PROGETTAZIONE O LIVELLO INFERIORE DI PROGETTAZIONE",
+        "CONSEGNE COMPLEMENTARI",
+        "MODIFICHE CONTRATTUALI O VARIANTI PER LE QUALI E' NECESSARIA UNA NUOVA PROCEDURA DI AFFIDAMENTO",
+        "MODIFICHE CONTRATTUALI O VARIANTI PER LE QUALI È NECESSARIA UNA NUOVA PROCEDURA DI AFFIDAMENTO",
+        "NO, NESSUNA IPOTESI DI COLLEGAMENTO",
+        "PROCEDURA A SEGUITO DI PRECEDENTE GARA ANNULLATA O DESERTA (SENZA ESITO)",
+        "PROCEDURA A SEGUITO DI PRECEDENTE REVOCA DI AGGIUDICAZIONE O DI RESCISSIONE CONTRATTUALE, SENZA SCORRIMENTO GRADUATORIA",
+        "RIPETIZIONE DI LAVORI O SERVIZI ANALOGHI",
+        "SERVIZIO DI PROGETTAZIONE DISCENDENTE DA CONCORSO DI PROGETTAZIONE E IDEE"
+      ],
+      "paired_values_sample": [
+        {
+          "code": "10.0",
+          "label": "NO, NESSUNA IPOTESI DI COLLEGAMENTO"
+        },
+        {
+          "code": "5.0",
+          "label": "PROCEDURA A SEGUITO DI PRECEDENTE GARA ANNULLATA O DESERTA (SENZA ESITO)"
+        },
+        {
+          "code": "1.0",
+          "label": "RIPETIZIONE DI LAVORI O SERVIZI ANALOGHI"
+        },
+        {
+          "code": "2.0",
+          "label": "CONSEGNE COMPLEMENTARI"
+        },
+        {
+          "code": "8.0",
+          "label": "MODIFICHE CONTRATTUALI O VARIANTI PER LE QUALI È NECESSARIA UNA NUOVA PROCEDURA DI AFFIDAMENTO"
+        },
+        {
+          "code": "11.0",
+          "label": "AFFIDAMENTO A SEGUITO DI APPALTO PRE-COMMERCIALE"
+        },
+        {
+          "code": "6.0",
+          "label": "AFFIDAMENTO DELL’ESECUZIONE O DELLA PROGETTAZIONE DEI LAVORI SUCCESSIVA A PROGETTAZIONE O LIVELLO INFERIORE DI PROGETTAZIONE"
+        },
+        {
+          "code": "4.0",
+          "label": "PROCEDURA A SEGUITO DI PRECEDENTE REVOCA DI AGGIUDICAZIONE O DI RESCISSIONE CONTRATTUALE, SENZA SCORRIMENTO GRADUATORIA"
+        },
+        {
+          "code": "8.0",
+          "label": "MODIFICHE CONTRATTUALI O VARIANTI PER LE QUALI E' NECESSARIA UNA NUOVA PROCEDURA DI AFFIDAMENTO"
+        },
+        {
+          "code": "9.0",
+          "label": "SERVIZIO DI PROGETTAZIONE DISCENDENTE DA CONCORSO DI PROGETTAZIONE E IDEE"
+        }
+      ],
+      "normalization": {
+        "canonicalization_strategy": "preserve_raw",
+        "canonicalization_safe": false,
+        "unsafe_rules": [
+          {
+            "rule": "heuristic_code_merge",
+            "reason": "No external vocabulary dataset is wired, so canonical concepts cannot be proven yet."
+          }
+        ],
+        "label_alias_groups": []
+      },
+      "hypothesis": "Likely controlled vocabulary already embedded in the CIG extract; no dedicated external dataset is wired yet.",
+      "notes": [
+        "No dedicated controlled vocabulary dataset has been wired yet."
+      ]
     },
     {
       "field": "cod_esito",
-      "notes": "No dedicated controlled vocabulary dataset has been wired yet."
+      "label_field": "ESITO",
+      "semantic_type": "controlled_vocabulary_code",
+      "code_meaning_status": "resolved_inline",
+      "external_vocabulary_status": "missing_dataset",
+      "observed_pattern": "code_like",
+      "non_empty_row_count": 101289,
+      "unique_value_count": 6,
+      "unique_values_sample": [
+        "1.0",
+        "6.0",
+        "7.0",
+        "90.0",
+        "98.0",
+        "99.0"
+      ],
+      "unique_label_count": 6,
+      "unique_labels_sample": [
+        "AGGIUDICATA",
+        "ANNULLATA/REVOCATA DOPO L'APERTURA DELLE BUSTE AMMINISTRATIVE",
+        "ANNULLATA/REVOCATA PRIMA DELL'APERTURA DELLE BUSTE AMMINISTRATIVE",
+        "NON AGGIUDICATA",
+        "NON È ANCORA STATO SELEZIONATO UN VINCITORE MA LA GARA È ANCORA IN CORSO.",
+        "NON È STATO SELEZIONATO NESSUN VINCITORE E LA GARA È CHIUSA."
+      ],
+      "paired_values_sample": [
+        {
+          "code": "1.0",
+          "label": "AGGIUDICATA"
+        },
+        {
+          "code": "6.0",
+          "label": "ANNULLATA/REVOCATA PRIMA DELL'APERTURA DELLE BUSTE AMMINISTRATIVE"
+        },
+        {
+          "code": "99.0",
+          "label": "NON AGGIUDICATA"
+        },
+        {
+          "code": "7.0",
+          "label": "ANNULLATA/REVOCATA DOPO L'APERTURA DELLE BUSTE AMMINISTRATIVE"
+        },
+        {
+          "code": "98.0",
+          "label": "NON È STATO SELEZIONATO NESSUN VINCITORE E LA GARA È CHIUSA."
+        },
+        {
+          "code": "90.0",
+          "label": "NON È ANCORA STATO SELEZIONATO UN VINCITORE MA LA GARA È ANCORA IN CORSO."
+        }
+      ],
+      "normalization": {
+        "canonicalization_strategy": "preserve_raw",
+        "canonicalization_safe": false,
+        "unsafe_rules": [
+          {
+            "rule": "heuristic_code_merge",
+            "reason": "No external vocabulary dataset is wired, so canonical concepts cannot be proven yet."
+          }
+        ],
+        "label_alias_groups": []
+      },
+      "hypothesis": "Likely controlled vocabulary already embedded in the CIG extract; no dedicated external dataset is wired yet.",
+      "notes": [
+        "No dedicated controlled vocabulary dataset has been wired yet."
+      ]
     }
   ]
 }

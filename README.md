@@ -3,7 +3,7 @@ It is part of a wider initiative to increase the legibility of the Italian gover
 
 ## Current implementation focus
 
-Phase 1 now covers six reusable slices of the future system:
+Phase 1 now covers seven reusable slices of the future system:
 
 1. resolve a monthly CIG resource from ANAC metadata
 2. download and inspect a sample archive
@@ -11,6 +11,7 @@ Phase 1 now covers six reusable slices of the future system:
 4. compare schema variations across years
 5. build controlled vocabulary cross-reference tables
 6. build a comprehensive field dictionary for the January 2025 CIG surface
+7. publish semantic join and normalization metadata for LLM- and DuckDB-oriented querying
 
 ## Current code layout
 
@@ -21,7 +22,7 @@ Phase 1 now covers six reusable slices of the future system:
 - `src/anac_explorator/comparison.py` — schema artifact comparison across files or years
 - `src/anac_explorator/vocabulary.py` — controlled vocabulary normalization and cross-reference generation
 - `src/anac_explorator/dictionary.py` — data-dictionary generation from schema, comparison, and vocabulary artifacts
-- `src/anac_explorator/cli.py` — CLI entry points for metadata, schema, and vocabulary workflows
+- `src/anac_explorator/cli.py` — CLI entry points for metadata, schema, vocabulary, and dictionary workflows
 
 ## Local usage
 
@@ -68,3 +69,29 @@ anac-explorator build-data-dictionary
 - `vocabularies/*.json` — per-dataset normalized cross-reference tables
 - `dictionaries/cig_2025_01.dictionary.json` — machine-readable field dictionary for the current January 2025 CIG schema
 - `dictionaries/cig_2025_01.dictionary.md` — grouped human-readable version of the same dictionary
+
+## Current semantic metadata
+
+- `vocabularies/index.json` now publishes a `code_meaning_status` taxonomy:
+  - `resolved_external`
+  - `resolved_inline`
+  - `missing_dataset`
+  - `free_text`
+  - `not_coded`
+  - `unknown`
+- The current "missing vocabulary" fields are no longer represented as a single opaque gap.
+  - `cod_motivo_urgenza`
+  - `cod_esito`
+  - `cod_modalita_indizione_speciali`
+  - `cod_modalita_indizione_servizi`
+  - `cod_strumento_svolgimento`
+  - `cod_ipotesi_collegamento`
+  - These are now classified as `resolved_inline` plus `missing_dataset`, because the January 2025 CIG extract already carries sibling label fields such as `MOTIVO_URGENZA`, `ESITO`, and `IPOTESI_COLLEGAMENTO`, even though no separate CKAN vocabulary dataset has been wired yet.
+- `dictionaries/cig_2025_01.dictionary.json` now embeds:
+  - `semantic_type`
+  - `value_pattern`
+  - `paired_field`
+  - richer `code_reference` objects
+  - explicit `join_contract` metadata for externally resolved vocabularies
+- Vocabulary artifacts now publish conservative normalization metadata rather than guessed canonical merges.
+  - Example: `vocabularies/bandi-cig-modalita-realizzazione.json` explicitly marks leading-zero stripping as unsafe because `01 -> APPALTO` and `1 -> CONTRATTO D'APPALTO` are different meanings, not safe aliases.

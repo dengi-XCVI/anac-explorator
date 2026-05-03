@@ -58,6 +58,12 @@ class DataDictionaryTests(unittest.TestCase):
                                 "nullable": True,
                                 "non_empty_samples": ["1.0"],
                             },
+                            {
+                                "name": "ESITO",
+                                "inferred_type": "text",
+                                "nullable": True,
+                                "non_empty_samples": ["AGGIUDICATA"],
+                            },
                         ],
                     }
                 ),
@@ -103,16 +109,53 @@ class DataDictionaryTests(unittest.TestCase):
                                 "scope": "current_cig_schema",
                                 "dataset_id": "bandi-cig-tipo-scelta-contraente",
                                 "table_name": "tipo_scelta_contraente",
+                                "source_code_field": "cod_tipo_scelta_contraente",
+                                "source_label_field": "tipo_scelta_contraente",
+                                "target_code_field": "code",
+                                "target_label_field": "label",
+                                "code_meaning_status": "resolved_external",
+                                "external_vocabulary_status": "resolved",
                                 "resolved_fields": [
                                     "cod_tipo_scelta_contraente",
                                     "tipo_scelta_contraente",
                                 ],
+                                "join_contract": {
+                                    "target_dataset": "bandi-cig-tipo-scelta-contraente",
+                                    "target_table": "tipo_scelta_contraente",
+                                    "source_field": "cod_tipo_scelta_contraente",
+                                    "target_field": "code",
+                                    "target_label_field": "label",
+                                    "join_type": "left",
+                                },
                                 "notes": "Demo code mapping.",
                             }
                         ],
                         "current_cig_schema_gaps": [
                             {
                                 "field": "cod_esito",
+                                "label_field": "ESITO",
+                                "semantic_type": "controlled_vocabulary_code",
+                                "code_meaning_status": "resolved_inline",
+                                "external_vocabulary_status": "missing_dataset",
+                                "observed_pattern": "code_like",
+                                "non_empty_row_count": 1,
+                                "unique_value_count": 1,
+                                "unique_values_sample": ["1.0"],
+                                "unique_label_count": 1,
+                                "unique_labels_sample": ["AGGIUDICATA"],
+                                "paired_values_sample": [{"code": "1.0", "label": "AGGIUDICATA"}],
+                                "normalization": {
+                                    "canonicalization_strategy": "preserve_raw",
+                                    "canonicalization_safe": False,
+                                    "unsafe_rules": [
+                                        {
+                                            "rule": "heuristic_code_merge",
+                                            "reason": "Demo inline-only mapping.",
+                                        }
+                                    ],
+                                    "label_alias_groups": [],
+                                },
+                                "hypothesis": "Likely controlled vocabulary already embedded in the CIG extract; no dedicated external dataset is wired yet.",
                                 "notes": "No dedicated controlled vocabulary dataset has been wired yet.",
                             }
                         ],
@@ -131,16 +174,25 @@ class DataDictionaryTests(unittest.TestCase):
                 dataset_id="demo-dataset",
             )
 
-            self.assertEqual(result["entry_count"], 4)
-            self.assertEqual(result["resolved_code_fields"], ["cod_tipo_scelta_contraente", "tipo_scelta_contraente"])
-            self.assertEqual(result["unresolved_code_fields"], ["cod_esito"])
+            self.assertEqual(result["entry_count"], 5)
+            self.assertEqual(
+                result["resolved_code_fields"],
+                ["ESITO", "cod_esito", "cod_tipo_scelta_contraente", "tipo_scelta_contraente"],
+            )
+            self.assertEqual(result["unresolved_code_fields"], [])
+            self.assertEqual(result["missing_external_vocabulary_fields"], ["cod_esito"])
 
             dictionary_payload = json.loads((output_dir / "demo.dictionary.json").read_text(encoding="utf-8"))
             by_name = {entry["name"]: entry for entry in dictionary_payload["entries"]}
-            self.assertEqual(by_name["cod_tipo_scelta_contraente"]["code_meaning_status"], "resolved")
+            self.assertEqual(by_name["cod_tipo_scelta_contraente"]["semantic_type"], "controlled_vocabulary_code")
+            self.assertEqual(by_name["cod_tipo_scelta_contraente"]["code_meaning_status"], "resolved_external")
+            self.assertEqual(by_name["cod_tipo_scelta_contraente"]["code_reference"]["join_contract"]["target_table"], "tipo_scelta_contraente")
             self.assertEqual(by_name["cod_tipo_scelta_contraente"]["code_reference"]["entry_count"], 2)
             self.assertIn("Compared with January 2007", by_name["numero_gara"]["cross_year_notes"][0])
-            self.assertEqual(by_name["cod_esito"]["code_meaning_status"], "missing")
+            self.assertEqual(by_name["cod_esito"]["code_meaning_status"], "resolved_inline")
+            self.assertEqual(by_name["cod_esito"]["external_vocabulary_status"], "missing_dataset")
+            self.assertEqual(by_name["cod_esito"]["paired_field"], "ESITO")
+            self.assertEqual(by_name["ESITO"]["semantic_type"], "controlled_vocabulary_label")
 
             markdown = (output_dir / "demo.dictionary.md").read_text(encoding="utf-8")
             self.assertIn("## Publication and procedure", markdown)

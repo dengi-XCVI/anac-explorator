@@ -22,6 +22,76 @@
       "label_column": "descrizione",
       "extra_columns": [],
       "entry_count": 97,
+      "normalization": {
+        "canonicalization_strategy": "preserve_raw",
+        "canonicalization_safe": false,
+        "unsafe_rules": [
+          {
+            "rule": "strip_leading_zeroes",
+            "canonical_code": "999",
+            "variants": [
+              {
+                "code": "999",
+                "label": "* OO.CC. - CATEGORIA NON DEFINITA"
+              },
+              {
+                "code": "999",
+                "label": "OO.CC. - CATEGORIA NON DEFINITA"
+              },
+              {
+                "code": "999",
+                "label": "OO.CC. - Categoria non definita"
+              }
+            ]
+          },
+          {
+            "rule": "strip_leading_zeroes",
+            "canonical_code": "AA",
+            "variants": [
+              {
+                "code": "AA",
+                "label": "ALTRO (STAZIONI APPALTANTI CON SISTEMA DI QUALIFICAZIONE PROPRIO)"
+              },
+              {
+                "code": "AA",
+                "label": "ALTRO (Stazioni appaltanti con sistema di qualificazione proprio)"
+              }
+            ]
+          },
+          {
+            "rule": "strip_leading_zeroes",
+            "canonical_code": "OG 4",
+            "variants": [
+              {
+                "code": "OG 4",
+                "label": "OG 4 - OPERE D'ARTE NEL SOTTOSUOLO"
+              },
+              {
+                "code": "OG 4",
+                "label": "OG 4 - OPERE D’ARTE NEL SOTTOSUOLO"
+              }
+            ]
+          }
+        ],
+        "label_alias_groups": [
+          {
+            "code": "AA",
+            "normalized_label": "altro (stazioni appaltanti con sistema di qualificazione proprio)",
+            "variants": [
+              "ALTRO (STAZIONI APPALTANTI CON SISTEMA DI QUALIFICAZIONE PROPRIO)",
+              "ALTRO (Stazioni appaltanti con sistema di qualificazione proprio)"
+            ]
+          },
+          {
+            "code": "OG 4",
+            "normalized_label": "og 4 - opere d'arte nel sottosuolo",
+            "variants": [
+              "OG 4 - OPERE D'ARTE NEL SOTTOSUOLO",
+              "OG 4 - OPERE D’ARTE NEL SOTTOSUOLO"
+            ]
+          }
+        ]
+      },
       "entries": [
         {
           "code": "999",
@@ -1020,6 +1090,76 @@
         "classe_importo"
       ],
       "entry_count": 176,
+      "normalization": {
+        "canonicalization_strategy": "preserve_raw",
+        "canonicalization_safe": false,
+        "unsafe_rules": [
+          {
+            "rule": "strip_leading_zeroes",
+            "canonical_code": "999",
+            "variants": [
+              {
+                "code": "999",
+                "label": "* OO.CC. - CATEGORIA NON DEFINITA"
+              },
+              {
+                "code": "999",
+                "label": "OO.CC. - CATEGORIA NON DEFINITA"
+              },
+              {
+                "code": "999",
+                "label": "OO.CC. - Categoria non definita"
+              }
+            ]
+          },
+          {
+            "rule": "strip_leading_zeroes",
+            "canonical_code": "AA",
+            "variants": [
+              {
+                "code": "AA",
+                "label": "ALTRO (STAZIONI APPALTANTI CON SISTEMA DI QUALIFICAZIONE PROPRIO)"
+              },
+              {
+                "code": "AA",
+                "label": "ALTRO (Stazioni appaltanti con sistema di qualificazione proprio)"
+              }
+            ]
+          },
+          {
+            "rule": "strip_leading_zeroes",
+            "canonical_code": "OG 4",
+            "variants": [
+              {
+                "code": "OG 4",
+                "label": "OG 4 - OPERE D'ARTE NEL SOTTOSUOLO"
+              },
+              {
+                "code": "OG 4",
+                "label": "OG 4 - OPERE D’ARTE NEL SOTTOSUOLO"
+              }
+            ]
+          }
+        ],
+        "label_alias_groups": [
+          {
+            "code": "AA",
+            "normalized_label": "altro (stazioni appaltanti con sistema di qualificazione proprio)",
+            "variants": [
+              "ALTRO (STAZIONI APPALTANTI CON SISTEMA DI QUALIFICAZIONE PROPRIO)",
+              "ALTRO (Stazioni appaltanti con sistema di qualificazione proprio)"
+            ]
+          },
+          {
+            "code": "OG 4",
+            "normalized_label": "og 4 - opere d'arte nel sottosuolo",
+            "variants": [
+              "OG 4 - OPERE D'ARTE NEL SOTTOSUOLO",
+              "OG 4 - OPERE D’ARTE NEL SOTTOSUOLO"
+            ]
+          }
+        ]
+      },
       "entries": [
         {
           "code": "999",
@@ -4030,6 +4170,12 @@
       "label_column": "descrizione_tipo_categoria",
       "extra_columns": [],
       "entry_count": 2,
+      "normalization": {
+        "canonicalization_strategy": "preserve_raw",
+        "canonicalization_safe": true,
+        "unsafe_rules": [],
+        "label_alias_groups": []
+      },
       "entries": [
         {
           "code": "P",

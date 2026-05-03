@@ -22,6 +22,12 @@
       "label_column": "tipo-fattispecie-contrattuale_denominazione",
       "extra_columns": [],
       "entry_count": 78,
+      "normalization": {
+        "canonicalization_strategy": "preserve_raw",
+        "canonicalization_safe": true,
+        "unsafe_rules": [],
+        "label_alias_groups": []
+      },
       "entries": [
         {
           "code": "00015154059",

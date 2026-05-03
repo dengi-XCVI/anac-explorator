@@ -15,6 +15,7 @@ from anac_explorator.models import (
     DataDictionaryArtifact,
     DataDictionaryCodeReference,
     DataDictionaryEntry,
+    JoinContract,
 )
 
 
@@ -228,11 +229,8 @@ def build_cig_data_dictionary(
     vocabulary_path = Path(vocabulary_dir)
 
     direct_links = _build_field_links(vocabulary_index, vocabulary_path)
-    unresolved_gaps = {
-        _normalize_field_name(str(item["field"])): str(item["notes"])
-        for item in vocabulary_index.get("current_cig_schema_gaps", [])
-        if isinstance(item, dict) and "field" in item
-    }
+    gap_analyses = _build_gap_analysis_map(vocabulary_index)
+    field_semantics = _build_field_semantics(vocabulary_index, direct_links, gap_analyses)
     cross_year_notes = _build_cross_year_notes(comparison_payload)
 
     entries = []
@@ -248,8 +246,7 @@ def build_cig_data_dictionary(
                 nullable=column.nullable,
                 samples=column.non_empty_samples,
                 section=section,
-                direct_links=direct_links,
-                unresolved_gaps=unresolved_gaps,
+                field_semantics=field_semantics,
                 cross_year_notes=cross_year_notes,
             )
         )
@@ -279,10 +276,18 @@ def build_cig_data_dictionary(
         "json_path": str(json_path),
         "markdown_path": str(markdown_path),
         "resolved_code_fields": sorted(
-            entry.name for entry in entries if entry.code_meaning_status == "resolved"
+            entry.name
+            for entry in entries
+            if entry.code_meaning_status in {"resolved_external", "resolved_inline"}
         ),
         "unresolved_code_fields": sorted(
-            entry.name for entry in entries if entry.code_meaning_status == "missing"
+            entry.name for entry in entries if entry.code_meaning_status in {"missing_dataset", "unknown"}
+        ),
+        "missing_external_vocabulary_fields": sorted(
+            entry.name
+            for entry in entries
+            if entry.semantic_type == "controlled_vocabulary_code"
+            and entry.external_vocabulary_status == "missing_dataset"
         ),
     }
 
@@ -311,18 +316,37 @@ def render_data_dictionary_markdown(artifact: DataDictionaryArtifact) -> str:
         for entry in entries_by_section.get(section, []):
             lines.append(f"### `{entry.name}`")
             lines.append(f"- Description: {entry.description}")
+            lines.append(f"- Semantic type: `{entry.semantic_type}`")
+            lines.append(f"- Value pattern: `{entry.value_pattern}`")
             lines.append(f"- Type: `{entry.inferred_type}`")
             lines.append(f"- Nullable: `{entry.nullable}`")
             if entry.related_fields:
                 lines.append(f"- Related fields: {', '.join(f'`{field}`' for field in entry.related_fields)}")
+            if entry.paired_field:
+                lines.append(f"- Paired field: `{entry.paired_field}`")
+            lines.append(f"- Code meaning status: `{entry.code_meaning_status}`")
+            lines.append(f"- External vocabulary status: `{entry.external_vocabulary_status}`")
             if entry.code_reference is not None:
                 lines.append(
-                    "- Code meanings: "
-                    f"`{entry.code_reference.dataset_id}` / `{entry.code_reference.table_name}` "
-                    f"({entry.code_reference.entry_count} entries)"
+                    f"- Code reference kind: `{entry.code_reference.reference_kind}`"
                 )
+                if entry.code_reference.dataset_id and entry.code_reference.table_name:
+                    lines.append(
+                        "- Code meanings: "
+                        f"`{entry.code_reference.dataset_id}` / `{entry.code_reference.table_name}` "
+                        f"({entry.code_reference.entry_count} entries)"
+                    )
+                if entry.code_reference.join_contract is not None:
+                    lines.append(
+                        "- Join contract: "
+                        f"`{entry.code_reference.join_contract.source_field}` -> "
+                        f"`{entry.code_reference.join_contract.target_dataset}` / "
+                        f"`{entry.code_reference.join_contract.target_table}` "
+                        f"on `{entry.code_reference.join_contract.target_field}` "
+                        f"({entry.code_reference.join_contract.join_type} join)"
+                    )
             else:
-                lines.append(f"- Code meanings: `{entry.code_meaning_status}`")
+                lines.append("- Code meanings: none")
             if entry.cross_year_notes:
                 lines.append("- Cross-year notes:")
                 for note in entry.cross_year_notes:
@@ -347,29 +371,24 @@ def _build_entry(
     nullable: bool,
     samples: list[str],
     section: str,
-    direct_links: dict[str, DataDictionaryCodeReference],
-    unresolved_gaps: dict[str, str],
+    field_semantics: dict[str, dict[str, object]],
     cross_year_notes: dict[str, list[str]],
 ) -> DataDictionaryEntry:
     """@notice Build one dictionary entry from schema plus enrichment metadata."""
 
     normalized_name = _normalize_field_name(column_name)
-    code_reference = direct_links.get(normalized_name)
-    notes = []
+    semantics = field_semantics.get(
+        normalized_name,
+        _derive_default_field_semantics(column_name, inferred_type, samples),
+    )
+    code_reference = semantics.get("code_reference")
+    notes = list(semantics.get("notes", []))
     if inferred_type == "unknown":
         notes.append("The current full-file scan did not observe any non-empty values for this field.")
-    if normalized_name in unresolved_gaps:
-        notes.append(unresolved_gaps[normalized_name])
     if column_name == "DURATA_PREVISTA":
         notes.append("The source values look numeric, but the duration unit is not yet confirmed in repository documentation.")
     if column_name == "numero_gara":
         notes.append("The January 2025 file contains mixed identifier formats, so this field should not be treated as strictly numeric.")
-
-    code_meaning_status = "not_applicable"
-    if code_reference is not None:
-        code_meaning_status = "resolved"
-    elif normalized_name in unresolved_gaps:
-        code_meaning_status = "missing"
 
     return DataDictionaryEntry(
         name=column_name,
@@ -381,15 +400,87 @@ def _build_entry(
                 default=f"Field `{column_name}` from the current CIG schema artifact.",
             )
         ),
+        semantic_type=str(semantics["semantic_type"]),
+        value_pattern=str(semantics["value_pattern"]),
         inferred_type=inferred_type,
         nullable=nullable,
         non_empty_samples=samples,
         related_fields=list(_lookup_field_metadata(RELATED_FIELDS, column_name, default=[])),
-        code_meaning_status=code_meaning_status,
-        code_reference=code_reference,
+        paired_field=None if semantics.get("paired_field") is None else str(semantics["paired_field"]),
+        code_meaning_status=str(semantics["code_meaning_status"]),
+        external_vocabulary_status=str(semantics["external_vocabulary_status"]),
+        code_reference=code_reference if isinstance(code_reference, DataDictionaryCodeReference) else None,
         cross_year_notes=cross_year_notes.get(normalized_name, []),
         notes=notes,
     )
+
+
+def _build_field_semantics(
+    vocabulary_index: dict[str, object],
+    direct_links: dict[str, DataDictionaryCodeReference],
+    gap_analyses: dict[str, dict[str, object]],
+) -> dict[str, dict[str, object]]:
+    """@notice Build per-field semantic metadata from external links and inline gap analyses."""
+
+    semantics: dict[str, dict[str, object]] = {}
+    for link in vocabulary_index.get("field_links", []):
+        if not isinstance(link, dict) or link.get("scope") != "current_cig_schema":
+            continue
+        code_field = str(link["source_code_field"])
+        label_field = str(link["source_label_field"])
+        reference = direct_links[_normalize_field_name(code_field)]
+        shared_notes = [str(link.get("notes", ""))] if str(link.get("notes", "")) else []
+        semantics[_normalize_field_name(code_field)] = {
+            "semantic_type": "controlled_vocabulary_code",
+            "value_pattern": "code_like",
+            "paired_field": label_field,
+            "code_meaning_status": str(link.get("code_meaning_status", "resolved_external")),
+            "external_vocabulary_status": str(link.get("external_vocabulary_status", "resolved")),
+            "code_reference": reference,
+            "notes": shared_notes,
+        }
+        semantics[_normalize_field_name(label_field)] = {
+            "semantic_type": "controlled_vocabulary_label",
+            "value_pattern": "natural_language",
+            "paired_field": code_field,
+            "code_meaning_status": str(link.get("code_meaning_status", "resolved_external")),
+            "external_vocabulary_status": str(link.get("external_vocabulary_status", "resolved")),
+            "code_reference": reference,
+            "notes": shared_notes,
+        }
+
+    for analysis in gap_analyses.values():
+        code_field = str(analysis["field"])
+        label_field = str(analysis["label_field"])
+        reference = _build_inline_reference(analysis)
+        raw_notes = analysis.get("notes", [])
+        if isinstance(raw_notes, str):
+            note_list = [raw_notes]
+        else:
+            note_list = [str(note) for note in raw_notes]
+        notes = [str(analysis["hypothesis"])] + note_list
+        semantics[_normalize_field_name(code_field)] = {
+            "semantic_type": "controlled_vocabulary_code",
+            "value_pattern": str(analysis["observed_pattern"]),
+            "paired_field": label_field,
+            "code_meaning_status": str(analysis["code_meaning_status"]),
+            "external_vocabulary_status": str(analysis.get("external_vocabulary_status", "missing_dataset")),
+            "code_reference": reference,
+            "notes": notes,
+        }
+        semantics[_normalize_field_name(label_field)] = {
+            "semantic_type": "controlled_vocabulary_label",
+            "value_pattern": "natural_language",
+            "paired_field": code_field,
+            "code_meaning_status": str(analysis["code_meaning_status"]),
+            "external_vocabulary_status": str(analysis.get("external_vocabulary_status", "missing_dataset")),
+            "code_reference": reference,
+            "notes": [
+                f"Inline label field paired with `{code_field}`.",
+                *notes,
+            ],
+        }
+    return semantics
 
 
 def _build_field_links(
@@ -404,12 +495,33 @@ def _build_field_links(
             continue
         dataset_id = str(link["dataset_id"])
         table_name = str(link["table_name"])
+        code_field = str(link["source_code_field"])
+        label_field = str(link["source_label_field"])
         artifact_payload = _load_json_object(vocabulary_dir / f"{dataset_id}.json")
         table = _find_table(artifact_payload, table_name)
+        join_contract = None
+        if isinstance(link.get("join_contract"), dict):
+            join_contract = JoinContract(
+                target_dataset=str(link["join_contract"]["target_dataset"]),
+                target_table=str(link["join_contract"]["target_table"]),
+                source_field=str(link["join_contract"]["source_field"]),
+                target_field=str(link["join_contract"]["target_field"]),
+                target_label_field=str(link["join_contract"]["target_label_field"]),
+                join_type=str(link["join_contract"].get("join_type", "left")),
+            )
         reference = DataDictionaryCodeReference(
+            reference_kind="external_vocabulary",
             dataset_id=dataset_id,
             table_name=table_name,
+            source_code_field=code_field,
+            source_label_field=label_field,
+            target_code_field=str(link.get("target_code_field", "code")),
+            target_label_field=str(link.get("target_label_field", "label")),
+            table_code_column=None if table.get("code_column") is None else str(table["code_column"]),
+            table_label_column=None if table.get("label_column") is None else str(table["label_column"]),
             resolved_fields=[str(field) for field in link.get("resolved_fields", [])],
+            external_vocabulary_status=str(link.get("external_vocabulary_status", "resolved")),
+            join_contract=join_contract,
             notes=str(link.get("notes", "")),
             artifact_path=str(vocabulary_dir / f"{dataset_id}.json"),
             entry_count=int(table.get("entry_count", 0)),
@@ -425,6 +537,121 @@ def _build_field_links(
         for field_name in reference.resolved_fields:
             references[_normalize_field_name(field_name)] = reference
     return references
+
+
+def _build_gap_analysis_map(vocabulary_index: dict[str, object]) -> dict[str, dict[str, object]]:
+    """@notice Index the enriched current-gap analysis entries by field name."""
+
+    analyses = {}
+    for item in vocabulary_index.get("current_cig_schema_gaps", []):
+        if not isinstance(item, dict) or "field" not in item:
+            continue
+        analyses[_normalize_field_name(str(item["field"]))] = item
+    return analyses
+
+
+def _build_inline_reference(analysis: dict[str, object]) -> DataDictionaryCodeReference:
+    """@notice Build a code reference for fields resolved by an inline label pair."""
+
+    return DataDictionaryCodeReference(
+        reference_kind="inline_label_field",
+        source_code_field=str(analysis["field"]),
+        source_label_field=str(analysis["label_field"]),
+        resolved_fields=[str(analysis["field"]), str(analysis["label_field"])],
+        external_vocabulary_status=str(analysis.get("external_vocabulary_status", "missing_dataset")),
+        notes=str(analysis["hypothesis"]),
+        preview_entries=[
+            {
+                "code": str(item["code"]),
+                "label": str(item["label"]),
+            }
+            for item in analysis.get("paired_values_sample", [])[:5]
+            if isinstance(item, dict)
+        ],
+    )
+
+
+def _derive_default_field_semantics(
+    column_name: str,
+    inferred_type: str,
+    samples: list[str],
+) -> dict[str, object]:
+    """@notice Infer conservative semantics for fields without explicit vocabulary metadata."""
+
+    semantic_type = _infer_semantic_type(column_name, inferred_type)
+    if semantic_type == "free_text":
+        code_meaning_status = "free_text"
+    else:
+        code_meaning_status = "not_coded"
+    return {
+        "semantic_type": semantic_type,
+        "value_pattern": _infer_value_pattern(column_name, semantic_type, inferred_type, samples),
+        "paired_field": None,
+        "code_meaning_status": code_meaning_status,
+        "external_vocabulary_status": "not_applicable",
+        "code_reference": None,
+        "notes": [],
+    }
+
+
+def _infer_semantic_type(column_name: str, inferred_type: str) -> str:
+    """@notice Derive a high-level semantic type for fields without explicit mappings."""
+
+    normalized_name = _normalize_field_name(column_name)
+    if normalized_name.startswith("flag_"):
+        return "boolean_flag"
+    if normalized_name.startswith("data_"):
+        return "date"
+    if normalized_name.startswith("importo_"):
+        return "monetary_amount"
+    if normalized_name in {"durata_prevista", "n_lotti_componenti", "anno_pubblicazione", "mese_pubblicazione"}:
+        return "quantity"
+    if normalized_name in {
+        "cig",
+        "cig_accordo_quadro",
+        "numero_gara",
+        "luogo_istat",
+        "codice_ausa",
+        "cf_amministrazione_appaltante",
+        "id_centro_costo",
+        "cf_sa_delegante",
+        "cf_sa_delegata",
+        "cui_programma",
+        "cig_collegamento",
+        "cod_cpv",
+    }:
+        return "identifier"
+    if inferred_type == "text":
+        return "free_text"
+    return "quantity"
+
+
+def _infer_value_pattern(
+    column_name: str,
+    semantic_type: str,
+    inferred_type: str,
+    samples: list[str],
+) -> str:
+    """@notice Derive a pragmatic pattern summary from semantic type and samples."""
+
+    if semantic_type == "controlled_vocabulary_code":
+        return "code_like"
+    if semantic_type in {"controlled_vocabulary_label", "free_text"}:
+        return "natural_language"
+    if semantic_type == "date":
+        return "date_iso"
+    if semantic_type == "boolean_flag":
+        return "boolean_flag"
+    if semantic_type in {"monetary_amount", "quantity"}:
+        return "decimal_number" if inferred_type == "decimal" else "integer_number"
+    if semantic_type == "identifier":
+        if any(any(character in sample for character in "/:_-") for sample in samples):
+            return "mixed_identifier"
+        if inferred_type == "integer":
+            return "numeric_identifier"
+        return "identifier_text"
+    return "unknown"
+
 
 
 def _build_cross_year_notes(comparison_payload: dict[str, object]) -> dict[str, list[str]]:

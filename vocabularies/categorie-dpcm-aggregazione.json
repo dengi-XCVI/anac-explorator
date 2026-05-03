@@ -22,6 +22,36 @@
       "label_column": "categoria_merceologica_dpcm_aggregazione",
       "extra_columns": [],
       "entry_count": 27,
+      "normalization": {
+        "canonicalization_strategy": "preserve_raw",
+        "canonicalization_safe": false,
+        "unsafe_rules": [
+          {
+            "rule": "strip_leading_zeroes",
+            "canonical_code": "999",
+            "variants": [
+              {
+                "code": "999",
+                "label": "LAVORI OPPURE BENI E SERVIZI NON ELENCATI NELL'ART. 1 DPCM 24 DICEMBRE 2015"
+              },
+              {
+                "code": "999",
+                "label": "Lavori oppure beni e servizi non elencati nell'art. 1 dPCM 24 dicembre 2015"
+              }
+            ]
+          }
+        ],
+        "label_alias_groups": [
+          {
+            "code": "999",
+            "normalized_label": "lavori oppure beni e servizi non elencati nell'art. 1 dpcm 24 dicembre 2015",
+            "variants": [
+              "LAVORI OPPURE BENI E SERVIZI NON ELENCATI NELL'ART. 1 DPCM 24 DICEMBRE 2015",
+              "Lavori oppure beni e servizi non elencati nell'art. 1 dPCM 24 dicembre 2015"
+            ]
+          }
+        ]
+      },
       "entries": [
         {
           "code": "1",
@@ -310,6 +340,12 @@
       "label_column": "deroga_dpcm_soggetto_aggregatore",
       "extra_columns": [],
       "entry_count": 7,
+      "normalization": {
+        "canonicalization_strategy": "preserve_raw",
+        "canonicalization_safe": true,
+        "unsafe_rules": [],
+        "label_alias_groups": []
+      },
       "entries": [
         {
           "code": "1",
