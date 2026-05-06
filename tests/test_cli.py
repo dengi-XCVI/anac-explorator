@@ -12,6 +12,8 @@ import unittest
 from contextlib import redirect_stdout
 from pathlib import Path
 
+import duckdb
+
 from anac_explorator.cli import main
 
 
@@ -62,6 +64,15 @@ class CliTests(unittest.TestCase):
 
         self.assertEqual(args.dataset_id, "demo")
         self.assertEqual(args.resource_format, "json")
+
+    def test_load_downloaded_resource_parser_uses_default_warehouse_dir(self) -> None:
+        """@notice Parse the warehouse-loader subcommand with its default storage location."""
+
+        parser = main.__globals__["build_parser"]()
+        args = parser.parse_args(["load-downloaded-resource", "data/raw/demo/manifest.json"])
+
+        self.assertEqual(args.manifest_path, "data/raw/demo/manifest.json")
+        self.assertEqual(args.warehouse_dir, "data/warehouse")
 
     def test_parse_resource_prints_structured_csv_payload(self) -> None:
         """@notice Emit a parsed CSV payload from the new Phase 2 parser surface."""
@@ -148,3 +159,31 @@ class CliTests(unittest.TestCase):
         payload = json.loads(completed.stdout)
         self.assertEqual(payload["row_count"], 1)
         self.assertEqual(payload["rows"][0]["values"]["cig"], "0001")
+
+    def test_query_local_data_prints_json_rows(self) -> None:
+        """@notice Emit JSON-friendly rows from the local DuckDB warehouse query facade."""
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            db_path = Path(temp_dir) / "warehouse.duckdb"
+            connection = duckdb.connect(str(db_path))
+            try:
+                connection.execute("CREATE TABLE demo (id INTEGER, label VARCHAR)")
+                connection.execute("INSERT INTO demo VALUES (1, 'one'), (2, 'two')")
+            finally:
+                connection.close()
+
+            output = io.StringIO()
+            with redirect_stdout(output):
+                exit_code = main(
+                    [
+                        "query-local-data",
+                        "SELECT id, label FROM demo ORDER BY id",
+                        "--db-path",
+                        str(db_path),
+                    ]
+                )
+
+        payload = json.loads(output.getvalue())
+        self.assertEqual(exit_code, 0)
+        self.assertEqual(payload["row_count"], 2)
+        self.assertEqual(payload["rows"][0]["label"], "one")

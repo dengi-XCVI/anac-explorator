@@ -11,6 +11,8 @@ pipeline surface:
 7. download manifest-backed CKAN CSV or JSON resources
 8. parse local CSV or JSON resources into structured payloads
 9. clean parsed resources for later database loading
+10. load manifest-backed CSV resources into DuckDB/Parquet storage
+11. run SQL queries against the local DuckDB warehouse
 """
 
 from __future__ import annotations
@@ -20,6 +22,8 @@ import json
 import os
 from pathlib import Path
 from typing import Sequence
+
+import duckdb
 
 from anac_explorator.ckan import (
     CkanClient,
@@ -33,6 +37,7 @@ from anac_explorator.ckan import (
 from anac_explorator.cleaner import clean_csv_resource, clean_json_resource
 from anac_explorator.comparison import compare_schema_mappings, load_schema_mapping
 from anac_explorator.dictionary import build_cig_data_dictionary
+from anac_explorator.loader import load_downloaded_resource, run_local_query
 from anac_explorator.parsing import parse_csv_resource, parse_json_resource
 from anac_explorator.sample import (
     SampleDownloadError,
@@ -451,6 +456,53 @@ def build_parser() -> argparse.ArgumentParser:
     )
     clean_resource.set_defaults(handler=_handle_clean_resource)
 
+    load_downloaded_resource_parser = subparsers.add_parser(
+        "load-downloaded-resource",
+        help="Load one manifest-backed CSV resource into partitioned Parquet and register a DuckDB view.",
+    )
+    load_downloaded_resource_parser.add_argument(
+        "manifest_path",
+        help="Path to the manifest.json file produced by download-dataset-resource.",
+    )
+    load_downloaded_resource_parser.add_argument(
+        "--schema-path",
+        help="Optional schema artifact used for typed warehouse projection.",
+    )
+    load_downloaded_resource_parser.add_argument(
+        "--warehouse-dir",
+        default="data/warehouse",
+        help="Base directory for the local DuckDB database and Parquet files.",
+    )
+    load_downloaded_resource_parser.add_argument(
+        "--delimiter",
+        default=";",
+        help="CSV delimiter used by the downloaded resource.",
+    )
+    load_downloaded_resource_parser.add_argument(
+        "--encoding",
+        default="utf-8-sig",
+        help="Encoding used when reading the source header if no schema artifact is supplied.",
+    )
+    load_downloaded_resource_parser.set_defaults(handler=_handle_load_downloaded_resource)
+
+    query_local_data = subparsers.add_parser(
+        "query-local-data",
+        help="Execute SQL against the local DuckDB warehouse and emit JSON rows.",
+    )
+    query_local_data.add_argument("sql_query", help="SQL query executed against the local DuckDB warehouse.")
+    query_local_data.add_argument(
+        "--db-path",
+        default="data/warehouse/anac.duckdb",
+        help="Path to the local DuckDB database.",
+    )
+    query_local_data.add_argument(
+        "--row-limit",
+        type=int,
+        default=1_000,
+        help="Maximum number of rows returned. Use 0 to retain all.",
+    )
+    query_local_data.set_defaults(handler=_handle_query_local_data)
+
     return parser
 
 
@@ -468,7 +520,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         payload = args.handler(args)
     except (CkanClientError, SampleDownloadError) as exc:
         parser.exit(status=1, message=f"error: {exc}\n")
-    except (FileNotFoundError, UnicodeDecodeError, ValueError) as exc:
+    except (FileNotFoundError, UnicodeDecodeError, ValueError, duckdb.Error) as exc:
         parser.exit(status=1, message=f"error: {exc}\n")
 
     print(json.dumps(payload, indent=2, ensure_ascii=False))
@@ -648,6 +700,28 @@ def _handle_clean_resource(args: argparse.Namespace) -> dict[str, object]:
         item_limit=args.record_limit,
     )
     return clean_json_resource(parsed_resource).to_dict()
+
+
+def _handle_load_downloaded_resource(args: argparse.Namespace) -> dict[str, object]:
+    """@notice Execute the `load-downloaded-resource` CLI subcommand."""
+
+    return load_downloaded_resource(
+        Path(args.manifest_path),
+        schema_path=None if args.schema_path is None else Path(args.schema_path),
+        warehouse_dir=Path(args.warehouse_dir),
+        delimiter=args.delimiter,
+        encoding=args.encoding,
+    ).to_dict()
+
+
+def _handle_query_local_data(args: argparse.Namespace) -> dict[str, object]:
+    """@notice Execute the `query-local-data` CLI subcommand."""
+
+    return run_local_query(
+        Path(args.db_path),
+        args.sql_query,
+        row_limit=args.row_limit,
+    ).to_dict()
 
 
 if __name__ == "__main__":

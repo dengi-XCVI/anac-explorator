@@ -19,9 +19,13 @@ from anac_explorator.models import (
     SchemaMapping,
 )
 
-_DATE_FORMATS = ("%Y-%m-%d", "%d/%m/%Y")
-_DATETIME_FORMATS = ("%Y-%m-%d %H:%M:%S", "%Y-%m-%dT%H:%M:%S", "%Y-%m-%dT%H:%M:%S%z")
-_NULL_MARKERS = {"", "null", "none", "n/a", "nan"}
+DATE_FORMATS = ("%Y-%m-%d", "%d/%m/%Y")
+DATETIME_FORMATS = ("%Y-%m-%d %H:%M:%S", "%Y-%m-%dT%H:%M:%S", "%Y-%m-%dT%H:%M:%S%z")
+NULL_MARKERS = frozenset({"", "null", "none", "n/a", "nan"})
+
+_DATE_FORMATS = DATE_FORMATS
+_DATETIME_FORMATS = DATETIME_FORMATS
+_NULL_MARKERS = NULL_MARKERS
 
 
 def clean_csv_resource(

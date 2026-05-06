@@ -282,7 +282,7 @@ def _materialize_resource(download_path: Path, output_dir: Path, expected_extens
     output_dir.mkdir(parents=True, exist_ok=True)
     materialized_path = output_dir / f"{download_path.stem}.{expected_extension}"
     copyfile(download_path, materialized_path)
-    return materialized_path
+    return materialized_path 
 
 
 def _materialize_csv(download_path: Path, output_dir: Path) -> Path:

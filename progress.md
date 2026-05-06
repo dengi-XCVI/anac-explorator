@@ -1,7 +1,7 @@
 # Progress
 
 ## Current phase
-- Phase 2: downloader, parser, and cleaner baseline
+- Phase 2: DuckDB/Parquet loader baseline
 
 ## Current status
 - Bootstrap implementation complete:
@@ -79,13 +79,31 @@
     - integration tests now cover download -> parse -> clean flows for both CSV and JSON resources
     - direct `python -m anac_explorator.cli ...` execution now works and is tested
     - the January 2025 CIG sample was re-parsed and re-cleaned through the CLI as a smoke pass
+- Phase 2 storage baseline completed for the next planned item:
+  - DuckDB/Parquet loader support:
+    - `src/anac_explorator/loader.py` added for SQL-native warehouse loading and local query execution
+    - `load-downloaded-resource` command added for manifest-backed CSV loading into `data/warehouse/`
+    - `query-local-data` command added for SQL execution against the local DuckDB warehouse
+    - `duckdb` added as a project dependency
+  - view-first storage model:
+    - durable analytical data now lives in `data/warehouse/parquet/...`
+    - DuckDB stores `loaded_resources` lineage metadata and `registered_views` definitions
+    - monthly CIG resources now map to the logical `cig` view and partition by `year` / `month`
+    - smaller reference datasets can be loaded without forcing unnecessary partitions
+  - loader safeguards:
+    - the heavy load path now stays inside DuckDB instead of retaining full tables in Python memory
+    - typed SQL projections are validated before Parquet writes so invalid coercions fail fast
+    - DuckDB views are refreshed from the current Parquet file inventory after each load
+  - test coverage:
+    - new loader tests now cover partitioned CIG loading, Parquet registration, and local SQL querying
+    - CLI coverage now includes the local DuckDB query command and the loader parser surface
 - Research references reviewed: `research/ANAC-data.md`, `research/ANAC-data-research.md`
 - Live network access is no longer blocked when using Playwright transport
 
 ## Planned milestones
-1. Build the Phase 2 loader from cleaned records into DuckDB/Parquet
-2. Handle incremental delta updates beyond one-off resource materialization
-3. Validate data integrity and vocabulary-linked referential expectations
+1. Handle incremental delta updates beyond one-off resource materialization
+2. Validate data integrity and vocabulary-linked referential expectations
+3. Expand the local query surface carefully without over-materializing data
 4. Resolve the remaining coded fields through dedicated external vocabularies where available
 
 ## Known risks

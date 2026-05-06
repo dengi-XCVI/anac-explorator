@@ -6,6 +6,7 @@
 3. raw schema mapping and comparison
 4. vocabulary and dictionary generation
 5. parser and cleaning helpers for the first database-oriented pipeline slice
+6. DuckDB/Parquet loader helpers plus local SQL query support
 """
 
 __all__ = ["__version__"]

@@ -2,15 +2,16 @@
 
 ## Current architecture state
 
-The project is currently a **research-complete, pipeline-foundation ANAC ingestion tool**. It already covers:
+The project is currently a **research-complete, ingestion-and-storage baseline ANAC tool**. It already covers:
 
 1. **dataset discovery and access hardening**
 2. **raw resource download and local materialization**
 3. **schema inspection and cross-year comparison**
 4. **controlled-vocabulary and data-dictionary enrichment**
 5. **resource parsing and cleaning for later loading**
+6. **DuckDB/Parquet loading plus local SQL view registration**
 
-It does **not** yet implement the planned **DuckDB/Parquet loader**, **incremental merge/update workflow**, or **local analytical query layer**.
+It does **not** yet implement the planned **incremental merge/update workflow**, **integrity-validation layer**, or a richer end-user analytical interface beyond the new local SQL facade.
 
 ## The architecture as it exists today
 
@@ -23,13 +24,13 @@ It does **not** yet implement the planned **DuckDB/Parquet loader**, **increment
 | Semantic enrichment layer | Build vocabulary crosswalks, join contracts, gap analysis, and the field dictionary | `src/anac_explorator/vocabulary.py`, `src/anac_explorator/dictionary.py` | Implemented |
 | Parse/clean layer | Turn CSV/JSON into structured Python objects and cleaned records | `src/anac_explorator/parsing.py`, `src/anac_explorator/cleaner.py`, `src/anac_explorator/models.py` | Implemented |
 | Interface layer | Expose all current workflows through the CLI and module entrypoints | `src/anac_explorator/cli.py`, `src/anac_explorator/__main__.py` | Implemented |
-| Persistence/query layer | Load curated data into DuckDB/Parquet and expose query surfaces | _not built yet_ | Missing |
+| Persistence/query layer | Load manifest-backed resources into partitioned Parquet and expose DuckDB views over them | `src/anac_explorator/loader.py`, `src/anac_explorator/cli.py`, `src/anac_explorator/models.py` | Implemented baseline |
 
 ## Practical data flow
 
 Today the main flow is:
 
-`ANAC CKAN -> CkanClient/PlaywrightFetcher -> download_dataset_resource -> manifest-backed raw files -> schema/vocabulary/dictionary artifacts -> parse_resource -> clean_resource`
+`ANAC CKAN -> CkanClient/PlaywrightFetcher -> download_dataset_resource -> manifest-backed raw files -> schema/vocabulary/dictionary artifacts -> parse_resource/clean_resource -> load_downloaded_resource -> partitioned parquet -> query_local_data`
 
 That means the repository already has two strong foundations:
 
@@ -46,6 +47,7 @@ That means the repository already has two strong foundations:
 - **The internal contract is dataclass-based.** The pipeline uses typed dataclasses instead of Pydantic for CKAN metadata, schemas, manifests, parsed rows, and cleaned records.
 - **The current architecture is CLI-first.** The reusable Python functions exist, but the main user-facing surface is the CLI.
 - **The system is source-preserving by design.** Raw column names are kept intact, normalization is conservative, and semantic links are added without rewriting source meaning.
+- **The storage model is now view-first.** DuckDB stores metadata and generated views, while the durable analytical payload lives in Parquet.
 - **The network model is environment-aware.** Direct HTTP can fail against the ANAC WAF, so Playwright is treated as the validated transport path from this runtime.
 
 ## What is already strong
@@ -55,36 +57,26 @@ That means the repository already has two strong foundations:
 - **Vocabulary and dictionary artifacts already make the CIG surface more queryable by humans and LLMs.**
 - **The Phase 2 parser/cleaner path is in place and integration-tested.**
 - **The current cache tree has been brought under manifest tracking for the main resources already in use.**
+- **A first DuckDB/Parquet loader exists and keeps large scans inside DuckDB instead of Python memory.**
 
 ## What is still missing architecturally
 
-- There is **no storage layer yet** for turning cleaned records into durable analytical tables.
 - There is **no incremental-update strategy yet** for merging the ANAC delta datasets into loaded history.
 - There is **no integrity-validation layer yet** to enforce row-count checks, expected joins, or vocabulary-linked consistency after loading.
-- There is **no query engine/UI layer yet** beyond the current operational CLI commands.
+- There is **no broader query engine/UI layer yet** beyond the current raw SQL CLI facade.
+- The current loader scope is still intentionally narrow: monthly CIG resources and the already-wired vocabulary datasets.
 
 ## Current architectural maturity
 
 The project is best described as:
 
-> **Phase 1 complete, Phase 2 foundation complete, analytics layer not yet built.**
+> **Phase 1 complete, Phase 2 storage baseline complete, incremental/integrity layers not yet built.**
 
-In other words, the repository is already past the exploratory stage and now has a credible ingestion foundation, but it has not yet crossed into the final intended architecture of **local relational storage + SQL querying + LLM query support**.
+In other words, the repository is already past the exploratory stage and now has a credible ingestion foundation plus a local storage baseline, but it has not yet crossed into the final intended architecture of **incremental relational refresh + integrity guarantees + richer query and LLM support**.
 
 ## Next three steps
 
-### 1. Build the loader into DuckDB/Parquet
-
-Convert cleaned CSV/JSON resources into durable local tables with a stable naming scheme and source lineage. This is the missing bridge between the current pipeline and the planned local database architecture.
-
-Concretely, this should add:
-
-- table/materialization conventions
-- DuckDB load logic
-- Parquet export or backing tables
-- links from loaded tables back to source manifests and schemas
-
-### 2. Add incremental delta-update handling
+### 1. Add incremental delta-update handling
 
 Implement the strategy for the `cig` delta dataset and other update-oriented sources so the local store can be refreshed without reloading everything from scratch.
 
@@ -95,7 +87,7 @@ Concretely, this should add:
 - duplicate/conflict handling
 - repeatable refresh commands
 
-### 3. Add integrity and relationship validation
+### 2. Add integrity and relationship validation
 
 Once data is loaded, validate that the stored model matches expectations from the schema and vocabulary layers. This is the step that will make the future query layer reliable.
 
@@ -106,6 +98,17 @@ Concretely, this should add:
 - nullability/type drift checks on loaded tables
 - relationship checks for future cross-dataset joins
 
+### 3. Expand the query surface carefully
+
+Build on the current raw SQL facade with a slightly richer local analytical interface, but keep the system view-first and avoid duplicating Parquet-backed data unless reuse clearly justifies it.
+
+Concretely, this should add:
+
+- small dataset/view discovery commands
+- reusable example analytical queries
+- query ergonomics for bounded-memory output
+- later LLM-oriented schema/context helpers
+
 ## Bottom line
 
-The architecture is currently **well prepared for ingestion**, **well documented semantically**, and **not yet complete as an analytics system**. The next step is no longer research; it is to build the **local storage layer**, then the **update model**, then the **integrity guarantees** that the later query and LLM layers will rely on.
+The architecture is currently **well prepared for ingestion**, **semantically documented**, and now **equipped with a first local storage/query baseline**. The next steps are to add the **update model**, then the **integrity guarantees**, then the broader **query and LLM surfaces** that will rely on that storage layer.

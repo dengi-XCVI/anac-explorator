@@ -20,7 +20,9 @@ The current implementation slice now covers:
 9. downloading CKAN CSV and JSON resources with manifest-backed caching
 10. parsing local CSV and JSON resources into structured Python models
 11. cleaning parsed records for later database loading
-12. documenting the result for later ingestion and querying phases
+12. loading manifest-backed CSV resources into partitioned Parquet through DuckDB
+13. registering local DuckDB views over Parquet-backed datasets
+14. documenting the result for later ingestion and querying phases
 
 ## Architectural baseline
 - ANAC CKAN metadata is the source of truth for dataset and resource discovery
@@ -40,6 +42,8 @@ The current implementation slice now covers:
 - `anac-explorator download-dataset-resource <dataset>` for manifest-backed CSV/JSON acquisition
 - `anac-explorator parse-resource <path>` for structured CSV/JSON parsing
 - `anac-explorator clean-resource <path>` for schema-aware cleaning before loading
+- `anac-explorator load-downloaded-resource <manifest>` for manifest-backed CSV loading into DuckDB/Parquet
+- `anac-explorator query-local-data "SELECT ..."` for SQL execution against the local DuckDB warehouse
 - `python -m anac_explorator.cli ...` for direct module execution of the same CLI surface
 - configurable proxy and request-header support for CKAN access hardening
 - Playwright transport for WAF-protected ANAC access
@@ -67,6 +71,23 @@ The current implementation slice now covers:
   - CSV resource download -> manifest creation -> parse -> clean -> manifest cache reuse
   - JSON resource download -> parse -> clean
   - CLI execution through both the imported `main(...)` function and `python -m anac_explorator.cli`
+
+## Phase 2 storage slice: DuckDB/Parquet loader
+- The loader now keeps large CSV scans inside DuckDB instead of materializing a second full Python in-memory copy.
+- The durable analytical payload now lives under `data/warehouse/parquet/`, while DuckDB stores:
+  - `loaded_resources` metadata keyed by source manifest
+  - `registered_views` metadata keyed by logical dataset/view name
+- The initial logical storage scope is:
+  - monthly CIG resources loaded under the `cig` view with `year=YYYY/month=MM` partition directories
+  - already-wired vocabulary datasets loaded as smaller reference-style Parquet assets
+- The SQL-native loader now:
+  - mirrors the cleaner's BOM/whitespace/NULL normalization rules
+  - validates typed projections before writing Parquet so invalid casts do not silently turn into `NULL`
+  - refreshes DuckDB views from the current Parquet file inventory after each load
+- The current query facade remains intentionally small:
+  - raw SQL input
+  - JSON-friendly output
+  - bounded row-return behavior through a configurable row limit
 
 ## Access hardening knobs
 - `ANAC_EXPLORATOR_PROXY_URL` or `--proxy-url`

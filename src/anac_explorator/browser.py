@@ -177,7 +177,7 @@ class PlaywrightFetcher:
         except PlaywrightError as exc:
             raise BrowserFetchError(f"Playwright failed while downloading {url}: {exc}") from exc
 
-        return output_path
+        return output_path 
 
 
 def _locale_from_accept_language(accept_language: str) -> str:

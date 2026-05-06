@@ -637,6 +637,117 @@ class CleanedJsonResource:
         }
 
 
+@dataclass(slots=True)
+class WarehousePartitionValue:
+    """@notice Capture one partition key/value attached to a loaded Parquet slice.
+
+    @param key Partition column name such as `year` or `month`.
+    @param value Partition value stored in the directory layout.
+    """
+
+    key: str
+    value: str
+
+    def to_dict(self) -> dict[str, str]:
+        """@notice Convert the partition value into a serializable dictionary."""
+
+        return asdict(self)
+
+
+@dataclass(slots=True)
+class WarehouseLoadResult:
+    """@notice Describe one manifest-backed load into the local DuckDB/Parquet warehouse.
+
+    @param dataset_id CKAN dataset slug used for the source resource.
+    @param resource_name CKAN resource name loaded into the warehouse.
+    @param table_name Stable logical table name represented by the load.
+    @param view_name DuckDB view name registered for querying the Parquet files.
+    @param manifest_path Path to the manifest that drove the load.
+    @param schema_path Optional schema artifact used for typed projections.
+    @param source_path Local source file loaded into Parquet.
+    @param warehouse_dir Base directory of the local warehouse assets.
+    @param duckdb_path Path to the DuckDB catalog database.
+    @param parquet_root Root directory that owns the table's Parquet files.
+    @param parquet_path Path of the specific Parquet file written for this load.
+    @param row_count Row count written for this load.
+    @param partition_values Partition metadata applied to this file.
+    @param registered_parquet_files Number of Parquet files currently registered in the view.
+    @param view_sql SQL used to create or refresh the DuckDB view.
+    """
+
+    dataset_id: str
+    resource_name: str
+    table_name: str
+    view_name: str
+    manifest_path: str
+    schema_path: str | None
+    source_path: str
+    warehouse_dir: str
+    duckdb_path: str
+    parquet_root: str
+    parquet_path: str
+    row_count: int
+    partition_values: list[WarehousePartitionValue] = field(default_factory=list)
+    registered_parquet_files: int = 0
+    view_sql: str = ""
+
+    def to_dict(self) -> dict[str, object]:
+        """@notice Convert the load result into a serializable dictionary."""
+
+        return {
+            "dataset_id": self.dataset_id,
+            "resource_name": self.resource_name,
+            "table_name": self.table_name,
+            "view_name": self.view_name,
+            "manifest_path": self.manifest_path,
+            "schema_path": self.schema_path,
+            "source_path": self.source_path,
+            "warehouse_dir": self.warehouse_dir,
+            "duckdb_path": self.duckdb_path,
+            "parquet_root": self.parquet_root,
+            "parquet_path": self.parquet_path,
+            "row_count": self.row_count,
+            "partition_values": [partition.to_dict() for partition in self.partition_values],
+            "registered_parquet_files": self.registered_parquet_files,
+            "view_sql": self.view_sql,
+        }
+
+
+@dataclass(slots=True)
+class WarehouseQueryResult:
+    """@notice Capture one JSON-friendly query result from the local DuckDB warehouse.
+
+    @param db_path Path to the DuckDB database that served the query.
+    @param sql_query SQL query text that was executed.
+    @param row_limit Maximum number of rows returned, or zero when unlimited.
+    @param column_names Ordered result column names.
+    @param row_count Number of rows returned to the caller.
+    @param rows JSON-friendly result rows keyed by column name.
+    """
+
+    db_path: str
+    sql_query: str
+    row_limit: int
+    column_names: list[str] = field(default_factory=list)
+    row_count: int = 0
+    rows: list[dict[str, object]] = field(default_factory=list)
+
+    def to_dict(self) -> dict[str, object]:
+        """@notice Convert the warehouse query result into a serializable dictionary."""
+
+        return {
+            "db_path": self.db_path,
+            "sql_query": self.sql_query,
+            "row_limit": self.row_limit,
+            "column_names": self.column_names,
+            "row_count": self.row_count,
+            "rows": [
+                {key: _to_json_compatible(value) for key, value in row.items()}
+                for row in self.rows
+            ],
+        }
+
+
 def _to_json_compatible(value: object) -> object:
     """@notice Convert richer Python scalars into JSON-compatible values."""
 

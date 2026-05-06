@@ -12,7 +12,10 @@ license = { text = "MIT" }
 authors = [
   { name = "Copilot" }
 ]
-dependencies = ["playwright>=1.52,<2"]
+dependencies = [
+  "duckdb>=1.2,<2",
+  "playwright>=1.52,<2",
+]
 
 [project.scripts]
 anac-explorator = "anac_explorator.cli:main"

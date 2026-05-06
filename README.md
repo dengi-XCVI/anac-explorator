@@ -3,8 +3,8 @@ It is part of a wider initiative to increase the legibility of the Italian gover
 
 ## Current implementation focus
 
-Phase 1 is complete, and the first Phase 2 pipeline slice now covers ten reusable
-parts of the future system:
+Phase 1 is complete, and the current Phase 2 storage slice now covers thirteen
+reusable parts of the future system:
 
 1. resolve a monthly CIG resource from ANAC metadata
 2. download and inspect a sample archive
@@ -16,7 +16,9 @@ parts of the future system:
 8. download CKAN CSV and JSON resources with manifest-backed caching
 9. parse local CSV and JSON resources into structured Python-friendly payloads
 10. clean parsed records for later database loading
-11. validate the pipeline end to end with integration coverage and direct module CLI execution
+11. load manifest-backed CSV resources into partitioned Parquet through DuckDB
+12. register lightweight DuckDB views over the Parquet files for local querying
+13. validate the pipeline end to end with integration coverage and direct module CLI execution
 
 ## Current code layout
 
@@ -29,6 +31,7 @@ parts of the future system:
 - `src/anac_explorator/comparison.py` — schema artifact comparison across files or years
 - `src/anac_explorator/vocabulary.py` — controlled vocabulary normalization and cross-reference generation
 - `src/anac_explorator/dictionary.py` — data-dictionary generation from schema, comparison, and vocabulary artifacts
+- `src/anac_explorator/loader.py` — DuckDB/Parquet loader plus local SQL query helpers
 - `src/anac_explorator/cli.py` — CLI entry points for metadata, schema, vocabulary, and dictionary workflows
 
 ## Local usage
@@ -45,6 +48,8 @@ anac-explorator build-vocabulary-crosswalks --transport playwright
 anac-explorator build-data-dictionary
 anac-explorator parse-resource ./data/raw/cig-2025/cig_csv_2025_01/extracted/cig_csv_2025_01.csv --format csv --record-limit 2
 anac-explorator clean-resource ./data/raw/cig-2025/cig_csv_2025_01/extracted/cig_csv_2025_01.csv --format csv --schema-path ./schemas/cig_2025_01.schema.json --record-limit 2
+anac-explorator load-downloaded-resource ./data/raw/cig-2025/cig_csv_2025_01/manifest.json --schema-path ./schemas/cig_2025_01.schema.json
+anac-explorator query-local-data "SELECT cig, importo_lotto FROM cig ORDER BY cig LIMIT 5"
 python3 -m anac_explorator.cli parse-resource ./data/raw/cig-2025/cig_csv_2025_01/extracted/cig_csv_2025_01.csv --format csv --record-limit 1
 ```
 
@@ -80,6 +85,19 @@ anac-explorator build-data-dictionary
 - `vocabularies/*.json` — per-dataset normalized cross-reference tables
 - `dictionaries/cig_2025_01.dictionary.json` — machine-readable field dictionary for the current January 2025 CIG schema
 - `dictionaries/cig_2025_01.dictionary.md` — grouped human-readable version of the same dictionary
+- `data/warehouse/anac.duckdb` — local DuckDB catalog for registered views and load metadata
+- `data/warehouse/parquet/...` — partitioned Parquet files written by the local loader
+
+## Current local analytical storage
+
+- `load-downloaded-resource` now turns one manifest-backed CSV resource into Parquet through DuckDB instead of materializing a second large in-memory Python copy.
+- Large fact-like datasets are partitioned when year/month can be derived safely from the manifest naming convention.
+  - Current example: monthly CIG resources register under the logical `cig` view and write files under `data/warehouse/parquet/cig/year=YYYY/month=MM/`.
+- DuckDB now acts as a lightweight control/query plane:
+  - `registered_views` stores the current generated view SQL
+  - `loaded_resources` stores manifest/schema lineage for each loaded Parquet slice
+  - `query-local-data` executes SQL against those registered views without duplicating the Parquet data into a second fact table
+- The current storage scope is intentionally narrow: monthly CIG resources plus the already-wired vocabulary datasets.
 
 ## Current semantic metadata
 
@@ -124,7 +142,16 @@ anac-explorator build-data-dictionary
   - conservative NULL-marker normalization
   - scalar coercion for booleans, integers, decimals, dates, and datetimes
   - schema-driven cleaning for CSV resources when a schema artifact is supplied
+- `load-downloaded-resource` now supports:
+  - manifest-backed CSV loading into DuckDB-written Parquet
+  - data-aware partitioning for monthly CIG resources
+  - fail-fast validation when typed SQL projections would silently coerce invalid values
+  - dynamic view refresh so one logical DuckDB view can span all loaded Parquet slices for a dataset
+- `query-local-data` now supports:
+  - direct SQL execution against the local DuckDB warehouse
+  - JSON-friendly result emission for downstream tooling
 - The automated test suite now includes end-to-end Phase 2 coverage for:
   - download -> manifest -> parse -> clean on CSV resources
   - download -> parse -> clean on JSON resources
+  - manifest -> partitioned Parquet -> DuckDB view registration/query on CSV resources
   - direct `python -m anac_explorator.cli ...` execution
