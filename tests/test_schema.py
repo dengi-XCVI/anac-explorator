@@ -56,3 +56,18 @@ class SchemaMappingTests(unittest.TestCase):
             mapping = map_csv_schema(handle.name, sample_limit=0)
 
         self.assertEqual(mapping.rows_sampled, 3)
+
+    def test_map_csv_schema_keeps_identifier_columns_as_text(self) -> None:
+        """@notice Treat tax-code and procurement identifier columns as text even when values look numeric."""
+
+        with tempfile.NamedTemporaryFile("w+", encoding="utf-8", suffix=".csv") as handle:
+            handle.write("cf_amministrazione_appaltante;CF_SA_DELEGANTE;codice_ausa\n")
+            handle.write("12345678901;12345678901;900001\n")
+            handle.write("98765432109;98765432109;900002\n")
+            handle.flush()
+
+            mapping = map_csv_schema(handle.name)
+
+        self.assertEqual(mapping.columns[0].inferred_type, "text")
+        self.assertEqual(mapping.columns[1].inferred_type, "text")
+        self.assertEqual(mapping.columns[2].inferred_type, "text")

@@ -74,6 +74,34 @@ class CliTests(unittest.TestCase):
         self.assertEqual(args.manifest_path, "data/raw/demo/manifest.json")
         self.assertEqual(args.warehouse_dir, "data/warehouse")
 
+    def test_download_dataset_to_parquet_parser_uses_defaults(self) -> None:
+        """@notice Parse the direct-to-Parquet download command with its default warehouse settings."""
+
+        parser = main.__globals__["build_parser"]()
+        args = parser.parse_args(["download-dataset-to-parquet", "demo-dataset"])
+
+        self.assertEqual(args.dataset_id, "demo-dataset")
+        self.assertEqual(args.output_dir, "data/raw")
+        self.assertEqual(args.schemas_dir, "schemas")
+        self.assertEqual(args.warehouse_dir, "data/warehouse")
+        self.assertFalse(args.keep_materialized)
+        self.assertFalse(args.skip_crosswalks)
+
+    def test_sync_cig_periods_parser_uses_incremental_defaults(self) -> None:
+        """@notice Parse the incremental CIG sync command with its default update behavior."""
+
+        parser = main.__globals__["build_parser"]()
+        args = parser.parse_args(["sync-cig-periods", "cig-2025"])
+
+        self.assertEqual(args.dataset_id, "cig-2025")
+        self.assertEqual(args.output_dir, "data/raw")
+        self.assertEqual(args.schemas_dir, "schemas")
+        self.assertEqual(args.warehouse_dir, "data/warehouse")
+        self.assertEqual(args.period, [])
+        self.assertFalse(args.refresh_changed)
+        self.assertFalse(args.keep_materialized)
+        self.assertFalse(args.skip_crosswalks)
+
     def test_parse_resource_prints_structured_csv_payload(self) -> None:
         """@notice Emit a parsed CSV payload from the new Phase 2 parser surface."""
 

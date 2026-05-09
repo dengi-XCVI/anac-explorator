@@ -122,7 +122,7 @@ class CkanClientTests(unittest.TestCase):
         )
 
         with self.assertRaisesRegex(CkanClientError, "blocked or filtered"):
-            CkanClient().package_show("cig-2025")
+            CkanClient(transport="http").package_show("cig-2025")
 
     @patch("anac_explorator.ckan.request.ProxyHandler")
     @patch("anac_explorator.ckan.request.build_opener")

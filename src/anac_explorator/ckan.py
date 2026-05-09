@@ -15,7 +15,10 @@ from urllib import parse, request
 from anac_explorator.models import CkanPackage, CkanResource
 
 DEFAULT_CKAN_BASE_URL = "https://dati.anticorruzione.it/opendata/api/3/action"
-DEFAULT_USER_AGENT = "anac-explorator/0.1.0 (+https://github.com/dengi-XCVI/anac-explorator)"
+DEFAULT_USER_AGENT = (
+    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
+    "(KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36"
+)
 DEFAULT_ACCEPT_LANGUAGE = "it-IT,it;q=0.9,en;q=0.8"
 DEFAULT_REFERER = "https://dati.anticorruzione.it/opendata/"
 DEFAULT_TRANSPORT = "auto"

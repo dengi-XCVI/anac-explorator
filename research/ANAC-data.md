@@ -209,7 +209,7 @@ All downloads are ZIP archives. CSV uses `;` (semicolon) delimiter.
 - [x] Build CKAN downloader with smart caching and resume support
 - [x] Build CSV/JSON parser → Python dataclasses/Pydantic models
 - [x] Build data cleaner: handle encoding, NULLs, type coercion
-- [ ] Build loader: CSV → DuckDB/Parquet with proper indexes
+- [x] Build loader: CSV → DuckDB/Parquet with proper indexes
 - [ ] Handle incremental delta updates (merging into full datasets)
 - [ ] Validate data integrity (row counts, referential integrity with vocabularies)
 

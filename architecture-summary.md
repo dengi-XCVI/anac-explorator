@@ -10,8 +10,9 @@ The project is currently a **research-complete, ingestion-and-storage baseline A
 4. **controlled-vocabulary and data-dictionary enrichment**
 5. **resource parsing and cleaning for later loading**
 6. **DuckDB/Parquet loading plus local SQL view registration**
+7. **incremental monthly CIG period sync with slice replacement**
 
-It does **not** yet implement the planned **incremental merge/update workflow**, **integrity-validation layer**, or a richer end-user analytical interface beyond the new local SQL facade.
+It does **not** yet implement the broader planned **integrity-validation layer** or a richer end-user analytical interface beyond the local SQL facade, and the incremental workflow currently targets the monthly CIG family only.
 
 ## The architecture as it exists today
 
@@ -30,7 +31,7 @@ It does **not** yet implement the planned **incremental merge/update workflow**,
 
 Today the main flow is:
 
-`ANAC CKAN -> CkanClient/PlaywrightFetcher -> download_dataset_resource -> manifest-backed raw files -> schema/vocabulary/dictionary artifacts -> parse_resource/clean_resource -> load_downloaded_resource -> partitioned parquet -> query_local_data`
+`ANAC CKAN -> CkanClient/PlaywrightFetcher -> download_dataset_resource/download_dataset_to_parquet -> manifest-backed raw files and schemas -> vocabulary/dictionary artifacts -> load_downloaded_resource -> partitioned parquet -> query_local_data`
 
 That means the repository already has two strong foundations:
 
@@ -48,6 +49,7 @@ That means the repository already has two strong foundations:
 - **The current architecture is CLI-first.** The reusable Python functions exist, but the main user-facing surface is the CLI.
 - **The system is source-preserving by design.** Raw column names are kept intact, normalization is conservative, and semantic links are added without rewriting source meaning.
 - **The storage model is now view-first.** DuckDB stores metadata and generated views, while the durable analytical payload lives in Parquet.
+- **The orchestration path is now partially integrated.** One CLI command can reuse the download cache, ensure a schema artifact exists, load to Parquet, prune the extracted CSV, and register vocabulary cross-reference views for DuckDB joins.
 - **The network model is environment-aware.** Direct HTTP can fail against the ANAC WAF, so Playwright is treated as the validated transport path from this runtime.
 
 ## What is already strong
@@ -58,10 +60,11 @@ That means the repository already has two strong foundations:
 - **The Phase 2 parser/cleaner path is in place and integration-tested.**
 - **The current cache tree has been brought under manifest tracking for the main resources already in use.**
 - **A first DuckDB/Parquet loader exists and keeps large scans inside DuckDB instead of Python memory.**
+- **The semantic crosswalk artifacts can now be surfaced directly inside DuckDB for joinable querying.**
 
 ## What is still missing architecturally
 
-- There is **no incremental-update strategy yet** for merging the ANAC delta datasets into loaded history.
+- The incremental-update strategy is now implemented only for the **monthly CIG family**; other dataset families still use the one-shot load path.
 - There is **no integrity-validation layer yet** to enforce row-count checks, expected joins, or vocabulary-linked consistency after loading.
 - There is **no broader query engine/UI layer yet** beyond the current raw SQL CLI facade.
 - The current loader scope is still intentionally narrow: monthly CIG resources and the already-wired vocabulary datasets.
@@ -70,15 +73,15 @@ That means the repository already has two strong foundations:
 
 The project is best described as:
 
-> **Phase 1 complete, Phase 2 storage baseline complete, incremental/integrity layers not yet built.**
+> **Phase 1 complete, Phase 2 storage baseline complete, first incremental CIG slice built, integrity layer still pending.**
 
 In other words, the repository is already past the exploratory stage and now has a credible ingestion foundation plus a local storage baseline, but it has not yet crossed into the final intended architecture of **incremental relational refresh + integrity guarantees + richer query and LLM support**.
 
 ## Next three steps
 
-### 1. Add incremental delta-update handling
+### 1. Extend incremental delta-update handling beyond monthly CIG
 
-Implement the strategy for the `cig` delta dataset and other update-oriented sources so the local store can be refreshed without reloading everything from scratch.
+Generalize the new period-catalog workflow to other update-oriented sources so the local store can be refreshed without reloading everything from scratch.
 
 Concretely, this should add:
 

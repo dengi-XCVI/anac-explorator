@@ -20,6 +20,19 @@ from anac_explorator.models import SchemaColumn, SchemaMapping
 _BOOLEAN_VALUES = {"0", "1", "false", "true", "no", "yes"}
 _DATE_FORMATS = ("%Y-%m-%d", "%d/%m/%Y")
 _DATETIME_FORMATS = ("%Y-%m-%d %H:%M:%S", "%Y-%m-%dT%H:%M:%S", "%Y-%m-%dT%H:%M:%S%z")
+_TEXT_IDENTIFIER_COLUMNS = {
+    "cig",
+    "cig_accordo_quadro",
+    "numero_gara",
+    "codice_ausa",
+    "cf_amministrazione_appaltante",
+    "cf_sa_delegante",
+    "cf_sa_delegata",
+    "id_centro_costo",
+    "cui_programma",
+    "cig_collegamento",
+    "cod_cpv",
+}
 
 
 @dataclass(slots=True)
@@ -102,6 +115,8 @@ def _infer_type(column_name: str, values: list[str]) -> str:
 
     if not values:
         return "unknown"
+    if _is_text_identifier_column(column_name):
+        return "text"
     if _is_boolean_candidate(column_name, values):
         return "boolean"
     if _all_match(values, _is_integer):
@@ -113,6 +128,13 @@ def _infer_type(column_name: str, values: list[str]) -> str:
     if _all_match(values, _is_date):
         return "date"
     return "text"
+
+
+def _is_text_identifier_column(column_name: str) -> bool:
+    """@notice Detect identifier columns that must remain text even when they look numeric."""
+
+    normalized_name = column_name.casefold()
+    return normalized_name in _TEXT_IDENTIFIER_COLUMNS or normalized_name.startswith("cf_")
 
 
 def _all_match(values: list[str], predicate: Callable[[str], bool]) -> bool:

@@ -22,7 +22,8 @@ The current implementation slice now covers:
 11. cleaning parsed records for later database loading
 12. loading manifest-backed CSV resources into partitioned Parquet through DuckDB
 13. registering local DuckDB views over Parquet-backed datasets
-14. documenting the result for later ingestion and querying phases
+14. incrementally syncing monthly CIG periods into the existing Parquet-backed warehouse
+15. documenting the result for later ingestion and querying phases
 
 ## Architectural baseline
 - ANAC CKAN metadata is the source of truth for dataset and resource discovery
@@ -40,6 +41,8 @@ The current implementation slice now covers:
 - `anac-explorator build-vocabulary-crosswalks` for normalized vocabulary artifact generation
 - `anac-explorator build-data-dictionary` for January 2025 CIG field-dictionary generation
 - `anac-explorator download-dataset-resource <dataset>` for manifest-backed CSV/JSON acquisition
+- `anac-explorator download-dataset-to-parquet <dataset>` for direct manifest-backed CSV download into Parquet-backed DuckDB views
+- `anac-explorator sync-cig-periods <dataset>` for forward-only or explicitly selected monthly CIG incremental updates
 - `anac-explorator parse-resource <path>` for structured CSV/JSON parsing
 - `anac-explorator clean-resource <path>` for schema-aware cleaning before loading
 - `anac-explorator load-downloaded-resource <manifest>` for manifest-backed CSV loading into DuckDB/Parquet
@@ -53,6 +56,7 @@ The current implementation slice now covers:
 - The downloader now persists `manifest.json` files beside materialized resources.
 - The downloader behavior now distinguishes:
   - `cache_hit` when a manifest-backed local artifact can be reused directly
+  - `archive_cache_hit` when an extracted CSV has been pruned locally but can be rematerialized from the cached ZIP archive
   - `legacy_cache_hit` when an older Phase 1 cache layout is adopted and wrapped in a new manifest
   - `fresh`, `resumed`, and `restarted` download states during active fetches
 - Resume behavior:
@@ -83,7 +87,19 @@ The current implementation slice now covers:
 - The SQL-native loader now:
   - mirrors the cleaner's BOM/whitespace/NULL normalization rules
   - validates typed projections before writing Parquet so invalid casts do not silently turn into `NULL`
+  - reuses an already written Parquet slice for the same manifest instead of rewriting it unnecessarily
   - refreshes DuckDB views from the current Parquet file inventory after each load
+- The new orchestration command now:
+  - downloads one dataset resource through the existing manifest-backed cache layer
+  - reuses or generates a schema artifact for typed loading
+  - can prune the extracted uncompressed CSV after a successful load when the source archive is still cached
+  - registers vocabulary crosswalk artifacts as queryable DuckDB views when `vocabularies/index.json` is available
+- The first incremental update slice now adds:
+  - `dataset_period_manifest` in DuckDB to track imported monthly CIG periods, remote metadata, checksums, and import timestamps
+  - forward-only update planning so only periods newer than the newest local period are downloaded automatically
+  - explicit period or period-range sync without auto-backfilling older missing periods
+  - correction-aware refreshes that replace an existing period's Parquet slice in place when CKAN metadata changes upstream
+  - backfill of the new period catalog from existing `loaded_resources` rows so older one-shot monthly CIG loads become visible to the incremental planner
 - The current query facade remains intentionally small:
   - raw SQL input
   - JSON-friendly output

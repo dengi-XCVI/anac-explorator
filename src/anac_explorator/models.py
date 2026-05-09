@@ -672,6 +672,7 @@ class WarehouseLoadResult:
     @param row_count Row count written for this load.
     @param partition_values Partition metadata applied to this file.
     @param registered_parquet_files Number of Parquet files currently registered in the view.
+    @param load_status Whether the warehouse load was freshly written or reused from cache.
     @param view_sql SQL used to create or refresh the DuckDB view.
     """
 
@@ -689,6 +690,7 @@ class WarehouseLoadResult:
     row_count: int
     partition_values: list[WarehousePartitionValue] = field(default_factory=list)
     registered_parquet_files: int = 0
+    load_status: str = "fresh"
     view_sql: str = ""
 
     def to_dict(self) -> dict[str, object]:
@@ -709,7 +711,222 @@ class WarehouseLoadResult:
             "row_count": self.row_count,
             "partition_values": [partition.to_dict() for partition in self.partition_values],
             "registered_parquet_files": self.registered_parquet_files,
+            "load_status": self.load_status,
             "view_sql": self.view_sql,
+        }
+
+
+@dataclass(slots=True)
+class WarehouseCrosswalkView:
+    """@notice Describe one queryable DuckDB view registered from a vocabulary artifact.
+
+    @param dataset_id Dataset identifier that owns the vocabulary artifact.
+    @param table_name Logical cross-reference table name from the artifact.
+    @param view_name DuckDB view name registered for querying.
+    @param parquet_path Parquet file that backs the registered view.
+    @param row_count Number of rows emitted into the cross-reference Parquet file.
+    """
+
+    dataset_id: str
+    table_name: str
+    view_name: str
+    parquet_path: str
+    row_count: int
+
+    def to_dict(self) -> dict[str, object]:
+        """@notice Convert the crosswalk registration into a serializable dictionary."""
+
+        return asdict(self)
+
+
+@dataclass(slots=True)
+class WarehouseCrosswalkRegistrationResult:
+    """@notice Capture the result of registering vocabulary crosswalk views in DuckDB.
+
+    @param duckdb_path Path to the DuckDB catalog database.
+    @param vocabulary_index_path Vocabulary index used for registration when available.
+    @param status High-level outcome such as `registered` or `missing_index`.
+    @param registered_views Registered cross-reference views.
+    """
+
+    duckdb_path: str
+    vocabulary_index_path: str
+    status: str
+    registered_views: list[WarehouseCrosswalkView] = field(default_factory=list)
+
+    def to_dict(self) -> dict[str, object]:
+        """@notice Convert the registration result into a serializable dictionary."""
+
+        return {
+            "duckdb_path": self.duckdb_path,
+            "vocabulary_index_path": self.vocabulary_index_path,
+            "status": self.status,
+            "registered_views": [view.to_dict() for view in self.registered_views],
+        }
+
+
+@dataclass(slots=True)
+class DatasetParquetDownloadResult:
+    """@notice Capture the end-to-end download-to-Parquet workflow result.
+
+    @param dataset_id CKAN dataset slug requested by the user.
+    @param resource_name CKAN resource name selected for download.
+    @param manifest_path Manifest path produced or reused by the downloader.
+    @param download_cache_status Download-layer cache status for the selected resource.
+    @param schema_path Schema artifact path used for loading.
+    @param schema_generated Whether the schema artifact had to be generated during the workflow.
+    @param removed_materialized_path Whether the extracted uncompressed working file was removed after loading.
+    @param load_result Warehouse load result for the dataset resource.
+    @param crosswalk_registration Optional vocabulary crosswalk registration result.
+    """
+
+    dataset_id: str
+    resource_name: str
+    manifest_path: str
+    download_cache_status: str
+    schema_path: str
+    schema_generated: bool
+    removed_materialized_path: bool
+    load_result: WarehouseLoadResult
+    crosswalk_registration: WarehouseCrosswalkRegistrationResult | None = None
+
+    def to_dict(self) -> dict[str, object]:
+        """@notice Convert the end-to-end workflow result into a serializable dictionary."""
+
+        return {
+            "dataset_id": self.dataset_id,
+            "resource_name": self.resource_name,
+            "manifest_path": self.manifest_path,
+            "download_cache_status": self.download_cache_status,
+            "schema_path": self.schema_path,
+            "schema_generated": self.schema_generated,
+            "removed_materialized_path": self.removed_materialized_path,
+            "load_result": self.load_result.to_dict(),
+            "crosswalk_registration": None
+            if self.crosswalk_registration is None
+            else self.crosswalk_registration.to_dict(),
+        }
+
+
+@dataclass(slots=True)
+class DatasetPeriodManifestRecord:
+    """@notice Capture one warehouse-level period manifest entry for incremental updates.
+
+    @param dataset_type Stable logical dataset family such as `cig`.
+    @param period Period identifier in `YYYY_MM` format.
+    @param dataset_id CKAN dataset slug that exposed the resource.
+    @param resource_name CKAN resource name for the period slice.
+    @param manifest_path Local raw manifest path backing the downloaded period.
+    @param parquet_path Local Parquet slice path currently registered for the period.
+    @param resource_id CKAN resource identifier when known.
+    @param resource_url Direct CKAN resource URL when known.
+    @param remote_modified CKAN last-modified timestamp used for refresh detection.
+    @param remote_size CKAN size metadata used for refresh detection.
+    @param content_checksum Deterministic checksum of the downloaded period content.
+    @param row_count Current row count for the Parquet slice.
+    @param imported_at ISO timestamp for the first successful import of the period.
+    @param refreshed_at ISO timestamp for the latest successful refresh of the period.
+    """
+
+    dataset_type: str
+    period: str
+    dataset_id: str
+    resource_name: str
+    manifest_path: str
+    parquet_path: str
+    resource_id: str | None = None
+    resource_url: str | None = None
+    remote_modified: str | None = None
+    remote_size: int | None = None
+    content_checksum: str | None = None
+    row_count: int | None = None
+    imported_at: str | None = None
+    refreshed_at: str | None = None
+
+    def to_dict(self) -> dict[str, object]:
+        """@notice Convert the warehouse period manifest entry into a serializable dictionary."""
+
+        return asdict(self)
+
+
+@dataclass(slots=True)
+class DatasetUpdatePlanItem:
+    """@notice Describe one planned incremental-update decision for a dataset period.
+
+    @param dataset_type Stable logical dataset family such as `cig`.
+    @param period Period identifier in `YYYY_MM` format.
+    @param dataset_id CKAN dataset slug that exposed the resource.
+    @param resource_name CKAN resource name associated with the period.
+    @param action Planned action such as `download`, `refresh`, or `skip`.
+    @param reason Short explanation of why the planner chose the action.
+    @param remote_modified CKAN last-modified timestamp currently reported by CKAN.
+    @param remote_size CKAN size metadata currently reported by CKAN.
+    @param manifest_path Existing local manifest path when the period is already cataloged.
+    @param parquet_path Existing local Parquet path when the period is already cataloged.
+    @param content_checksum Existing stored content checksum when available locally.
+    """
+
+    dataset_type: str
+    period: str
+    dataset_id: str
+    resource_name: str
+    action: str
+    reason: str
+    remote_modified: str | None = None
+    remote_size: int | None = None
+    manifest_path: str | None = None
+    parquet_path: str | None = None
+    content_checksum: str | None = None
+
+    def to_dict(self) -> dict[str, object]:
+        """@notice Convert the incremental update plan item into a serializable dictionary."""
+
+        return asdict(self)
+
+
+@dataclass(slots=True)
+class DatasetIncrementalUpdateResult:
+    """@notice Capture the result of an incremental multi-period warehouse sync.
+
+    @param dataset_type Stable logical dataset family such as `cig`.
+    @param dataset_id CKAN dataset slug inspected for remote period resources.
+    @param selection_mode High-level planning mode such as `forward`, `bootstrap`, `explicit`, or `range`.
+    @param latest_local_period Newest locally imported period before planning, when any.
+    @param requested_periods Periods considered by the planner in this run.
+    @param plan Planned actions for all candidate periods.
+    @param applied_loads Periods that were actually downloaded/loaded during this run.
+    @param period_manifest Current warehouse period catalog after the sync.
+    @param duckdb_path Path to the DuckDB catalog database.
+    @param crosswalk_registration Optional vocabulary crosswalk registration result.
+    """
+
+    dataset_type: str
+    dataset_id: str
+    selection_mode: str
+    latest_local_period: str | None
+    requested_periods: list[str] = field(default_factory=list)
+    plan: list[DatasetUpdatePlanItem] = field(default_factory=list)
+    applied_loads: list[DatasetParquetDownloadResult] = field(default_factory=list)
+    period_manifest: list[DatasetPeriodManifestRecord] = field(default_factory=list)
+    duckdb_path: str = ""
+    crosswalk_registration: WarehouseCrosswalkRegistrationResult | None = None
+
+    def to_dict(self) -> dict[str, object]:
+        """@notice Convert the incremental sync result into a serializable dictionary."""
+
+        return {
+            "dataset_type": self.dataset_type,
+            "dataset_id": self.dataset_id,
+            "selection_mode": self.selection_mode,
+            "latest_local_period": self.latest_local_period,
+            "requested_periods": self.requested_periods,
+            "plan": [item.to_dict() for item in self.plan],
+            "applied_loads": [load.to_dict() for load in self.applied_loads],
+            "period_manifest": [record.to_dict() for record in self.period_manifest],
+            "duckdb_path": self.duckdb_path,
+            "crosswalk_registration": None
+            if self.crosswalk_registration is None
+            else self.crosswalk_registration.to_dict(),
         }
 
 

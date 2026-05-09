@@ -13,6 +13,7 @@ pipeline surface:
 9. clean parsed resources for later database loading
 10. load manifest-backed CSV resources into DuckDB/Parquet storage
 11. run SQL queries against the local DuckDB warehouse
+12. download one dataset resource directly into Parquet-backed DuckDB views
 """
 
 from __future__ import annotations
@@ -37,7 +38,12 @@ from anac_explorator.ckan import (
 from anac_explorator.cleaner import clean_csv_resource, clean_json_resource
 from anac_explorator.comparison import compare_schema_mappings, load_schema_mapping
 from anac_explorator.dictionary import build_cig_data_dictionary
-from anac_explorator.loader import load_downloaded_resource, run_local_query
+from anac_explorator.loader import (
+    download_dataset_to_parquet,
+    load_downloaded_resource,
+    run_local_query,
+    sync_cig_periods_to_parquet,
+)
 from anac_explorator.parsing import parse_csv_resource, parse_json_resource
 from anac_explorator.sample import (
     SampleDownloadError,
@@ -210,6 +216,213 @@ def build_parser() -> argparse.ArgumentParser:
         help="Transport used for CKAN and download requests.",
     )
     download_dataset_resource_parser.set_defaults(handler=_handle_download_dataset_resource)
+
+    download_dataset_to_parquet_parser = subparsers.add_parser(
+        "download-dataset-to-parquet",
+        help="Download one CSV dataset resource, load it into Parquet, and register DuckDB views.",
+    )
+    download_dataset_to_parquet_parser.add_argument("dataset_id", help="CKAN dataset slug to resolve.")
+    download_dataset_to_parquet_parser.add_argument(
+        "--resource-name",
+        help="Exact CKAN resource name to choose when a dataset exposes multiple CSV resources.",
+    )
+    download_dataset_to_parquet_parser.add_argument(
+        "--output-dir",
+        default="data/raw",
+        help="Base directory used for downloaded raw archives and manifests.",
+    )
+    download_dataset_to_parquet_parser.add_argument(
+        "--schemas-dir",
+        default="schemas",
+        help="Directory used for generated or reused schema artifacts.",
+    )
+    download_dataset_to_parquet_parser.add_argument(
+        "--schema-path",
+        help="Optional schema artifact used or generated for typed warehouse loading.",
+    )
+    download_dataset_to_parquet_parser.add_argument(
+        "--schema-sample-limit",
+        type=int,
+        default=2_000,
+        help="Maximum number of rows inspected when generating a missing schema artifact. Use 0 to scan the full file.",
+    )
+    download_dataset_to_parquet_parser.add_argument(
+        "--warehouse-dir",
+        default="data/warehouse",
+        help="Base directory for the local DuckDB database and Parquet files.",
+    )
+    download_dataset_to_parquet_parser.add_argument(
+        "--keep-materialized",
+        action="store_true",
+        help="Keep the extracted uncompressed CSV after loading instead of pruning it when an archive is available.",
+    )
+    download_dataset_to_parquet_parser.add_argument(
+        "--skip-crosswalks",
+        action="store_true",
+        help="Skip automatic registration of local vocabulary crosswalk artifacts in DuckDB.",
+    )
+    download_dataset_to_parquet_parser.add_argument(
+        "--vocabulary-index-path",
+        default="vocabularies/index.json",
+        help="Vocabulary index used when registering crosswalk views for DuckDB querying.",
+    )
+    download_dataset_to_parquet_parser.add_argument(
+        "--delimiter",
+        default=";",
+        help="CSV delimiter used for schema generation and loading.",
+    )
+    download_dataset_to_parquet_parser.add_argument(
+        "--encoding",
+        default="utf-8-sig",
+        help="Encoding used for schema generation and loading.",
+    )
+    download_dataset_to_parquet_parser.add_argument(
+        "--base-url",
+        default=DEFAULT_CKAN_BASE_URL,
+        help="CKAN action API base URL.",
+    )
+    download_dataset_to_parquet_parser.add_argument(
+        "--timeout",
+        type=int,
+        default=30,
+        help="Request timeout in seconds.",
+    )
+    download_dataset_to_parquet_parser.add_argument(
+        "--user-agent",
+        default=os.getenv("ANAC_EXPLORATOR_USER_AGENT", DEFAULT_USER_AGENT),
+        help="User-Agent header for CKAN and download requests.",
+    )
+    download_dataset_to_parquet_parser.add_argument(
+        "--accept-language",
+        default=os.getenv("ANAC_EXPLORATOR_ACCEPT_LANGUAGE", DEFAULT_ACCEPT_LANGUAGE),
+        help="Accept-Language header for CKAN and download requests.",
+    )
+    download_dataset_to_parquet_parser.add_argument(
+        "--referer",
+        default=os.getenv("ANAC_EXPLORATOR_REFERER", DEFAULT_REFERER),
+        help="Referer header for CKAN and download requests.",
+    )
+    download_dataset_to_parquet_parser.add_argument(
+        "--proxy-url",
+        default=os.getenv("ANAC_EXPLORATOR_PROXY_URL"),
+        help="Optional HTTP(S) proxy URL used for CKAN and download requests.",
+    )
+    download_dataset_to_parquet_parser.add_argument(
+        "--transport",
+        choices=["auto", "http", "playwright"],
+        default=os.getenv("ANAC_EXPLORATOR_TRANSPORT", "playwright"),
+        help="Transport used for CKAN and download requests.",
+    )
+    download_dataset_to_parquet_parser.set_defaults(handler=_handle_download_dataset_to_parquet)
+
+    sync_cig_periods_parser = subparsers.add_parser(
+        "sync-cig-periods",
+        help="Incrementally load selected or newer monthly CIG periods into Parquet-backed DuckDB views.",
+    )
+    sync_cig_periods_parser.add_argument("dataset_id", help="CKAN yearly CIG dataset slug to inspect, such as cig-2025.")
+    sync_cig_periods_parser.add_argument(
+        "--period",
+        action="append",
+        default=[],
+        help="Explicit period to sync in YYYY_MM form. Repeat to request multiple periods.",
+    )
+    sync_cig_periods_parser.add_argument(
+        "--from-period",
+        help="Inclusive start of a period range in YYYY_MM form.",
+    )
+    sync_cig_periods_parser.add_argument(
+        "--to-period",
+        help="Inclusive end of a period range in YYYY_MM form.",
+    )
+    sync_cig_periods_parser.add_argument(
+        "--refresh-changed",
+        action="store_true",
+        help="Also refresh already-loaded periods when CKAN metadata shows they changed upstream.",
+    )
+    sync_cig_periods_parser.add_argument(
+        "--output-dir",
+        default="data/raw",
+        help="Base directory used for downloaded raw archives and manifests.",
+    )
+    sync_cig_periods_parser.add_argument(
+        "--schemas-dir",
+        default="schemas",
+        help="Directory used for generated or reused schema artifacts.",
+    )
+    sync_cig_periods_parser.add_argument(
+        "--warehouse-dir",
+        default="data/warehouse",
+        help="Base directory for the local DuckDB database and Parquet files.",
+    )
+    sync_cig_periods_parser.add_argument(
+        "--schema-sample-limit",
+        type=int,
+        default=2_000,
+        help="Maximum number of rows inspected when generating a missing schema artifact. Use 0 to scan the full file.",
+    )
+    sync_cig_periods_parser.add_argument(
+        "--keep-materialized",
+        action="store_true",
+        help="Keep extracted uncompressed CSV files after loading instead of pruning them when an archive is available.",
+    )
+    sync_cig_periods_parser.add_argument(
+        "--skip-crosswalks",
+        action="store_true",
+        help="Skip automatic registration of local vocabulary crosswalk artifacts in DuckDB.",
+    )
+    sync_cig_periods_parser.add_argument(
+        "--vocabulary-index-path",
+        default="vocabularies/index.json",
+        help="Vocabulary index used when registering crosswalk views for DuckDB querying.",
+    )
+    sync_cig_periods_parser.add_argument(
+        "--delimiter",
+        default=";",
+        help="CSV delimiter used for schema generation and loading.",
+    )
+    sync_cig_periods_parser.add_argument(
+        "--encoding",
+        default="utf-8-sig",
+        help="Encoding used for schema generation and loading.",
+    )
+    sync_cig_periods_parser.add_argument(
+        "--base-url",
+        default=DEFAULT_CKAN_BASE_URL,
+        help="CKAN action API base URL.",
+    )
+    sync_cig_periods_parser.add_argument(
+        "--timeout",
+        type=int,
+        default=30,
+        help="Request timeout in seconds.",
+    )
+    sync_cig_periods_parser.add_argument(
+        "--user-agent",
+        default=os.getenv("ANAC_EXPLORATOR_USER_AGENT", DEFAULT_USER_AGENT),
+        help="User-Agent header for CKAN and download requests.",
+    )
+    sync_cig_periods_parser.add_argument(
+        "--accept-language",
+        default=os.getenv("ANAC_EXPLORATOR_ACCEPT_LANGUAGE", DEFAULT_ACCEPT_LANGUAGE),
+        help="Accept-Language header for CKAN and download requests.",
+    )
+    sync_cig_periods_parser.add_argument(
+        "--referer",
+        default=os.getenv("ANAC_EXPLORATOR_REFERER", DEFAULT_REFERER),
+        help="Referer header for CKAN and download requests.",
+    )
+    sync_cig_periods_parser.add_argument(
+        "--proxy-url",
+        default=os.getenv("ANAC_EXPLORATOR_PROXY_URL"),
+        help="Optional HTTP(S) proxy URL used for CKAN and download requests.",
+    )
+    sync_cig_periods_parser.add_argument(
+        "--transport",
+        choices=["auto", "http", "playwright"],
+        default=os.getenv("ANAC_EXPLORATOR_TRANSPORT", "playwright"),
+        help="Transport used for CKAN and download requests.",
+    )
+    sync_cig_periods_parser.set_defaults(handler=_handle_sync_cig_periods)
 
     download_cig_sample = subparsers.add_parser(
         "download-cig-sample",
@@ -617,6 +830,66 @@ def _handle_download_dataset_resource(args: argparse.Namespace) -> dict[str, obj
         output_dir=Path(args.output_dir),
     )
     return resource.to_dict()
+
+
+def _handle_download_dataset_to_parquet(args: argparse.Namespace) -> dict[str, object]:
+    """@notice Execute the `download-dataset-to-parquet` CLI subcommand."""
+
+    client = CkanClient(
+        base_url=args.base_url,
+        timeout=args.timeout,
+        user_agent=args.user_agent,
+        accept_language=args.accept_language,
+        referer=args.referer,
+        proxy_url=args.proxy_url,
+        transport=args.transport,
+    )
+    return download_dataset_to_parquet(
+        client,
+        dataset_id=args.dataset_id,
+        output_dir=Path(args.output_dir),
+        schemas_dir=Path(args.schemas_dir),
+        warehouse_dir=Path(args.warehouse_dir),
+        preferred_resource_name=args.resource_name,
+        schema_path=None if args.schema_path is None else Path(args.schema_path),
+        vocabulary_index_path=Path(args.vocabulary_index_path),
+        delimiter=args.delimiter,
+        encoding=args.encoding,
+        schema_sample_limit=args.schema_sample_limit,
+        keep_materialized=args.keep_materialized,
+        register_crosswalks=not args.skip_crosswalks,
+    ).to_dict()
+
+
+def _handle_sync_cig_periods(args: argparse.Namespace) -> dict[str, object]:
+    """@notice Execute the `sync-cig-periods` CLI subcommand."""
+
+    client = CkanClient(
+        base_url=args.base_url,
+        timeout=args.timeout,
+        user_agent=args.user_agent,
+        accept_language=args.accept_language,
+        referer=args.referer,
+        proxy_url=args.proxy_url,
+        transport=args.transport,
+    )
+    return sync_cig_periods_to_parquet(
+        client,
+        dataset_id=args.dataset_id,
+        output_dir=Path(args.output_dir),
+        schemas_dir=Path(args.schemas_dir),
+        warehouse_dir=Path(args.warehouse_dir),
+        periods=args.period,
+        period_start=args.from_period,
+        period_end=args.to_period,
+        vocabulary_index_path=Path(args.vocabulary_index_path),
+        delimiter=args.delimiter,
+        encoding=args.encoding,
+        schema_sample_limit=args.schema_sample_limit,
+        keep_materialized=args.keep_materialized,
+        register_crosswalks=not args.skip_crosswalks,
+        refresh_changed=args.refresh_changed,
+    ).to_dict()
 
 
 def _handle_compare_schema_files(args: argparse.Namespace) -> dict[str, object]:

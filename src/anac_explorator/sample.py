@@ -89,25 +89,27 @@ def download_dataset_resource(
     output_dir: str | Path,
     preferred_resource_name: str | None = None,
     preferred_format: str = "CSV",
+    force_download: bool = False,
 ) -> DownloadedResourceArtifact:
     """@notice Resolve, download, materialize, and manifest one CKAN resource."""
 
     output_path = Path(output_dir)
-    cached = _load_cached_artifact(
-        output_path / dataset_id / preferred_resource_name if preferred_resource_name else None,
-        expected_format=preferred_format,
-    )
-    if cached is not None:
-        return cached
-    legacy_cached = _recover_legacy_cached_artifact(
-        output_path / dataset_id / preferred_resource_name if preferred_resource_name else None,
-        dataset_id=dataset_id,
-        resource_name=preferred_resource_name,
-        resource_format=preferred_format.upper(),
-        expected_extension=_format_extension(preferred_format),
-    )
-    if legacy_cached is not None:
-        return legacy_cached
+    if not force_download:
+        cached = _load_cached_artifact(
+            output_path / dataset_id / preferred_resource_name if preferred_resource_name else None,
+            expected_format=preferred_format,
+        )
+        if cached is not None:
+            return cached
+        legacy_cached = _recover_legacy_cached_artifact(
+            output_path / dataset_id / preferred_resource_name if preferred_resource_name else None,
+            dataset_id=dataset_id,
+            resource_name=preferred_resource_name,
+            resource_format=preferred_format.upper(),
+            expected_extension=_format_extension(preferred_format),
+        )
+        if legacy_cached is not None:
+            return legacy_cached
 
     try:
         package = client.package_show(dataset_id)
@@ -121,22 +123,23 @@ def download_dataset_resource(
     )
     expected_extension = _format_extension(preferred_format)
     base_output_dir = output_path / dataset_id / resource.name
-    cached = _load_cached_artifact(base_output_dir, expected_format=preferred_format, expected_url=resource.url)
-    if cached is not None:
-        return cached
-    legacy_cached = _recover_legacy_cached_artifact(
-        base_output_dir,
-        dataset_id=dataset_id,
-        resource_name=resource.name,
-        resource_format=resource.format,
-        expected_extension=expected_extension,
-        resource_id=resource.id or None,
-        resource_url=resource.url,
-        source_size=resource.size,
-        source_last_modified=resource.last_modified,
-    )
-    if legacy_cached is not None:
-        return legacy_cached
+    if not force_download:
+        cached = _load_cached_artifact(base_output_dir, expected_format=preferred_format, expected_url=resource.url)
+        if cached is not None:
+            return cached
+        legacy_cached = _recover_legacy_cached_artifact(
+            base_output_dir,
+            dataset_id=dataset_id,
+            resource_name=resource.name,
+            resource_format=resource.format,
+            expected_extension=expected_extension,
+            resource_id=resource.id or None,
+            resource_url=resource.url,
+            source_size=resource.size,
+            source_last_modified=resource.last_modified,
+        )
+        if legacy_cached is not None:
+            return legacy_cached
 
     if resource.url.lower().endswith(".zip"):
         archive_path = base_output_dir / f"{resource.name}.zip"
@@ -175,6 +178,7 @@ def download_dataset_csv_resource(
     dataset_id: str,
     output_dir: str | Path,
     preferred_resource_name: str | None = None,
+    force_download: bool = False,
 ) -> DownloadedCsvResource:
     """@notice Resolve, download, and materialize one CKAN CSV resource."""
 
@@ -184,6 +188,7 @@ def download_dataset_csv_resource(
         output_dir=output_dir,
         preferred_resource_name=preferred_resource_name,
         preferred_format="CSV",
+        force_download=force_download,
     )
     return DownloadedCsvResource(artifact=artifact)
 
@@ -194,6 +199,7 @@ def download_cig_monthly_sample(
     year: int,
     month: int,
     output_dir: str | Path,
+    force_download: bool = False,
 ) -> DownloadedCsvResource:
     """@notice Resolve, download, and extract one monthly CIG CSV sample."""
 
@@ -204,6 +210,7 @@ def download_cig_monthly_sample(
         dataset_id=dataset_id,
         output_dir=output_dir,
         preferred_resource_name=preferred_resource_name,
+        force_download=force_download,
     )
 
 
@@ -334,10 +341,22 @@ def _load_cached_artifact(
         return None
     if expected_url is not None and manifest.resource_url != expected_url:
         return None
-    if not Path(manifest.materialized_path).exists():
-        return None
     if manifest.archive_path is not None and not Path(manifest.archive_path).exists():
         return None
+
+    materialized_path = Path(manifest.materialized_path)
+    if not materialized_path.exists():
+        if manifest.archive_path is None:
+            return None
+        rematerialized_path = _materialize_resource(
+            Path(manifest.archive_path),
+            manifest_path.parent / "extracted",
+            manifest.materialized_kind,
+        )
+        manifest.materialized_path = str(rematerialized_path)
+        manifest.cache_status = "archive_cache_hit"
+        _write_manifest(manifest, manifest_path)
+        return DownloadedResourceArtifact(manifest=manifest, manifest_path=str(manifest_path))
 
     manifest.cache_status = "cache_hit"
     return DownloadedResourceArtifact(manifest=manifest, manifest_path=str(manifest_path))

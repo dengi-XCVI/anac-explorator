@@ -3,7 +3,7 @@ It is part of a wider initiative to increase the legibility of the Italian gover
 
 ## Current implementation focus
 
-Phase 1 is complete, and the current Phase 2 storage slice now covers thirteen
+Phase 1 is complete, and the current Phase 2 storage + incremental slice now covers fourteen
 reusable parts of the future system:
 
 1. resolve a monthly CIG resource from ANAC metadata
@@ -18,7 +18,8 @@ reusable parts of the future system:
 10. clean parsed records for later database loading
 11. load manifest-backed CSV resources into partitioned Parquet through DuckDB
 12. register lightweight DuckDB views over the Parquet files for local querying
-13. validate the pipeline end to end with integration coverage and direct module CLI execution
+13. incrementally sync monthly CIG periods without reloading full history
+14. validate the pipeline end to end with integration coverage and direct module CLI execution
 
 ## Current code layout
 
@@ -48,8 +49,11 @@ anac-explorator build-vocabulary-crosswalks --transport playwright
 anac-explorator build-data-dictionary
 anac-explorator parse-resource ./data/raw/cig-2025/cig_csv_2025_01/extracted/cig_csv_2025_01.csv --format csv --record-limit 2
 anac-explorator clean-resource ./data/raw/cig-2025/cig_csv_2025_01/extracted/cig_csv_2025_01.csv --format csv --schema-path ./schemas/cig_2025_01.schema.json --record-limit 2
+anac-explorator download-dataset-to-parquet cig-2025 --resource-name cig_csv_2025_01 --transport playwright
+anac-explorator sync-cig-periods cig-2025 --transport playwright
 anac-explorator load-downloaded-resource ./data/raw/cig-2025/cig_csv_2025_01/manifest.json --schema-path ./schemas/cig_2025_01.schema.json
 anac-explorator query-local-data "SELECT cig, importo_lotto FROM cig ORDER BY cig LIMIT 5"
+anac-explorator query-local-data "SELECT c.cig, t.label AS tipo_scelta FROM cig c LEFT JOIN tipo_scelta_contraente t ON c.cod_tipo_scelta_contraente = t.code LIMIT 5"
 python3 -m anac_explorator.cli parse-resource ./data/raw/cig-2025/cig_csv_2025_01/extracted/cig_csv_2025_01.csv --format csv --record-limit 1
 ```
 
@@ -75,6 +79,10 @@ anac-explorator build-vocabulary-crosswalks --transport playwright
 anac-explorator build-data-dictionary
 ```
 
+The default Playwright request headers now use a browser-like user agent, so
+live CKAN discovery and direct-to-Parquet loading work again here without a
+manual `--user-agent` override.
+
 ## Current generated artifacts
 
 - `schemas/cig_2025_01.schema.json` — full-file January 2025 CIG schema
@@ -91,12 +99,27 @@ anac-explorator build-data-dictionary
 ## Current local analytical storage
 
 - `load-downloaded-resource` now turns one manifest-backed CSV resource into Parquet through DuckDB instead of materializing a second large in-memory Python copy.
+- `download-dataset-to-parquet` now wires together the previous steps:
+  - manifest-backed download/cache reuse
+  - schema reuse or schema generation when an artifact is missing
+  - Parquet loading plus DuckDB view refresh
+  - optional pruning of the extracted CSV after a successful load when the ZIP archive is still present
 - Large fact-like datasets are partitioned when year/month can be derived safely from the manifest naming convention.
   - Current example: monthly CIG resources register under the logical `cig` view and write files under `data/warehouse/parquet/cig/year=YYYY/month=MM/`.
 - DuckDB now acts as a lightweight control/query plane:
   - `registered_views` stores the current generated view SQL
   - `loaded_resources` stores manifest/schema lineage for each loaded Parquet slice
+  - `dataset_period_manifest` stores the monthly CIG period catalog used for incremental updates and refresh detection
   - `query-local-data` executes SQL against those registered views without duplicating the Parquet data into a second fact table
+- The loader is now idempotent at the warehouse layer:
+  - repeated loads of the same manifest reuse the existing Parquet slice instead of rewriting it
+  - if an extracted CSV has been pruned but the ZIP archive still exists, the downloader can rematerialize it from the archive without re-downloading
+- Vocabulary cross-reference artifacts can now be registered automatically as DuckDB views such as `tipo_scelta_contraente` and `modalita_realizzazione`, so joins against the CIG view can reuse the existing semantic crosswalk work.
+- `sync-cig-periods` now adds the first incremental-update surface for monthly CIG resources:
+  - by default it looks at the newest locally cataloged period and downloads only strictly newer remote periods from the selected CKAN yearly dataset
+  - older missing periods are not auto-backfilled unless they are requested explicitly with `--period` or a period range
+  - already-loaded periods are skipped when unchanged and refreshed in place when CKAN metadata shows a correction upstream
+  - the merged `cig` dataset still comes from the DuckDB view over Parquet slices, so no second fully materialized master fact table is required
 - The current storage scope is intentionally narrow: monthly CIG resources plus the already-wired vocabulary datasets.
 
 ## Current semantic metadata
@@ -130,6 +153,7 @@ anac-explorator build-data-dictionary
 - `download-dataset-resource` now persists a `manifest.json` next to materialized resources.
 - The downloader can:
   - reuse manifest-backed cache hits without re-downloading
+  - rematerialize a pruned extracted CSV from the cached ZIP archive when needed
   - adopt the older Phase 1 cache layout and wrap it in a new manifest
   - resume partial downloads when using plain HTTP transport
   - restart safely through Playwright transport when resume is not available
@@ -145,13 +169,21 @@ anac-explorator build-data-dictionary
 - `load-downloaded-resource` now supports:
   - manifest-backed CSV loading into DuckDB-written Parquet
   - data-aware partitioning for monthly CIG resources
+  - warehouse-level cache reuse for already loaded manifests
   - fail-fast validation when typed SQL projections would silently coerce invalid values
   - dynamic view refresh so one logical DuckDB view can span all loaded Parquet slices for a dataset
+- `download-dataset-to-parquet` now supports:
+  - direct dataset download into Parquet-backed DuckDB views
+  - automatic schema generation when a needed schema artifact is missing
+  - optional pruning of uncompressed extracted CSVs after a successful load
+  - automatic registration of local vocabulary crosswalk artifacts as queryable DuckDB views
 - `query-local-data` now supports:
   - direct SQL execution against the local DuckDB warehouse
   - JSON-friendly result emission for downstream tooling
 - The automated test suite now includes end-to-end Phase 2 coverage for:
   - download -> manifest -> parse -> clean on CSV resources
   - download -> parse -> clean on JSON resources
+  - archive-backed cache rematerialization when an extracted CSV has been pruned
   - manifest -> partitioned Parquet -> DuckDB view registration/query on CSV resources
+  - direct dataset download -> schema generation -> Parquet load -> DuckDB query
   - direct `python -m anac_explorator.cli ...` execution

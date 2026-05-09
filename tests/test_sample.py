@@ -118,6 +118,59 @@ class SampleTests(unittest.TestCase):
             self.assertEqual(artifact.manifest.cache_status, "cache_hit")
             self.assertEqual(artifact.manifest.materialized_path, str(csv_path))
 
+    def test_download_dataset_resource_rehydrates_from_archive_cache_without_ckan_lookup(self) -> None:
+        """@notice Re-extract the cached archive when the uncompressed CSV has been pruned locally."""
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            base_path = Path(temp_dir) / "demo-dataset" / "demo_csv"
+            base_path.mkdir(parents=True)
+            archive_path = base_path / "demo_csv.zip"
+            with ZipFile(archive_path, "w") as archive:
+                archive.writestr("inner/demo.csv", "code;label\n1;ONE\n")
+
+            manifest_path = base_path / "manifest.json"
+            missing_csv_path = base_path / "extracted" / "demo_csv.csv"
+            manifest_path.write_text(
+                """
+{
+  "dataset_id": "demo-dataset",
+  "resource_id": "123",
+  "resource_name": "demo_csv",
+  "resource_format": "CSV",
+  "resource_url": "https://example.invalid/demo.zip",
+  "transport": "playwright",
+  "archive_path": "%s",
+  "materialized_path": "%s",
+  "materialized_kind": "csv",
+  "cache_status": "fresh",
+  "resume_supported": false,
+  "source_size": 10,
+  "source_last_modified": null,
+  "downloaded_at": "2026-05-03T10:00:00+00:00"
+}
+"""
+                % (
+                    str(archive_path).replace("\\", "\\\\"),
+                    str(missing_csv_path).replace("\\", "\\\\"),
+                ),
+                encoding="utf-8",
+            )
+
+            client = Mock()
+            client.package_show.side_effect = AssertionError("CKAN should not be queried for an archive cache hit.")
+
+            artifact = download_dataset_resource(
+                client,
+                dataset_id="demo-dataset",
+                output_dir=temp_dir,
+                preferred_resource_name="demo_csv",
+                preferred_format="CSV",
+            )
+
+            self.assertEqual(artifact.manifest.cache_status, "archive_cache_hit")
+            self.assertTrue(Path(artifact.manifest.materialized_path).exists())
+            self.assertIn("code;label", Path(artifact.manifest.materialized_path).read_text(encoding="utf-8"))
+
     def test_download_resource_over_http_resumes_partial_downloads(self) -> None:
         """@notice Append HTTP byte ranges onto an existing partial file when available."""
 
