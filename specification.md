@@ -23,7 +23,8 @@ The current implementation slice now covers:
 12. loading manifest-backed CSV resources into partitioned Parquet through DuckDB
 13. registering local DuckDB views over Parquet-backed datasets
 14. incrementally syncing monthly CIG periods into the existing Parquet-backed warehouse
-15. documenting the result for later ingestion and querying phases
+15. validating local warehouse integrity across current CIG data and external vocabulary joins
+16. documenting the result for later ingestion and querying phases
 
 ## Architectural baseline
 - ANAC CKAN metadata is the source of truth for dataset and resource discovery
@@ -43,6 +44,7 @@ The current implementation slice now covers:
 - `anac-explorator download-dataset-resource <dataset>` for manifest-backed CSV/JSON acquisition
 - `anac-explorator download-dataset-to-parquet <dataset>` for direct manifest-backed CSV download into Parquet-backed DuckDB views
 - `anac-explorator sync-cig-periods <dataset>` for forward-only or explicitly selected monthly CIG incremental updates
+- `anac-explorator validate-local-data-integrity` for read-only warehouse integrity validation
 - `anac-explorator parse-resource <path>` for structured CSV/JSON parsing
 - `anac-explorator clean-resource <path>` for schema-aware cleaning before loading
 - `anac-explorator load-downloaded-resource <manifest>` for manifest-backed CSV loading into DuckDB/Parquet
@@ -100,6 +102,13 @@ The current implementation slice now covers:
   - explicit period or period-range sync without auto-backfilling older missing periods
   - correction-aware refreshes that replace an existing period's Parquet slice in place when CKAN metadata changes upstream
   - backfill of the new period catalog from existing `loaded_resources` rows so older one-shot monthly CIG loads become visible to the incremental planner
+- The first integrity-validation slice now adds:
+  - read-only validation against the local DuckDB catalog and Parquet-backed views
+  - catalog/file coherence checks across `loaded_resources`, `registered_views`, and `dataset_period_manifest`
+  - recomputed per-slice and merged-view row-count validation
+  - loaded-schema checks against the selected CIG schema artifact
+  - hard-failure checks for exact duplicate rows and unmatched externally resolved vocabulary codes
+  - warning-level checks for non-unique `cig` groups and CIG label disagreements against the linked external vocabulary label
 - The current query facade remains intentionally small:
   - raw SQL input
   - JSON-friendly output

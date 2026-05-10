@@ -210,7 +210,7 @@ All downloads are ZIP archives. CSV uses `;` (semicolon) delimiter.
 - [x] Build CSV/JSON parser → Python dataclasses/Pydantic models
 - [x] Build data cleaner: handle encoding, NULLs, type coercion
 - [x] Build loader: CSV → DuckDB/Parquet with proper indexes
-- [ ] Handle incremental delta updates (merging into full datasets)
+- [x] Handle incremental delta updates (merging into full datasets)
 - [ ] Validate data integrity (row counts, referential integrity with vocabularies)
 
 ### Phase 3: CLI Tool (Week 3–4)

@@ -11,8 +11,9 @@ The project is currently a **research-complete, ingestion-and-storage baseline A
 5. **resource parsing and cleaning for later loading**
 6. **DuckDB/Parquet loading plus local SQL view registration**
 7. **incremental monthly CIG period sync with slice replacement**
+8. **read-only warehouse integrity validation for the current CIG slice**
 
-It does **not** yet implement the broader planned **integrity-validation layer** or a richer end-user analytical interface beyond the local SQL facade, and the incremental workflow currently targets the monthly CIG family only.
+It does **not** yet implement a broader cross-dataset integrity framework or a richer end-user analytical interface beyond the local SQL facade, and the current integrity workflow still targets the monthly CIG family only.
 
 ## The architecture as it exists today
 
@@ -26,6 +27,7 @@ It does **not** yet implement the broader planned **integrity-validation layer**
 | Parse/clean layer | Turn CSV/JSON into structured Python objects and cleaned records | `src/anac_explorator/parsing.py`, `src/anac_explorator/cleaner.py`, `src/anac_explorator/models.py` | Implemented |
 | Interface layer | Expose all current workflows through the CLI and module entrypoints | `src/anac_explorator/cli.py`, `src/anac_explorator/__main__.py` | Implemented |
 | Persistence/query layer | Load manifest-backed resources into partitioned Parquet and expose DuckDB views over them | `src/anac_explorator/loader.py`, `src/anac_explorator/cli.py`, `src/anac_explorator/models.py` | Implemented baseline |
+| Integrity layer | Validate warehouse metadata, row counts, schema consistency, uniqueness, and vocabulary joins | `src/anac_explorator/integrity.py`, `src/anac_explorator/cli.py`, `src/anac_explorator/models.py` | Implemented first slice |
 
 ## Practical data flow
 
@@ -64,7 +66,7 @@ That means the repository already has two strong foundations:
 
 ## What is still missing architecturally
 
-- The incremental-update strategy is now implemented only for the **monthly CIG family**; other dataset families still use the one-shot load path.
+- The incremental-update and integrity strategies are now implemented only for the **monthly CIG family**; other dataset families still use the one-shot load path.
 - There is **no integrity-validation layer yet** to enforce row-count checks, expected joins, or vocabulary-linked consistency after loading.
 - There is **no broader query engine/UI layer yet** beyond the current raw SQL CLI facade.
 - The current loader scope is still intentionally narrow: monthly CIG resources and the already-wired vocabulary datasets.
@@ -73,7 +75,7 @@ That means the repository already has two strong foundations:
 
 The project is best described as:
 
-> **Phase 1 complete, Phase 2 storage baseline complete, first incremental CIG slice built, integrity layer still pending.**
+> **Phase 1 complete, Phase 2 storage baseline complete, first incremental CIG slice built, first integrity slice built.**
 
 In other words, the repository is already past the exploratory stage and now has a credible ingestion foundation plus a local storage baseline, but it has not yet crossed into the final intended architecture of **incremental relational refresh + integrity guarantees + richer query and LLM support**.
 
@@ -90,9 +92,9 @@ Concretely, this should add:
 - duplicate/conflict handling
 - repeatable refresh commands
 
-### 2. Add integrity and relationship validation
+### 2. Extend integrity validation beyond the current CIG slice
 
-Once data is loaded, validate that the stored model matches expectations from the schema and vocabulary layers. This is the step that will make the future query layer reliable.
+The first validator now checks the local monthly CIG warehouse, but the broader architecture still needs the same guarantees for other dataset families and future cross-dataset joins.
 
 Concretely, this should add:
 

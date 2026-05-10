@@ -1,7 +1,7 @@
 # Progress
 
 ## Current phase
-- Phase 2: DuckDB/Parquet incremental CIG sync
+- Phase 2: DuckDB/Parquet integrity validation
 
 ## Current status
 - Bootstrap implementation complete:
@@ -119,11 +119,27 @@
   - corrected periods now replace the existing Parquet slice in place and refresh the merged `cig` view without building a second master fact table
   - repeated incremental runs now stay idempotent when the remote period metadata is unchanged
   - real smoke pass confirmed that `sync-cig-periods cig-2025 --period 2025_01 --transport playwright` recognizes the already-loaded live January 2025 slice and skips it instead of redownloading it
+- First integrity-validation slice completed for the monthly CIG warehouse:
+  - `src/anac_explorator/integrity.py` added for read-only warehouse validation
+  - `validate-local-data-integrity` command added for JSON-friendly integrity reports
+  - the validator now checks:
+    - catalog/file coherence across `loaded_resources`, `registered_views`, and `dataset_period_manifest`
+    - per-slice and merged-view row counts
+    - schema consistency against a selected CIG schema artifact
+    - exact duplicate rows and duplicate external vocabulary codes
+    - unmatched external vocabulary codes for current CIG resolved fields
+    - warning-level non-unique `cig` groups and code/label disagreements against external vocabularies
+    - incremental-catalog coherence for monthly period slices
+  - test coverage now includes passing and failing integrity cases for duplicates, unmatched codes, schema drift, row-count mismatches, and incremental catalog corruption
+  - a live smoke pass of `validate-local-data-integrity` against the current warehouse surfaced real issues rather than false success:
+    - exact duplicate source rows exist in the January 2025 live warehouse slice
+    - many `cig` values span multiple distinct rows, so `cig` cannot currently be treated as a one-row primary key
+    - current external vocabulary label mappings disagree with some loaded source labels, notably `cod_tipo_scelta_contraente = 999`
 
 ## Planned milestones
-1. Validate data integrity and vocabulary-linked referential expectations
-2. Expand the local query surface carefully without over-materializing data
-3. Extend the incremental-update model beyond the monthly CIG family
+1. Expand the local query surface carefully without over-materializing data
+2. Extend the incremental-update model beyond the monthly CIG family
+3. Extend the integrity-validation model beyond the monthly CIG family
 4. Resolve the remaining coded fields through dedicated external vocabularies where available
 
 ## Known risks

@@ -3,7 +3,7 @@ It is part of a wider initiative to increase the legibility of the Italian gover
 
 ## Current implementation focus
 
-Phase 1 is complete, and the current Phase 2 storage + incremental slice now covers fourteen
+Phase 1 is complete, and the current Phase 2 storage + incremental + integrity slice now covers fifteen
 reusable parts of the future system:
 
 1. resolve a monthly CIG resource from ANAC metadata
@@ -19,7 +19,8 @@ reusable parts of the future system:
 11. load manifest-backed CSV resources into partitioned Parquet through DuckDB
 12. register lightweight DuckDB views over the Parquet files for local querying
 13. incrementally sync monthly CIG periods without reloading full history
-14. validate the pipeline end to end with integration coverage and direct module CLI execution
+14. validate local warehouse integrity across catalog, row counts, schema, uniqueness, and vocabulary joins
+15. validate the pipeline end to end with integration coverage and direct module CLI execution
 
 ## Current code layout
 
@@ -51,6 +52,7 @@ anac-explorator parse-resource ./data/raw/cig-2025/cig_csv_2025_01/extracted/cig
 anac-explorator clean-resource ./data/raw/cig-2025/cig_csv_2025_01/extracted/cig_csv_2025_01.csv --format csv --schema-path ./schemas/cig_2025_01.schema.json --record-limit 2
 anac-explorator download-dataset-to-parquet cig-2025 --resource-name cig_csv_2025_01 --transport playwright
 anac-explorator sync-cig-periods cig-2025 --transport playwright
+anac-explorator validate-local-data-integrity
 anac-explorator load-downloaded-resource ./data/raw/cig-2025/cig_csv_2025_01/manifest.json --schema-path ./schemas/cig_2025_01.schema.json
 anac-explorator query-local-data "SELECT cig, importo_lotto FROM cig ORDER BY cig LIMIT 5"
 anac-explorator query-local-data "SELECT c.cig, t.label AS tipo_scelta FROM cig c LEFT JOIN tipo_scelta_contraente t ON c.cod_tipo_scelta_contraente = t.code LIMIT 5"
@@ -120,6 +122,13 @@ manual `--user-agent` override.
   - older missing periods are not auto-backfilled unless they are requested explicitly with `--period` or a period range
   - already-loaded periods are skipped when unchanged and refreshed in place when CKAN metadata shows a correction upstream
   - the merged `cig` dataset still comes from the DuckDB view over Parquet slices, so no second fully materialized master fact table is required
+- `validate-local-data-integrity` now adds the first read-only integrity surface for the monthly CIG warehouse:
+  - validates metadata/catalog coherence across `loaded_resources`, `registered_views`, `dataset_period_manifest`, and on-disk Parquet slices
+  - recomputes per-slice and merged-view row counts
+  - checks loaded schema consistency against the selected CIG schema artifact
+  - treats exact duplicate rows and unmatched externally resolved vocabulary codes as hard failures
+  - warns when the same `cig` spans multiple distinct rows, because the live ANAC slice is not strictly one-row-per-`cig`
+  - warns when source labels disagree with the linked external vocabulary labels
 - The current storage scope is intentionally narrow: monthly CIG resources plus the already-wired vocabulary datasets.
 
 ## Current semantic metadata

@@ -14,6 +14,7 @@ pipeline surface:
 10. load manifest-backed CSV resources into DuckDB/Parquet storage
 11. run SQL queries against the local DuckDB warehouse
 12. download one dataset resource directly into Parquet-backed DuckDB views
+13. validate the local DuckDB/Parquet warehouse for integrity issues
 """
 
 from __future__ import annotations
@@ -38,6 +39,7 @@ from anac_explorator.ckan import (
 from anac_explorator.cleaner import clean_csv_resource, clean_json_resource
 from anac_explorator.comparison import compare_schema_mappings, load_schema_mapping
 from anac_explorator.dictionary import build_cig_data_dictionary
+from anac_explorator.integrity import validate_local_data_integrity
 from anac_explorator.loader import (
     download_dataset_to_parquet,
     load_downloaded_resource,
@@ -716,6 +718,32 @@ def build_parser() -> argparse.ArgumentParser:
     )
     query_local_data.set_defaults(handler=_handle_query_local_data)
 
+    validate_local_data = subparsers.add_parser(
+        "validate-local-data-integrity",
+        help="Run read-only integrity validation against the local DuckDB/Parquet warehouse.",
+    )
+    validate_local_data.add_argument(
+        "--db-path",
+        default="data/warehouse/anac.duckdb",
+        help="Path to the local DuckDB database.",
+    )
+    validate_local_data.add_argument(
+        "--dataset-type",
+        default="cig",
+        help="Logical dataset family to validate. The current implementation focuses on monthly CIG.",
+    )
+    validate_local_data.add_argument(
+        "--schema-path",
+        default="schemas/cig_2025_01.schema.json",
+        help="Schema artifact used for loaded CIG schema validation.",
+    )
+    validate_local_data.add_argument(
+        "--vocabulary-index-path",
+        default="vocabularies/index.json",
+        help="Vocabulary index used for external referential-integrity checks.",
+    )
+    validate_local_data.set_defaults(handler=_handle_validate_local_data_integrity)
+
     return parser
 
 
@@ -994,6 +1022,17 @@ def _handle_query_local_data(args: argparse.Namespace) -> dict[str, object]:
         Path(args.db_path),
         args.sql_query,
         row_limit=args.row_limit,
+    ).to_dict()
+
+
+def _handle_validate_local_data_integrity(args: argparse.Namespace) -> dict[str, object]:
+    """@notice Execute the `validate-local-data-integrity` CLI subcommand."""
+
+    return validate_local_data_integrity(
+        Path(args.db_path),
+        dataset_type=args.dataset_type,
+        schema_path=Path(args.schema_path),
+        vocabulary_index_path=Path(args.vocabulary_index_path),
     ).to_dict()
 
 

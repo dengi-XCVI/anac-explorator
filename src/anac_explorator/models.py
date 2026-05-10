@@ -931,6 +931,118 @@ class DatasetIncrementalUpdateResult:
 
 
 @dataclass(slots=True)
+class WarehouseIntegrityIssue:
+    """@notice Describe one integrity issue detected in the local warehouse.
+
+    @param check_name Stable name of the check that emitted the issue.
+    @param severity Issue severity such as `error` or `warning`.
+    @param code Stable machine-readable issue code.
+    @param message Human-readable explanation of the integrity problem.
+    @param details Additional machine-readable context attached to the issue.
+    """
+
+    check_name: str
+    severity: str
+    code: str
+    message: str
+    details: dict[str, object] = field(default_factory=dict)
+
+    def to_dict(self) -> dict[str, object]:
+        """@notice Convert the integrity issue into a serializable dictionary."""
+
+        return {
+            "check_name": self.check_name,
+            "severity": self.severity,
+            "code": self.code,
+            "message": self.message,
+            "details": _to_json_compatible(self.details),
+        }
+
+
+@dataclass(slots=True)
+class WarehouseIntegrityCheckResult:
+    """@notice Capture the result of one warehouse integrity check.
+
+    @param check_name Stable machine-readable check name.
+    @param status High-level outcome such as `passed`, `warning`, or `failed`.
+    @param metrics Optional machine-readable metrics emitted by the check.
+    @param issues Errors and warnings emitted by the check.
+    """
+
+    check_name: str
+    status: str
+    metrics: dict[str, object] = field(default_factory=dict)
+    issues: list[WarehouseIntegrityIssue] = field(default_factory=list)
+
+    def to_dict(self) -> dict[str, object]:
+        """@notice Convert the check result into a serializable dictionary."""
+
+        error_count = sum(1 for issue in self.issues if issue.severity == "error")
+        warning_count = sum(1 for issue in self.issues if issue.severity == "warning")
+        return {
+            "check_name": self.check_name,
+            "status": self.status,
+            "metrics": _to_json_compatible(self.metrics),
+            "error_count": error_count,
+            "warning_count": warning_count,
+            "issues": [issue.to_dict() for issue in self.issues],
+        }
+
+
+@dataclass(slots=True)
+class WarehouseIntegrityReport:
+    """@notice Capture the full integrity-validation result for the local warehouse.
+
+    @param db_path Path to the DuckDB warehouse database that was validated.
+    @param dataset_type Dataset family currently validated, such as `cig`.
+    @param schema_path Optional schema artifact used for schema validation.
+    @param vocabulary_index_path Optional vocabulary index used for referential checks.
+    @param checked_at ISO timestamp when validation completed.
+    @param checks Ordered list of executed integrity checks.
+    """
+
+    db_path: str
+    dataset_type: str
+    schema_path: str | None
+    vocabulary_index_path: str | None
+    checked_at: str
+    checks: list[WarehouseIntegrityCheckResult] = field(default_factory=list)
+
+    def to_dict(self) -> dict[str, object]:
+        """@notice Convert the integrity report into a serializable dictionary."""
+
+        failed_checks = sum(1 for check in self.checks if check.status == "failed")
+        warning_checks = sum(1 for check in self.checks if check.status == "warning")
+        passed_checks = sum(1 for check in self.checks if check.status == "passed")
+        error_count = sum(
+            1 for check in self.checks for issue in check.issues if issue.severity == "error"
+        )
+        warning_count = sum(
+            1 for check in self.checks for issue in check.issues if issue.severity == "warning"
+        )
+        overall_status = "passed"
+        if failed_checks:
+            overall_status = "failed"
+        elif warning_checks:
+            overall_status = "warning"
+        return {
+            "db_path": self.db_path,
+            "dataset_type": self.dataset_type,
+            "schema_path": self.schema_path,
+            "vocabulary_index_path": self.vocabulary_index_path,
+            "checked_at": self.checked_at,
+            "overall_status": overall_status,
+            "total_checks": len(self.checks),
+            "passed_checks": passed_checks,
+            "warning_checks": warning_checks,
+            "failed_checks": failed_checks,
+            "error_count": error_count,
+            "warning_count": warning_count,
+            "checks": [check.to_dict() for check in self.checks],
+        }
+
+
+@dataclass(slots=True)
 class WarehouseQueryResult:
     """@notice Capture one JSON-friendly query result from the local DuckDB warehouse.
 

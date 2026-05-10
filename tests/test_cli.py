@@ -102,6 +102,17 @@ class CliTests(unittest.TestCase):
         self.assertFalse(args.keep_materialized)
         self.assertFalse(args.skip_crosswalks)
 
+    def test_validate_local_data_integrity_parser_uses_defaults(self) -> None:
+        """@notice Parse the integrity-validation subcommand with its default warehouse artifacts."""
+
+        parser = main.__globals__["build_parser"]()
+        args = parser.parse_args(["validate-local-data-integrity"])
+
+        self.assertEqual(args.db_path, "data/warehouse/anac.duckdb")
+        self.assertEqual(args.dataset_type, "cig")
+        self.assertEqual(args.schema_path, "schemas/cig_2025_01.schema.json")
+        self.assertEqual(args.vocabulary_index_path, "vocabularies/index.json")
+
     def test_parse_resource_prints_structured_csv_payload(self) -> None:
         """@notice Emit a parsed CSV payload from the new Phase 2 parser surface."""
 
