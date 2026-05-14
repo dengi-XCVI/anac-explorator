@@ -171,7 +171,7 @@ All downloads are ZIP archives. CSV uses `;` (semicolon) delimiter.
 │  • Download & caching (incremental deltas)  │
 │  • Schema validation & documentation        │
 │  • DuckDB query engine                      │
-│  • LLM natural language query interface     │
+|                                             | 
 └─────────────┬───────────────────────────────┘
               │
               ▼
@@ -221,13 +221,8 @@ All downloads are ZIP archives. CSV uses `;` (semicolon) delimiter.
 - [ ] `anac stats` — Show data statistics and summary
 - [ ] `anac update` — Fetch and merge incremental deltas
 
-### Phase 4: LLM Query Interface (Week 4–5)
-- [ ] Build text-to-SQL prompt template with full schema context
-- [ ] Inject controlled vocabulary mappings for proper code resolution
-- [ ] Natural language → SQL → results pipeline with DuckDB
-- [ ] Example queries: "Top 10 contractors by total value", "PNRR projects in Milan", "How much did Regione Lombardia spend in 2024?"
 
-### Phase 5: Publication (Week 5–6)
+### Phase 4: Publication (Week 5–6)
 - [ ] Create GitHub repo with comprehensive documentation
 - [ ] Publish PyPI package
 - [ ] Write README with installation + usage examples
@@ -259,6 +254,8 @@ Aligned with the Manifesto: *"Are we making Italy more legible to its citizens?"
 6. **Contractor network graph** — Connected companies, subcontracting chains, repeated winner patterns
 7. **Revolving doors** — Officials appearing in both contracting authority (`stazioni-appaltanti`) and contractor (`aggiudicatari`) lists
 8. **SOA certification analysis** — Which certifications are required most? Potential certification concentration patterns
+
+Other example queries: "Top 10 contractors by total value", "PNRR projects in Milan", "How much did Regione Lombardia spend in 2024?"
 
 ---
 
