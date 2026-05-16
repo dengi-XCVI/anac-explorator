@@ -501,6 +501,48 @@ class LoaderTests(unittest.TestCase):
             self.assertEqual(result.applied_loads, [])
             self.assertEqual(result.period_manifest[0].period, "2025_01")
 
+    def test_sync_cig_periods_accepts_hyphenated_legacy_range_inputs(self) -> None:
+        """@notice Normalize legacy period ranges through shared canonical slice parsing."""
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_path = Path(temp_dir)
+            client = Mock()
+            client.transport = "http"
+            client.package_show.return_value = self._build_cig_package(
+                "cig-2025",
+                {
+                    "cig_csv_2025_01": ("https://example.invalid/cig_2025_01.zip", "2026-05-01T00:00:00"),
+                    "cig_csv_2025_02": ("https://example.invalid/cig_2025_02.zip", "2026-05-02T00:00:00"),
+                    "cig_csv_2025_03": ("https://example.invalid/cig_2025_03.zip", "2026-05-03T00:00:00"),
+                },
+            )
+            zip_payloads = {
+                "https://example.invalid/cig_2025_01.zip": "cig;flag_prevalente;importo_lotto;data_pubblicazione\n0100;1;1.00;2025-01-01\n",
+                "https://example.invalid/cig_2025_02.zip": "cig;flag_prevalente;importo_lotto;data_pubblicazione\n0200;1;2.00;2025-02-01\n",
+                "https://example.invalid/cig_2025_03.zip": "cig;flag_prevalente;importo_lotto;data_pubblicazione\n0300;1;3.00;2025-03-01\n",
+            }
+
+            def fake_download(_client, url, destination):  # noqa: ANN001
+                destination.parent.mkdir(parents=True, exist_ok=True)
+                self._write_zip_payload(destination, zip_payloads[url])
+                return "fresh", True
+
+            with patch("anac_explorator.sample._download_resource", side_effect=fake_download):
+                result = sync_cig_periods_to_parquet(
+                    client,
+                    dataset_id="cig-2025",
+                    period_start="2025-02",
+                    period_end="2025_03",
+                    output_dir=temp_path / "data" / "raw",
+                    schemas_dir=temp_path / "schemas",
+                    warehouse_dir=temp_path / "warehouse",
+                    register_crosswalks=False,
+                )
+
+            self.assertEqual(result.selection_mode, "range")
+            self.assertEqual(result.requested_periods, ["2025_02", "2025_03"])
+            self.assertEqual([item.period for item in result.plan], ["2025_02", "2025_03"])
+
     def test_sync_cig_periods_refreshes_corrected_remote_periods(self) -> None:
         """@notice Re-download and replace a loaded period slice when CKAN metadata changes upstream."""
 

@@ -1077,6 +1077,151 @@ class WarehouseQueryResult:
         }
 
 
+PHASE3_CONTRACT_VERSION = "phase3/v1"
+
+
+@dataclass(slots=True)
+class CommandWarning:
+    """@notice Describe one structured warning attached to a command result.
+
+    @param code Stable machine-readable warning code.
+    @param message Human-readable warning summary.
+    @param details Optional machine-readable warning context.
+    """
+
+    code: str
+    message: str
+    details: dict[str, object] = field(default_factory=dict)
+
+    def to_dict(self) -> dict[str, object]:
+        """@notice Convert the warning into a serializable dictionary."""
+
+        return {
+            "code": self.code,
+            "message": self.message,
+            "details": _to_json_compatible(self.details),
+        }
+
+
+@dataclass(slots=True)
+class CommandError:
+    """@notice Describe one structured command error for envelope rendering.
+
+    @param code Machine-readable error code.
+    @param message Human-readable error summary.
+    @param retryable Whether the failure is safe to retry automatically.
+    @param details Optional machine-readable error context.
+    """
+
+    code: str
+    message: str
+    retryable: bool
+    details: dict[str, object] = field(default_factory=dict)
+
+    def to_dict(self) -> dict[str, object]:
+        """@notice Convert the error into a serializable dictionary."""
+
+        return {
+            "code": self.code,
+            "message": self.message,
+            "retryable": self.retryable,
+            "details": _to_json_compatible(self.details),
+        }
+
+
+@dataclass(slots=True)
+class CommandMeta:
+    """@notice Capture shared metadata for one rendered command result.
+
+    @param generated_at ISO timestamp when the command finished rendering.
+    @param elapsed_ms End-to-end handler execution time in milliseconds.
+    @param paths Optional resolved path metadata reserved for later phases.
+    @param truncated Whether the returned data is a truncated view of a larger payload.
+    """
+
+    generated_at: str
+    elapsed_ms: int
+    paths: dict[str, object] = field(default_factory=dict)
+    truncated: bool | None = None
+
+    def to_dict(self) -> dict[str, object]:
+        """@notice Convert the shared meta block into a serializable dictionary."""
+
+        payload: dict[str, object] = {
+            "generated_at": self.generated_at,
+            "elapsed_ms": self.elapsed_ms,
+        }
+        if self.paths:
+            payload["paths"] = _to_json_compatible(self.paths)
+        if self.truncated is not None:
+            payload["truncated"] = self.truncated
+        return payload
+
+
+@dataclass(slots=True)
+class CommandOutput:
+    """@notice Capture a handler payload plus envelope-specific rendering metadata.
+
+    @param data Command-specific payload object rendered inside the shared envelope.
+    @param warnings Structured warnings attached to the command result.
+    @param paths Optional resolved-path metadata reserved for later phases.
+    @param truncated Whether the command returned a truncated payload sample.
+    """
+
+    data: object
+    warnings: list[CommandWarning] = field(default_factory=list)
+    paths: dict[str, object] = field(default_factory=dict)
+    truncated: bool | None = None
+
+
+@dataclass(slots=True)
+class CommandSuccessEnvelope:
+    """@notice Wrap one successful command result in the shared Phase 3 envelope."""
+
+    command: str
+    data: dict[str, object]
+    meta: CommandMeta
+    warnings: list[CommandWarning] = field(default_factory=list)
+    ok: bool = field(default=True, init=False)
+    contract_version: str = field(default=PHASE3_CONTRACT_VERSION, init=False)
+
+    def to_dict(self) -> dict[str, object]:
+        """@notice Convert the success envelope into a serializable dictionary."""
+
+        return {
+            "ok": self.ok,
+            "command": self.command,
+            "contract_version": self.contract_version,
+            "data": _to_json_compatible(self.data),
+            "warnings": [warning.to_dict() for warning in self.warnings],
+            "meta": self.meta.to_dict(),
+        }
+
+
+@dataclass(slots=True)
+class CommandErrorEnvelope:
+    """@notice Wrap one failed command result in the shared Phase 3 envelope."""
+
+    command: str
+    error: CommandError
+    meta: CommandMeta
+    warnings: list[CommandWarning] = field(default_factory=list)
+    ok: bool = field(default=False, init=False)
+    contract_version: str = field(default=PHASE3_CONTRACT_VERSION, init=False)
+
+    def to_dict(self) -> dict[str, object]:
+        """@notice Convert the error envelope into a serializable dictionary."""
+
+        return {
+            "ok": self.ok,
+            "command": self.command,
+            "contract_version": self.contract_version,
+            "error": self.error.to_dict(),
+            "warnings": [warning.to_dict() for warning in self.warnings],
+            "meta": self.meta.to_dict(),
+        }
+
+
 def _to_json_compatible(value: object) -> object:
     """@notice Convert richer Python scalars into JSON-compatible values."""
 

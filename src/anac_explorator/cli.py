@@ -20,8 +20,10 @@ pipeline surface:
 from __future__ import annotations
 
 import argparse
-import json
 import os
+import sys
+import time
+import traceback
 from pathlib import Path
 from typing import Sequence
 
@@ -36,23 +38,39 @@ from anac_explorator.ckan import (
     DEFAULT_TRANSPORT,
     DEFAULT_USER_AGENT,
 )
+from anac_explorator.catalog import DATASET_FAMILY_REGISTRY
 from anac_explorator.cleaner import clean_csv_resource, clean_json_resource
 from anac_explorator.comparison import compare_schema_mappings, load_schema_mapping
+from anac_explorator.config import (
+    apply_effective_config,
+    delete_persisted_config,
+    render_config_get_payload,
+    render_config_reset_payload,
+    render_config_set_payload,
+    render_config_unset_payload,
+    render_config_validate_payload,
+    set_config_value,
+    unset_config_value,
+)
 from anac_explorator.dictionary import build_cig_data_dictionary
+from anac_explorator.errors import CliCommandError, resolve_command_error
 from anac_explorator.integrity import validate_local_data_integrity
 from anac_explorator.loader import (
     download_dataset_to_parquet,
     load_downloaded_resource,
     run_local_query,
-    sync_cig_periods_to_parquet,
 )
+from anac_explorator.models import CommandOutput
+from anac_explorator.output import emit_error_result, print_json_result, print_table_result, print_yaml_result
 from anac_explorator.parsing import parse_csv_resource, parse_json_resource
+from anac_explorator.paths import apply_effective_paths
 from anac_explorator.sample import (
     SampleDownloadError,
     download_cig_monthly_sample,
     download_dataset_csv_resource,
     download_dataset_resource,
 )
+from anac_explorator.selection import parse_temporal_selection
 from anac_explorator.schema import map_csv_schema
 from anac_explorator.vocabulary import VOCABULARY_DATASET_CONFIGS, build_vocabulary_crosswalks
 
@@ -61,6 +79,26 @@ def build_parser() -> argparse.ArgumentParser:
     """@notice Construct the top-level CLI parser."""
 
     parser = argparse.ArgumentParser(prog="anac-explorator")
+    parser.add_argument(
+        "--debug",
+        action="store_true",
+        help="Emit traceback detail on stderr when a handled command fails.",
+    )
+    parser.add_argument(
+        "--config",
+        dest="config_path",
+        help="Explicit config file path.",
+    )
+    parser.add_argument(
+        "--no-config",
+        action="store_true",
+        help="Ignore config files and use defaults plus CLI flags.",
+    )
+    parser.add_argument(
+        "--yes",
+        action="store_true",
+        help="Suppress confirmations for destructive or write-enabled actions.",
+    )
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     package_show = subparsers.add_parser(
@@ -118,7 +156,6 @@ def build_parser() -> argparse.ArgumentParser:
     )
     download_dataset_csv.add_argument(
         "--output-dir",
-        default="data/raw",
         help="Base directory used for the downloaded archive and extracted CSV.",
     )
     download_dataset_csv.add_argument(
@@ -177,7 +214,6 @@ def build_parser() -> argparse.ArgumentParser:
     )
     download_dataset_resource_parser.add_argument(
         "--output-dir",
-        default="data/raw",
         help="Base directory used for downloaded archives and materialized files.",
     )
     download_dataset_resource_parser.add_argument(
@@ -230,12 +266,10 @@ def build_parser() -> argparse.ArgumentParser:
     )
     download_dataset_to_parquet_parser.add_argument(
         "--output-dir",
-        default="data/raw",
         help="Base directory used for downloaded raw archives and manifests.",
     )
     download_dataset_to_parquet_parser.add_argument(
         "--schemas-dir",
-        default="schemas",
         help="Directory used for generated or reused schema artifacts.",
     )
     download_dataset_to_parquet_parser.add_argument(
@@ -250,7 +284,6 @@ def build_parser() -> argparse.ArgumentParser:
     )
     download_dataset_to_parquet_parser.add_argument(
         "--warehouse-dir",
-        default="data/warehouse",
         help="Base directory for the local DuckDB database and Parquet files.",
     )
     download_dataset_to_parquet_parser.add_argument(
@@ -265,7 +298,6 @@ def build_parser() -> argparse.ArgumentParser:
     )
     download_dataset_to_parquet_parser.add_argument(
         "--vocabulary-index-path",
-        default="vocabularies/index.json",
         help="Vocabulary index used when registering crosswalk views for DuckDB querying.",
     )
     download_dataset_to_parquet_parser.add_argument(
@@ -343,17 +375,14 @@ def build_parser() -> argparse.ArgumentParser:
     )
     sync_cig_periods_parser.add_argument(
         "--output-dir",
-        default="data/raw",
         help="Base directory used for downloaded raw archives and manifests.",
     )
     sync_cig_periods_parser.add_argument(
         "--schemas-dir",
-        default="schemas",
         help="Directory used for generated or reused schema artifacts.",
     )
     sync_cig_periods_parser.add_argument(
         "--warehouse-dir",
-        default="data/warehouse",
         help="Base directory for the local DuckDB database and Parquet files.",
     )
     sync_cig_periods_parser.add_argument(
@@ -374,7 +403,6 @@ def build_parser() -> argparse.ArgumentParser:
     )
     sync_cig_periods_parser.add_argument(
         "--vocabulary-index-path",
-        default="vocabularies/index.json",
         help="Vocabulary index used when registering crosswalk views for DuckDB querying.",
     )
     sync_cig_periods_parser.add_argument(
@@ -444,7 +472,6 @@ def build_parser() -> argparse.ArgumentParser:
     )
     download_cig_sample.add_argument(
         "--output-dir",
-        default="data/raw",
         help="Base directory used for the downloaded archive and extracted CSV.",
     )
     download_cig_sample.add_argument(
@@ -505,17 +532,14 @@ def build_parser() -> argparse.ArgumentParser:
     )
     build_vocabularies.add_argument(
         "--data-dir",
-        default="data/raw",
         help="Base directory used for downloaded raw dataset files.",
     )
     build_vocabularies.add_argument(
         "--schemas-dir",
-        default="schemas",
         help="Directory used for raw schema artifacts.",
     )
     build_vocabularies.add_argument(
         "--output-dir",
-        default="vocabularies",
         help="Directory used for normalized vocabulary artifacts.",
     )
     build_vocabularies.add_argument(
@@ -563,27 +587,22 @@ def build_parser() -> argparse.ArgumentParser:
     )
     build_data_dictionary.add_argument(
         "--schema-path",
-        default="schemas/cig_2025_01.schema.json",
         help="Source schema artifact for the current CIG surface.",
     )
     build_data_dictionary.add_argument(
         "--comparison-path",
-        default="schemas/cig_2007_01_vs_cig_2025_01.comparison.json",
         help="Cross-year comparison artifact used for field notes.",
     )
     build_data_dictionary.add_argument(
         "--vocabulary-index-path",
-        default="vocabularies/index.json",
         help="Vocabulary index artifact used for code-meaning links and gaps.",
     )
     build_data_dictionary.add_argument(
         "--vocabulary-dir",
-        default="vocabularies",
         help="Directory containing generated vocabulary artifacts.",
     )
     build_data_dictionary.add_argument(
         "--output-dir",
-        default="dictionaries",
         help="Directory used for generated data-dictionary artifacts.",
     )
     build_data_dictionary.set_defaults(handler=_handle_build_data_dictionary)
@@ -685,7 +704,6 @@ def build_parser() -> argparse.ArgumentParser:
     )
     load_downloaded_resource_parser.add_argument(
         "--warehouse-dir",
-        default="data/warehouse",
         help="Base directory for the local DuckDB database and Parquet files.",
     )
     load_downloaded_resource_parser.add_argument(
@@ -707,7 +725,6 @@ def build_parser() -> argparse.ArgumentParser:
     query_local_data.add_argument("sql_query", help="SQL query executed against the local DuckDB warehouse.")
     query_local_data.add_argument(
         "--db-path",
-        default="data/warehouse/anac.duckdb",
         help="Path to the local DuckDB database.",
     )
     query_local_data.add_argument(
@@ -724,7 +741,6 @@ def build_parser() -> argparse.ArgumentParser:
     )
     validate_local_data.add_argument(
         "--db-path",
-        default="data/warehouse/anac.duckdb",
         help="Path to the local DuckDB database.",
     )
     validate_local_data.add_argument(
@@ -734,15 +750,101 @@ def build_parser() -> argparse.ArgumentParser:
     )
     validate_local_data.add_argument(
         "--schema-path",
-        default="schemas/cig_2025_01.schema.json",
         help="Schema artifact used for loaded CIG schema validation.",
     )
     validate_local_data.add_argument(
         "--vocabulary-index-path",
-        default="vocabularies/index.json",
         help="Vocabulary index used for external referential-integrity checks.",
     )
     validate_local_data.set_defaults(handler=_handle_validate_local_data_integrity)
+
+    config_parser = subparsers.add_parser(
+        "config",
+        help="Show, read, persist, reset, or validate CLI configuration.",
+    )
+    config_subparsers = config_parser.add_subparsers(dest="config_subcommand", required=True)
+
+    config_show = config_subparsers.add_parser(
+        "show",
+        help="Show effective configuration after file, env, and defaults are merged.",
+    )
+    config_show.add_argument(
+        "--format",
+        dest="output_format",
+        choices=["json", "table", "yaml"],
+        default=None,
+        help="Output format for the effective configuration view.",
+    )
+    config_show.set_defaults(handler=_handle_config_show)
+
+    config_get = config_subparsers.add_parser(
+        "get",
+        help="Read one resolved configuration key and show its source.",
+    )
+    config_get.add_argument("key", help="Configuration key in domain.field form.")
+    config_get.add_argument(
+        "--format",
+        dest="output_format",
+        choices=["json", "table"],
+        default=None,
+        help="Output format for the resolved key lookup.",
+    )
+    config_get.set_defaults(handler=_handle_config_get)
+
+    config_set = config_subparsers.add_parser(
+        "set",
+        help="Persist one configuration value into the config file.",
+    )
+    config_set.add_argument("key", help="Configuration key in domain.field form.")
+    config_set.add_argument("value", help="Configuration value to persist.")
+    config_set.add_argument(
+        "--format",
+        dest="output_format",
+        choices=["json", "table"],
+        default=None,
+        help="Output format for the persistence result.",
+    )
+    config_set.set_defaults(handler=_handle_config_set)
+
+    config_unset = config_subparsers.add_parser(
+        "unset",
+        help="Remove one explicitly persisted configuration value.",
+    )
+    config_unset.add_argument("key", help="Configuration key in domain.field form.")
+    config_unset.add_argument(
+        "--format",
+        dest="output_format",
+        choices=["json", "table"],
+        default=None,
+        help="Output format for the unset result.",
+    )
+    config_unset.set_defaults(handler=_handle_config_unset)
+
+    config_reset = config_subparsers.add_parser(
+        "reset",
+        help="Reset the persisted configuration file.",
+    )
+    config_reset.add_argument(
+        "--format",
+        dest="output_format",
+        choices=["json", "table"],
+        default=None,
+        help="Output format for the reset result.",
+    )
+    config_reset.set_defaults(handler=_handle_config_reset)
+
+    config_validate = config_subparsers.add_parser(
+        "validate",
+        help="Validate the current effective configuration and return all detected issues.",
+    )
+    config_validate.add_argument(
+        "--format",
+        dest="output_format",
+        choices=["json", "table"],
+        default=None,
+        help="Output format for the validation result.",
+    )
+    config_validate.set_defaults(handler=_handle_config_validate)
 
     return parser
 
@@ -755,17 +857,116 @@ def main(argv: Sequence[str] | None = None) -> int:
     """
 
     parser = build_parser()
-    args = parser.parse_args(argv)
+    raw_argv = list(argv) if argv is not None else sys.argv[1:]
+    args = parser.parse_args(raw_argv)
+    started_at_ns = time.perf_counter_ns()
+    command = str(args.command)
+    output_format = getattr(args, "output_format", None)
 
     try:
-        payload = args.handler(args)
-    except (CkanClientError, SampleDownloadError) as exc:
-        parser.exit(status=1, message=f"error: {exc}\n")
-    except (FileNotFoundError, UnicodeDecodeError, ValueError, duckdb.Error) as exc:
-        parser.exit(status=1, message=f"error: {exc}\n")
+        args = apply_effective_config(args, argv=raw_argv)
+        args = apply_effective_paths(args, config_paths={"paths": args.resolved_config.config.paths.to_dict()}, env={})
+        result = _attach_meta_paths(args.handler(args), args)
+    except (CkanClientError, SampleDownloadError, FileNotFoundError, UnicodeDecodeError, ValueError, duckdb.Error) as exc:
+        cli_error = resolve_command_error(command, exc, args=args)
+        if args.debug:
+            traceback.print_exception(cli_error.cause or exc, file=sys.stderr)
+        emit_error_result(
+            command,
+            cli_error,
+            started_at_ns=started_at_ns,
+            paths=_current_meta_paths(args),
+        )
+        return cli_error.exit_code
+    except Exception as exc:
+        cli_error = resolve_command_error(command, exc, args=args)
+        if args.debug:
+            traceback.print_exception(cli_error.cause or exc, file=sys.stderr)
+        emit_error_result(
+            command,
+            cli_error,
+            started_at_ns=started_at_ns,
+            paths=_current_meta_paths(args),
+        )
+        return cli_error.exit_code
 
-    print(json.dumps(payload, indent=2, ensure_ascii=False))
+    if command == "config" and output_format == "table":
+        print_table_result(command, result, started_at_ns=started_at_ns)
+        return 0
+    if command == "config" and output_format == "yaml":
+        print_yaml_result(result.data if isinstance(result, CommandOutput) else result)
+        return 0
+    print_json_result(command, result, started_at_ns=started_at_ns)
     return 0
+
+
+def _attach_meta_paths(result: object, args: argparse.Namespace) -> CommandOutput:
+    """@notice Attach resolved shared paths to the command result envelope metadata."""
+
+    meta_paths = args.effective_paths.to_meta_paths()
+    if isinstance(result, CommandOutput):
+        return CommandOutput(
+            data=result.data,
+            warnings=result.warnings,
+            paths={**meta_paths, **result.paths},
+            truncated=result.truncated,
+        )
+    return CommandOutput(data=result, paths=meta_paths)
+
+
+def _current_meta_paths(args: argparse.Namespace) -> dict[str, object]:
+    """@notice Return the best available path metadata during success or failure handling."""
+
+    if hasattr(args, "effective_paths"):
+        return args.effective_paths.to_meta_paths()
+    if hasattr(args, "resolved_config"):
+        return args.resolved_config.config.paths.to_dict()
+    return {}
+
+
+def _handle_config_show(args: argparse.Namespace) -> dict[str, object]:
+    """@notice Execute the `config show` CLI subcommand."""
+
+    return args.resolved_config.to_show_payload()
+
+
+def _handle_config_get(args: argparse.Namespace) -> dict[str, object]:
+    """@notice Execute the `config get` CLI subcommand."""
+
+    return render_config_get_payload(args.resolved_config, args.key)
+
+
+def _handle_config_set(args: argparse.Namespace) -> dict[str, object]:
+    """@notice Execute the `config set` CLI subcommand."""
+
+    value = set_config_value(args.config_path, args.key, args.value)
+    return render_config_set_payload(args.config_path, args.key, value)
+
+
+def _handle_config_unset(args: argparse.Namespace) -> dict[str, object]:
+    """@notice Execute the `config unset` CLI subcommand."""
+
+    removed = unset_config_value(args.config_path, args.key)
+    return render_config_unset_payload(args.config_path, args.key, removed)
+
+
+def _handle_config_reset(args: argparse.Namespace) -> dict[str, object]:
+    """@notice Execute the `config reset` CLI subcommand."""
+
+    if not args.yes:
+        raise CliCommandError(
+            "CONFIG_ERROR",
+            "Config reset requires --yes.",
+            details={"subcommand": "reset"},
+        )
+    delete_persisted_config(args.config_path)
+    return render_config_reset_payload(args.config_path)
+
+
+def _handle_config_validate(args: argparse.Namespace) -> dict[str, object]:
+    """@notice Execute the `config validate` CLI subcommand."""
+
+    return render_config_validate_payload(args.resolved_config)
 
 
 def _handle_package_show(args: argparse.Namespace) -> dict[str, object]:
@@ -799,6 +1000,12 @@ def _handle_inspect_csv_schema(args: argparse.Namespace) -> dict[str, object]:
 def _handle_download_cig_sample(args: argparse.Namespace) -> dict[str, object]:
     """@notice Execute the `download-cig-sample` CLI subcommand."""
 
+    temporal_selection = parse_temporal_selection(year=str(args.year), month=str(args.month))
+    requested_periods = temporal_selection.to_period_identifiers()
+    if len(requested_periods) != 1:
+        raise ValueError("download-cig-sample requires exactly one normalized monthly slice.")
+    year_text, month_text = requested_periods[0].split("_", 1)
+
     client = CkanClient(
         base_url=args.base_url,
         timeout=args.timeout,
@@ -810,8 +1017,8 @@ def _handle_download_cig_sample(args: argparse.Namespace) -> dict[str, object]:
     )
     sample = download_cig_monthly_sample(
         client,
-        year=args.year,
-        month=args.month,
+        year=int(year_text),
+        month=int(month_text),
         output_dir=Path(args.output_dir),
     )
     return sample.to_dict()
@@ -872,7 +1079,25 @@ def _handle_download_dataset_to_parquet(args: argparse.Namespace) -> dict[str, o
         proxy_url=args.proxy_url,
         transport=args.transport,
     )
-    return download_dataset_to_parquet(
+    family = DATASET_FAMILY_REGISTRY.resolve_family_for_dataset_id(args.dataset_id)
+    if family is None:
+        return download_dataset_to_parquet(
+            client,
+            dataset_id=args.dataset_id,
+            output_dir=Path(args.output_dir),
+            schemas_dir=Path(args.schemas_dir),
+            warehouse_dir=Path(args.warehouse_dir),
+            preferred_resource_name=args.resource_name,
+            schema_path=None if args.schema_path is None else Path(args.schema_path),
+            vocabulary_index_path=Path(args.vocabulary_index_path),
+            delimiter=args.delimiter,
+            encoding=args.encoding,
+            schema_sample_limit=args.schema_sample_limit,
+            keep_materialized=args.keep_materialized,
+            register_crosswalks=not args.skip_crosswalks,
+        ).to_dict()
+    return DATASET_FAMILY_REGISTRY.download_to_parquet(
+        family.dataset,
         client,
         dataset_id=args.dataset_id,
         output_dir=Path(args.output_dir),
@@ -901,7 +1126,8 @@ def _handle_sync_cig_periods(args: argparse.Namespace) -> dict[str, object]:
         proxy_url=args.proxy_url,
         transport=args.transport,
     )
-    return sync_cig_periods_to_parquet(
+    return DATASET_FAMILY_REGISTRY.update(
+        "cig",
         client,
         dataset_id=args.dataset_id,
         output_dir=Path(args.output_dir),
@@ -962,26 +1188,35 @@ def _handle_build_data_dictionary(args: argparse.Namespace) -> dict[str, object]
     )
 
 
-def _handle_parse_resource(args: argparse.Namespace) -> dict[str, object]:
+def _handle_parse_resource(args: argparse.Namespace) -> dict[str, object] | CommandOutput:
     """@notice Execute the `parse-resource` CLI subcommand."""
 
     encoding = args.encoding or ("utf-8-sig" if args.format == "csv" else "utf-8")
     if args.format == "csv":
-        return parse_csv_resource(
+        parsed_resource = parse_csv_resource(
             Path(args.resource_path),
             delimiter=args.delimiter,
             encoding=encoding,
             row_limit=args.record_limit,
-        ).to_dict()
+        )
+        return CommandOutput(
+            data=parsed_resource,
+            truncated=len(parsed_resource.rows) < parsed_resource.row_count,
+        )
 
-    return parse_json_resource(
+    parsed_resource = parse_json_resource(
         Path(args.resource_path),
         encoding=encoding,
         item_limit=args.record_limit,
-    ).to_dict()
+    )
+    item_count = parsed_resource.item_count
+    return CommandOutput(
+        data=parsed_resource,
+        truncated=item_count is not None and len(parsed_resource.sample_items) < item_count,
+    )
 
 
-def _handle_clean_resource(args: argparse.Namespace) -> dict[str, object]:
+def _handle_clean_resource(args: argparse.Namespace) -> dict[str, object] | CommandOutput:
     """@notice Execute the `clean-resource` CLI subcommand."""
 
     encoding = args.encoding or ("utf-8-sig" if args.format == "csv" else "utf-8")
@@ -993,14 +1228,17 @@ def _handle_clean_resource(args: argparse.Namespace) -> dict[str, object]:
             row_limit=args.record_limit,
         )
         schema_mapping = None if args.schema_path is None else load_schema_mapping(Path(args.schema_path))
-        return clean_csv_resource(parsed_resource, schema_mapping=schema_mapping).to_dict()
+        return CommandOutput(
+            data=clean_csv_resource(parsed_resource, schema_mapping=schema_mapping),
+            truncated=len(parsed_resource.rows) < parsed_resource.row_count,
+        )
 
     parsed_resource = parse_json_resource(
         Path(args.resource_path),
         encoding=encoding,
         item_limit=args.record_limit,
     )
-    return clean_json_resource(parsed_resource).to_dict()
+    return CommandOutput(data=clean_json_resource(parsed_resource))
 
 
 def _handle_load_downloaded_resource(args: argparse.Namespace) -> dict[str, object]:

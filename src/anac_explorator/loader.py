@@ -22,6 +22,7 @@ import duckdb
 from anac_explorator.ckan import CkanClient
 from anac_explorator.cleaner import DATETIME_FORMATS, DATE_FORMATS, NULL_MARKERS
 from anac_explorator.comparison import load_schema_mapping
+from anac_explorator.errors import enforce_read_only_query
 from anac_explorator.models import (
     CkanResource,
     DatasetParquetDownloadResult,
@@ -38,6 +39,12 @@ from anac_explorator.models import (
 )
 from anac_explorator.sample import download_dataset_resource
 from anac_explorator.schema import map_csv_schema
+from anac_explorator.selection import (
+    parse_legacy_period_selection,
+    period_to_slice_identifier,
+    select_available_slices,
+    slice_to_period_identifier,
+)
 
 _BOOLEAN_TRUE_LITERALS = ("1", "true", "yes")
 _BOOLEAN_FALSE_LITERALS = ("0", "false", "no")
@@ -481,6 +488,7 @@ def run_local_query(
     normalized_query = sql_query.strip().rstrip(";")
     if not normalized_query:
         raise ValueError("SQL query must not be empty.")
+    enforce_read_only_query(normalized_query)
 
     executable_sql = normalized_query
     if row_limit > 0:
@@ -540,36 +548,30 @@ def _select_period_resources(
 ) -> tuple[str, list[str], list[_RemotePeriodResource]]:
     """@notice Pick the remote periods that should be considered by the incremental planner."""
 
-    normalized_periods = [_normalize_period(period) for period in periods]
-    normalized_start = None if period_start is None else _normalize_period(period_start)
-    normalized_end = None if period_end is None else _normalize_period(period_end)
-    if normalized_periods and (normalized_start is not None or normalized_end is not None):
-        raise ValueError("Use either explicit --period values or a --from-period/--to-period range, not both.")
-    if normalized_start is not None and normalized_end is not None and normalized_start > normalized_end:
-        raise ValueError("The starting period must not be greater than the ending period.")
-
     remote_by_period = {resource.period: resource for resource in remote_resources}
-    if normalized_periods:
-        missing_periods = [period for period in normalized_periods if period not in remote_by_period]
-        if missing_periods:
-            raise ValueError(
-                "The requested CIG periods were not found in the remote CKAN dataset: "
-                + ", ".join(sorted(missing_periods))
-            )
-        requested_periods = sorted(set(normalized_periods))
-        return "explicit", requested_periods, [remote_by_period[period] for period in requested_periods]
+    explicit_selection = parse_legacy_period_selection(
+        periods=periods,
+        period_start=period_start,
+        period_end=period_end,
+    )
+    if explicit_selection.mode in {"slice", "range"}:
+        available_slices = [period_to_slice_identifier(resource.period) for resource in remote_resources]
+        try:
+            selected_slices = select_available_slices(explicit_selection, available_slices)
+        except ValueError as exc:
+            if explicit_selection.mode == "slice" and "requested slices were not found" in str(exc):
+                missing_periods = [slice_to_period_identifier(value) for value in explicit_selection.slices if value not in set(available_slices)]
+                raise ValueError(
+                    "The requested CIG periods were not found in the remote CKAN dataset: "
+                    + ", ".join(sorted(missing_periods))
+                ) from exc
+            if explicit_selection.mode == "range" and "No available slices matched" in str(exc):
+                raise ValueError("No remote CIG periods matched the requested period range.") from exc
+            raise
 
-    if normalized_start is not None or normalized_end is not None:
-        selected_resources = [
-            resource
-            for resource in remote_resources
-            if (normalized_start is None or resource.period >= normalized_start)
-            and (normalized_end is None or resource.period <= normalized_end)
-        ]
-        if not selected_resources:
-            raise ValueError("No remote CIG periods matched the requested period range.")
-        requested_periods = [resource.period for resource in selected_resources]
-        return "range", requested_periods, selected_resources
+        requested_periods = [slice_to_period_identifier(slice_value) for slice_value in selected_slices]
+        selection_mode = "explicit" if explicit_selection.mode == "slice" else "range"
+        return selection_mode, requested_periods, [remote_by_period[period] for period in requested_periods]
 
     if latest_local_period is None:
         requested_periods = [resource.period for resource in remote_resources]
@@ -578,18 +580,6 @@ def _select_period_resources(
     selected_resources = [resource for resource in remote_resources if resource.period > latest_local_period]
     requested_periods = [resource.period for resource in selected_resources]
     return "forward", requested_periods, selected_resources
-
-
-def _normalize_period(value: str) -> str:
-    """@notice Normalize supported period inputs into `YYYY_MM` identifiers."""
-
-    match = re.fullmatch(r"(\d{4})[-_](\d{1,2})", value.strip())
-    if match is None:
-        raise ValueError(f"Invalid period {value!r}; expected YYYY_MM.")
-    month = int(match.group(2))
-    if not 1 <= month <= 12:
-        raise ValueError(f"Invalid period {value!r}; month must be between 1 and 12.")
-    return f"{match.group(1)}_{month:02d}"
 
 
 def _build_period_plan_item(

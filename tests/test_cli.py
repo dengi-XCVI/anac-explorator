@@ -9,12 +9,15 @@ import subprocess
 import sys
 import tempfile
 import unittest
-from contextlib import redirect_stdout
+from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
+from unittest.mock import Mock, patch
 
 import duckdb
 
+from anac_explorator.ckan import CkanClientError
 from anac_explorator.cli import main
+from anac_explorator.paths import apply_effective_paths
 
 
 class CliTests(unittest.TestCase):
@@ -35,9 +38,16 @@ class CliTests(unittest.TestCase):
 
         payload = json.loads(output.getvalue())
         self.assertEqual(exit_code, 0)
-        self.assertEqual(payload["rows_sampled"], 2)
-        self.assertEqual(payload["columns"][1]["inferred_type"], "decimal")
-        self.assertTrue(payload["columns"][1]["nullable"])
+        self.assertTrue(payload["ok"])
+        self.assertEqual(payload["command"], "inspect-csv-schema")
+        self.assertEqual(payload["data"]["rows_sampled"], 2)
+        self.assertEqual(payload["data"]["columns"][1]["inferred_type"], "decimal")
+        self.assertTrue(payload["data"]["columns"][1]["nullable"])
+        self.assertEqual(payload["warnings"], [])
+        self.assertIn("generated_at", payload["meta"])
+        self.assertIn("elapsed_ms", payload["meta"])
+        self.assertEqual(payload["meta"]["paths"]["raw_dir"], "data/raw")
+        self.assertEqual(payload["meta"]["paths"]["warehouse_dir"], "data/warehouse")
 
     def test_download_dataset_csv_parser_accepts_dataset_slug(self) -> None:
         """@notice Parse the generic dataset-download subcommand without execution."""
@@ -51,7 +61,7 @@ class CliTests(unittest.TestCase):
         """@notice Parse the data-dictionary subcommand with its default artifact paths."""
 
         parser = main.__globals__["build_parser"]()
-        args = parser.parse_args(["build-data-dictionary"])
+        args = apply_effective_paths(parser.parse_args(["build-data-dictionary"]))
 
         self.assertEqual(args.schema_path, "schemas/cig_2025_01.schema.json")
         self.assertEqual(args.vocabulary_index_path, "vocabularies/index.json")
@@ -69,7 +79,7 @@ class CliTests(unittest.TestCase):
         """@notice Parse the warehouse-loader subcommand with its default storage location."""
 
         parser = main.__globals__["build_parser"]()
-        args = parser.parse_args(["load-downloaded-resource", "data/raw/demo/manifest.json"])
+        args = apply_effective_paths(parser.parse_args(["load-downloaded-resource", "data/raw/demo/manifest.json"]))
 
         self.assertEqual(args.manifest_path, "data/raw/demo/manifest.json")
         self.assertEqual(args.warehouse_dir, "data/warehouse")
@@ -78,7 +88,7 @@ class CliTests(unittest.TestCase):
         """@notice Parse the direct-to-Parquet download command with its default warehouse settings."""
 
         parser = main.__globals__["build_parser"]()
-        args = parser.parse_args(["download-dataset-to-parquet", "demo-dataset"])
+        args = apply_effective_paths(parser.parse_args(["download-dataset-to-parquet", "demo-dataset"]))
 
         self.assertEqual(args.dataset_id, "demo-dataset")
         self.assertEqual(args.output_dir, "data/raw")
@@ -91,7 +101,7 @@ class CliTests(unittest.TestCase):
         """@notice Parse the incremental CIG sync command with its default update behavior."""
 
         parser = main.__globals__["build_parser"]()
-        args = parser.parse_args(["sync-cig-periods", "cig-2025"])
+        args = apply_effective_paths(parser.parse_args(["sync-cig-periods", "cig-2025"]))
 
         self.assertEqual(args.dataset_id, "cig-2025")
         self.assertEqual(args.output_dir, "data/raw")
@@ -102,11 +112,88 @@ class CliTests(unittest.TestCase):
         self.assertFalse(args.keep_materialized)
         self.assertFalse(args.skip_crosswalks)
 
+    def test_download_cig_sample_routes_through_shared_temporal_parser(self) -> None:
+        """@notice Normalize the year/month request via the shared slice parser before download."""
+
+        sample = Mock()
+        sample.to_dict.return_value = {"dataset_id": "cig-2025", "resource_name": "cig_csv_2025_02"}
+
+        output = io.StringIO()
+        with patch("anac_explorator.cli.download_cig_monthly_sample", return_value=sample) as download_mock:
+            with redirect_stdout(output):
+                exit_code = main(["download-cig-sample", "--year", "2025", "--month", "2"])
+
+        payload = json.loads(output.getvalue())
+        self.assertEqual(exit_code, 0)
+        self.assertTrue(payload["ok"])
+        download_mock.assert_called_once()
+        self.assertEqual(download_mock.call_args.kwargs["year"], 2025)
+        self.assertEqual(download_mock.call_args.kwargs["month"], 2)
+
+    def test_download_dataset_to_parquet_uses_family_registry_when_dataset_is_registered(self) -> None:
+        """@notice Route known registered datasets through the shared family-adapter dispatch."""
+
+        family = main.__globals__["DATASET_FAMILY_REGISTRY"].get_family("cig")
+        load_result = Mock()
+        load_result.to_dict.return_value = {"dataset_id": "cig-2025", "view_name": "cig"}
+
+        output = io.StringIO()
+        with patch.object(
+            main.__globals__["DATASET_FAMILY_REGISTRY"],
+            "resolve_family_for_dataset_id",
+            return_value=family,
+        ):
+            with patch.object(
+                main.__globals__["DATASET_FAMILY_REGISTRY"],
+                "download_to_parquet",
+                return_value=load_result,
+            ) as download_mock:
+                with redirect_stdout(output):
+                    exit_code = main(["download-dataset-to-parquet", "cig-2025"])
+
+        payload = json.loads(output.getvalue())
+        self.assertEqual(exit_code, 0)
+        self.assertTrue(payload["ok"])
+        download_mock.assert_called_once()
+        self.assertEqual(download_mock.call_args.args[0], "cig")
+        self.assertEqual(download_mock.call_args.kwargs["dataset_id"], "cig-2025")
+
+    def test_sync_cig_periods_uses_family_registry_update_dispatch(self) -> None:
+        """@notice Route the legacy CIG sync shim through the shared family-update adapter."""
+
+        update_result = Mock()
+        update_result.to_dict.return_value = {
+            "dataset_type": "cig",
+            "dataset_id": "cig-2025",
+            "selection_mode": "forward",
+            "requested_periods": [],
+            "plan": [],
+            "applied_loads": [],
+            "period_manifest": [],
+            "duckdb_path": "data/warehouse/anac.duckdb",
+        }
+
+        output = io.StringIO()
+        with patch.object(
+            main.__globals__["DATASET_FAMILY_REGISTRY"],
+            "update",
+            return_value=update_result,
+        ) as update_mock:
+            with redirect_stdout(output):
+                exit_code = main(["sync-cig-periods", "cig-2025"])
+
+        payload = json.loads(output.getvalue())
+        self.assertEqual(exit_code, 0)
+        self.assertTrue(payload["ok"])
+        update_mock.assert_called_once()
+        self.assertEqual(update_mock.call_args.args[0], "cig")
+        self.assertEqual(update_mock.call_args.kwargs["dataset_id"], "cig-2025")
+
     def test_validate_local_data_integrity_parser_uses_defaults(self) -> None:
         """@notice Parse the integrity-validation subcommand with its default warehouse artifacts."""
 
         parser = main.__globals__["build_parser"]()
-        args = parser.parse_args(["validate-local-data-integrity"])
+        args = apply_effective_paths(parser.parse_args(["validate-local-data-integrity"]))
 
         self.assertEqual(args.db_path, "data/warehouse/anac.duckdb")
         self.assertEqual(args.dataset_type, "cig")
@@ -117,7 +204,7 @@ class CliTests(unittest.TestCase):
         """@notice Emit a parsed CSV payload from the new Phase 2 parser surface."""
 
         with tempfile.NamedTemporaryFile("w+", encoding="utf-8", suffix=".csv") as handle:
-            handle.write("cig;importo\n0001;100.50\n")
+            handle.write("cig;importo\n0001;100.50\n0002;200.00\n")
             handle.flush()
 
             output = io.StringIO()
@@ -126,8 +213,11 @@ class CliTests(unittest.TestCase):
 
         payload = json.loads(output.getvalue())
         self.assertEqual(exit_code, 0)
-        self.assertEqual(payload["row_count"], 1)
-        self.assertEqual(payload["rows"][0]["values"]["cig"], "0001")
+        self.assertTrue(payload["ok"])
+        self.assertEqual(payload["data"]["row_count"], 2)
+        self.assertEqual(len(payload["data"]["rows"]), 1)
+        self.assertEqual(payload["data"]["rows"][0]["values"]["cig"], "0001")
+        self.assertTrue(payload["meta"]["truncated"])
 
     def test_clean_resource_applies_schema_coercion(self) -> None:
         """@notice Emit cleaned CSV payloads using a schema artifact for type hints."""
@@ -160,8 +250,9 @@ class CliTests(unittest.TestCase):
 
         payload = json.loads(output.getvalue())
         self.assertEqual(exit_code, 0)
-        self.assertTrue(payload["cleaned_records"][0]["cleaned_values"]["flag_prevalente"])
-        self.assertEqual(payload["cleaned_records"][0]["cleaned_values"]["importo"], "100.50")
+        self.assertTrue(payload["ok"])
+        self.assertTrue(payload["data"]["cleaned_records"][0]["cleaned_values"]["flag_prevalente"])
+        self.assertEqual(payload["data"]["cleaned_records"][0]["cleaned_values"]["importo"], "100.50")
 
     def test_module_invocation_executes_main(self) -> None:
         """@notice Support `python -m anac_explorator.cli` as a direct CLI entrypoint."""
@@ -196,8 +287,9 @@ class CliTests(unittest.TestCase):
 
         self.assertEqual(completed.returncode, 0, msg=completed.stderr)
         payload = json.loads(completed.stdout)
-        self.assertEqual(payload["row_count"], 1)
-        self.assertEqual(payload["rows"][0]["values"]["cig"], "0001")
+        self.assertTrue(payload["ok"])
+        self.assertEqual(payload["data"]["row_count"], 1)
+        self.assertEqual(payload["data"]["rows"][0]["values"]["cig"], "0001")
 
     def test_query_local_data_prints_json_rows(self) -> None:
         """@notice Emit JSON-friendly rows from the local DuckDB warehouse query facade."""
@@ -224,5 +316,377 @@ class CliTests(unittest.TestCase):
 
         payload = json.loads(output.getvalue())
         self.assertEqual(exit_code, 0)
-        self.assertEqual(payload["row_count"], 2)
-        self.assertEqual(payload["rows"][0]["label"], "one")
+        self.assertTrue(payload["ok"])
+        self.assertEqual(payload["data"]["row_count"], 2)
+        self.assertEqual(payload["data"]["rows"][0]["label"], "one")
+        self.assertEqual(payload["meta"]["paths"]["warehouse_db_path"], str(db_path))
+
+    def test_runtime_failure_prints_error_envelope(self) -> None:
+        """@notice Emit the shared JSON error envelope for command-runtime failures."""
+
+        output = io.StringIO()
+        missing_db_path = "/tmp/anac-explorator-missing.duckdb"
+        with redirect_stdout(output):
+            exit_code = main(
+                [
+                    "query-local-data",
+                    "SELECT 1",
+                    "--db-path",
+                    missing_db_path,
+                ]
+            )
+
+        payload = json.loads(output.getvalue())
+        self.assertEqual(exit_code, 30)
+        self.assertFalse(payload["ok"])
+        self.assertEqual(payload["command"], "query-local-data")
+        self.assertEqual(payload["error"]["code"], "LOCAL_DATASET_NOT_AVAILABLE")
+        self.assertEqual(payload["error"]["details"]["path"], missing_db_path)
+        self.assertIn(missing_db_path, payload["error"]["message"])
+        self.assertEqual(payload["meta"]["paths"]["warehouse_db_path"], missing_db_path)
+
+    def test_parser_failure_remains_usage_error(self) -> None:
+        """@notice Keep argparse failures as usage errors instead of JSON runtime envelopes."""
+
+        stdout_buffer = io.StringIO()
+        stderr_buffer = io.StringIO()
+        with redirect_stdout(stdout_buffer), redirect_stderr(stderr_buffer), self.assertRaises(SystemExit) as context:
+            main(["query-local-data"])
+
+        self.assertEqual(context.exception.code, 2)
+        self.assertEqual(stdout_buffer.getvalue(), "")
+        self.assertIn("usage:", stderr_buffer.getvalue())
+
+    def test_query_write_sql_is_blocked_with_stable_error_code(self) -> None:
+        """@notice Reject write SQL before DuckDB execution and emit WRITE_QUERY_BLOCKED."""
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            db_path = Path(temp_dir) / "warehouse.duckdb"
+            connection = duckdb.connect(str(db_path))
+            try:
+                connection.execute("CREATE TABLE demo (id INTEGER, label VARCHAR)")
+            finally:
+                connection.close()
+
+            output = io.StringIO()
+            with redirect_stdout(output):
+                exit_code = main(
+                    [
+                        "query-local-data",
+                        "-- this should be blocked\nINSERT INTO demo VALUES (1, 'one')",
+                        "--db-path",
+                        str(db_path),
+                    ]
+                )
+
+        payload = json.loads(output.getvalue())
+        self.assertEqual(exit_code, 50)
+        self.assertFalse(payload["ok"])
+        self.assertEqual(payload["error"]["code"], "WRITE_QUERY_BLOCKED")
+        self.assertEqual(payload["error"]["details"]["blocked_keyword"], "INSERT")
+
+    def test_query_unknown_relation_maps_to_structured_error(self) -> None:
+        """@notice Surface missing DuckDB relations as UNKNOWN_RELATION with recovery hints."""
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            db_path = Path(temp_dir) / "warehouse.duckdb"
+            connection = duckdb.connect(str(db_path))
+            try:
+                connection.execute("CREATE TABLE demo (id INTEGER, label VARCHAR)")
+            finally:
+                connection.close()
+
+            output = io.StringIO()
+            with redirect_stdout(output):
+                exit_code = main(
+                    [
+                        "query-local-data",
+                        "SELECT * FROM missing_relation",
+                        "--db-path",
+                        str(db_path),
+                    ]
+                )
+
+        payload = json.loads(output.getvalue())
+        self.assertEqual(exit_code, 52)
+        self.assertFalse(payload["ok"])
+        self.assertEqual(payload["error"]["code"], "UNKNOWN_RELATION")
+        self.assertEqual(payload["error"]["details"]["relation"], "missing_relation")
+        self.assertIn("demo", payload["error"]["details"]["available_dataset_views"])
+
+    def test_query_generic_duckdb_failure_maps_to_query_error(self) -> None:
+        """@notice Emit QUERY_ERROR for DuckDB failures that are not missing relations."""
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            db_path = Path(temp_dir) / "warehouse.duckdb"
+            connection = duckdb.connect(str(db_path))
+            try:
+                connection.execute("CREATE TABLE demo (id INTEGER, label VARCHAR)")
+            finally:
+                connection.close()
+
+            output = io.StringIO()
+            with redirect_stdout(output):
+                exit_code = main(
+                    [
+                        "query-local-data",
+                        "SELECT FROM demo",
+                        "--db-path",
+                        str(db_path),
+                    ]
+                )
+
+        payload = json.loads(output.getvalue())
+        self.assertEqual(exit_code, 51)
+        self.assertFalse(payload["ok"])
+        self.assertEqual(payload["error"]["code"], "QUERY_ERROR")
+        self.assertEqual(payload["error"]["details"]["sql_query"], "SELECT FROM demo")
+
+    def test_transport_blocked_maps_to_transport_blocked_error(self) -> None:
+        """@notice Distinguish blocked transport failures from generic remote errors."""
+
+        output = io.StringIO()
+        with patch(
+            "anac_explorator.cli._handle_package_show",
+            side_effect=CkanClientError(
+                "CKAN endpoint returned HTML instead of JSON; remote access appears to be blocked or filtered."
+            ),
+        ), redirect_stdout(output):
+            exit_code = main(["package-show", "demo-dataset"])
+
+        payload = json.loads(output.getvalue())
+        self.assertEqual(exit_code, 21)
+        self.assertFalse(payload["ok"])
+        self.assertEqual(payload["error"]["code"], "TRANSPORT_BLOCKED")
+
+    def test_network_failure_maps_to_network_error(self) -> None:
+        """@notice Distinguish generic network failures from blocked transport errors."""
+
+        output = io.StringIO()
+        with patch(
+            "anac_explorator.cli._handle_package_show",
+            side_effect=CkanClientError("Failed to reach CKAN endpoint: [Errno 111] Connection refused"),
+        ), redirect_stdout(output):
+            exit_code = main(["package-show", "demo-dataset"])
+
+        payload = json.loads(output.getvalue())
+        self.assertEqual(exit_code, 20)
+        self.assertFalse(payload["ok"])
+        self.assertEqual(payload["error"]["code"], "NETWORK_ERROR")
+
+    def test_playwright_unavailable_maps_to_specific_error(self) -> None:
+        """@notice Preserve a dedicated error code when Playwright support is unavailable."""
+
+        output = io.StringIO()
+        with patch(
+            "anac_explorator.cli._handle_package_show",
+            side_effect=CkanClientError("Playwright is not installed. Install the package and browser runtime first."),
+        ), redirect_stdout(output):
+            exit_code = main(["package-show", "demo-dataset"])
+
+        payload = json.loads(output.getvalue())
+        self.assertEqual(exit_code, 22)
+        self.assertFalse(payload["ok"])
+        self.assertEqual(payload["error"]["code"], "PLAYWRIGHT_UNAVAILABLE")
+
+    def test_debug_mode_prints_traceback_to_stderr(self) -> None:
+        """@notice Keep raw traceback detail on stderr in debug mode only."""
+
+        stdout_buffer = io.StringIO()
+        stderr_buffer = io.StringIO()
+        with patch(
+            "anac_explorator.cli._handle_package_show",
+            side_effect=CkanClientError("Failed to reach CKAN endpoint: timeout"),
+        ), redirect_stdout(stdout_buffer), redirect_stderr(stderr_buffer):
+            exit_code = main(["--debug", "package-show", "demo-dataset"])
+
+        payload = json.loads(stdout_buffer.getvalue())
+        self.assertEqual(exit_code, 20)
+        self.assertEqual(payload["error"]["code"], "NETWORK_ERROR")
+        self.assertIn("CkanClientError", stderr_buffer.getvalue())
+
+    def test_config_show_reports_effective_values_and_sources(self) -> None:
+        """@notice Merge config file plus env values and report their sources."""
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            config_path = Path(temp_dir) / "config.json"
+            config_path.write_text(
+                json.dumps(
+                    {
+                        "transport": {"default": "http"},
+                        "paths": {"raw_dir": "config/raw"},
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            output = io.StringIO()
+            with patch.dict(
+                os.environ,
+                {
+                    "ANAC_TRANSPORT": "playwright",
+                    "ANAC_EXPLORATOR_TRANSPORT": "http",
+                },
+                clear=False,
+            ), redirect_stdout(output):
+                exit_code = main(["--config", str(config_path), "config", "show"])
+
+        payload = json.loads(output.getvalue())
+        effective = payload["data"]["config"]["effective"]
+        sources = payload["data"]["config"]["sources"]
+        self.assertEqual(exit_code, 0)
+        self.assertEqual(payload["data"]["subcommand"], "show")
+        self.assertEqual(effective["transport"]["default"], "playwright")
+        self.assertEqual(sources["transport"]["default"], "env:ANAC_TRANSPORT")
+        self.assertEqual(effective["paths"]["raw_dir"], "config/raw")
+        self.assertEqual(sources["paths"]["raw_dir"], "config_file")
+
+    def test_config_get_returns_key_value_and_source(self) -> None:
+        """@notice Return one resolved config value together with its source."""
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            config_path = Path(temp_dir) / "config.json"
+            config_path.write_text(json.dumps({"query": {"row_limit": 25}}), encoding="utf-8")
+
+            output = io.StringIO()
+            with redirect_stdout(output):
+                exit_code = main(["--config", str(config_path), "config", "get", "query.row_limit"])
+
+        payload = json.loads(output.getvalue())
+        self.assertEqual(exit_code, 0)
+        self.assertEqual(payload["data"]["key"], "query.row_limit")
+        self.assertEqual(payload["data"]["value"], 25)
+        self.assertEqual(payload["data"]["source"], "config_file")
+
+    def test_config_set_and_unset_only_change_config_file(self) -> None:
+        """@notice Persist and remove config values through the dedicated config subcommands."""
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            config_path = Path(temp_dir) / "config.json"
+
+            set_output = io.StringIO()
+            with redirect_stdout(set_output):
+                set_exit_code = main(
+                    ["--config", str(config_path), "config", "set", "transport.default", "playwright"]
+                )
+
+            unset_output = io.StringIO()
+            with redirect_stdout(unset_output):
+                unset_exit_code = main(
+                    ["--config", str(config_path), "config", "unset", "transport.default"]
+                )
+
+            persisted_exists = config_path.exists()
+
+        set_payload = json.loads(set_output.getvalue())
+        unset_payload = json.loads(unset_output.getvalue())
+        self.assertEqual(set_exit_code, 0)
+        self.assertEqual(set_payload["data"]["value"], "playwright")
+        self.assertEqual(unset_exit_code, 0)
+        self.assertTrue(unset_payload["data"]["value"])
+        self.assertFalse(persisted_exists)
+
+    def test_config_reset_requires_yes(self) -> None:
+        """@notice Protect config reset behind the shared confirmation flag."""
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            config_path = Path(temp_dir) / "config.json"
+            config_path.write_text(json.dumps({"query": {"row_limit": 25}}), encoding="utf-8")
+
+            output = io.StringIO()
+            with redirect_stdout(output):
+                exit_code = main(["--config", str(config_path), "config", "reset"])
+
+        payload = json.loads(output.getvalue())
+        self.assertEqual(exit_code, 60)
+        self.assertFalse(payload["ok"])
+        self.assertEqual(payload["error"]["code"], "CONFIG_ERROR")
+
+    def test_config_reset_with_yes_removes_file(self) -> None:
+        """@notice Remove the persisted config file when reset is confirmed."""
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            config_path = Path(temp_dir) / "config.json"
+            config_path.write_text(json.dumps({"query": {"row_limit": 25}}), encoding="utf-8")
+
+            output = io.StringIO()
+            with redirect_stdout(output):
+                exit_code = main(["--config", str(config_path), "--yes", "config", "reset"])
+
+            exists_after_reset = config_path.exists()
+
+        payload = json.loads(output.getvalue())
+        self.assertEqual(exit_code, 0)
+        self.assertEqual(payload["data"]["subcommand"], "reset")
+        self.assertFalse(exists_after_reset)
+
+    def test_config_validate_returns_all_detected_issues(self) -> None:
+        """@notice Report every config validation issue in one validate response."""
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            config_path = Path(temp_dir) / "config.json"
+            config_path.write_text(
+                json.dumps(
+                    {
+                        "transport": {"default": "invalid", "timeout": 0},
+                        "paths": {"unknown": "value"},
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            output = io.StringIO()
+            with redirect_stdout(output):
+                exit_code = main(["--config", str(config_path), "config", "validate"])
+
+        payload = json.loads(output.getvalue())
+        error_keys = {issue["key"] for issue in payload["data"]["validation_errors"]}
+        self.assertEqual(exit_code, 0)
+        self.assertIn("transport.default", error_keys)
+        self.assertIn("transport.timeout", error_keys)
+        self.assertIn("paths.unknown", error_keys)
+
+    def test_config_show_yaml_renders_without_json_envelope(self) -> None:
+        """@notice Support YAML output for the effective config view without extra dependencies."""
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            config_path = Path(temp_dir) / "config.json"
+            output = io.StringIO()
+            with redirect_stdout(output):
+                exit_code = main(["--config", str(config_path), "config", "show", "--format", "yaml"])
+
+        rendered = output.getvalue()
+        self.assertEqual(exit_code, 0)
+        self.assertIn("subcommand: show", rendered)
+        self.assertIn("transport:", rendered)
+
+    def test_query_uses_row_limit_from_config_when_cli_flag_is_absent(self) -> None:
+        """@notice Apply shared query defaults from config without command-specific merge logic."""
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            config_path = Path(temp_dir) / "config.json"
+            config_path.write_text(json.dumps({"query": {"row_limit": 1}}), encoding="utf-8")
+            db_path = Path(temp_dir) / "warehouse.duckdb"
+            connection = duckdb.connect(str(db_path))
+            try:
+                connection.execute("CREATE TABLE demo (id INTEGER)")
+                connection.execute("INSERT INTO demo VALUES (1), (2)")
+            finally:
+                connection.close()
+
+            output = io.StringIO()
+            with redirect_stdout(output):
+                exit_code = main(
+                    [
+                        "--config",
+                        str(config_path),
+                        "query-local-data",
+                        "SELECT id FROM demo ORDER BY id",
+                        "--db-path",
+                        str(db_path),
+                    ]
+                )
+
+        payload = json.loads(output.getvalue())
+        self.assertEqual(exit_code, 0)
+        self.assertEqual(payload["data"]["row_count"], 1)

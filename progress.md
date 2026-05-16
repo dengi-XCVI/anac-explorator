@@ -1,7 +1,7 @@
 # Progress
 
 ## Current phase
-- Phase 2: DuckDB/Parquet integrity validation
+- Phase 3: CLI contract foundations
 
 ## Current status
 - Bootstrap implementation complete:
@@ -135,6 +135,40 @@
     - exact duplicate source rows exist in the January 2025 live warehouse slice
     - many `cig` values span multiple distinct rows, so `cig` cannot currently be treated as a one-row primary key
     - current external vocabulary label mappings disagree with some loaded source labels, notably `cod_tipo_scelta_contraente = 999`
+- Phase 3 CLI contract step 5.1 completed:
+  - shared command-envelope dataclasses now live in `src/anac_explorator/models.py`
+  - new `src/anac_explorator/output.py` centralizes JSON rendering, table rendering, and handled runtime error envelopes
+  - CLI commands now emit a common `ok` / `data|error` / `warnings` / `meta` JSON shape on stdout
+  - sampled parse/clean responses now flag truncation through `meta.truncated`
+  - tests now cover envelope success, warnings, table rendering, and runtime failure output
+- Phase 3 CLI contract step 5.2 completed:
+  - new `src/anac_explorator/errors.py` defines the shared error catalog, exit-code mapping, and command-aware exception translation
+  - CLI runtime failures now emit stable JSON `error.code` values with documented exit families instead of generic failures
+  - `query-local-data` now distinguishes `WRITE_QUERY_BLOCKED`, `UNKNOWN_RELATION`, and generic `QUERY_ERROR`
+  - remote-access failures now distinguish `NETWORK_ERROR`, `TRANSPORT_BLOCKED`, and `PLAYWRIGHT_UNAVAILABLE`
+  - `--debug` now preserves traceback detail on stderr without changing the JSON error envelope
+- Phase 3 CLI contract step 5.3 completed:
+  - new `src/anac_explorator/paths.py` centralizes repository path defaults plus config/env/CLI resolution for raw, warehouse, schema, vocabulary, and dictionary storage
+  - CLI commands now receive one resolved effective-path object before execution instead of repeating path defaults in parser wiring
+  - JSON success and error envelopes now expose resolved shared storage paths through `meta.paths`
+  - command-specific artifact defaults such as the warehouse DB, vocabulary index, and dictionary/schema artifacts now derive from the shared root paths
+- Phase 3 CLI contract step 5.4 completed:
+  - new `src/anac_explorator/config.py` adds the config dataclass model, JSON file persistence, env merge layer, and full validation pass
+  - the CLI now supports `config show|get|set|unset|reset|validate` plus `--config`, `--no-config`, and `--yes`
+  - `ANAC_*` env names now take priority while existing `ANAC_EXPLORATOR_*` names remain accepted as compatibility fallbacks
+  - shared config defaults now feed command execution centrally for transport, query, output, and path settings instead of each command re-merging values
+  - `config show --format yaml` now renders a dependency-free YAML view of the effective config object
+- Phase 3 CLI contract step 5.5 completed:
+  - new `src/anac_explorator/selection.py` adds the shared temporal parser for canonical `YYYY-MM` slices plus compatibility helpers for legacy `YYYY_MM` period identifiers
+  - `download-cig-sample` now routes its year/month request through the shared selection layer instead of ad hoc temporal handling
+  - incremental CIG sync now normalizes explicit and ranged legacy period inputs through the shared parser before matching remote monthly resources
+  - tests now cover valid and invalid temporal grammars, canonical/legacy conversion helpers, and loader/CLI integration paths that consume the shared selection model
+- Phase 3 CLI contract step 5.6 completed:
+  - new `src/anac_explorator/catalog.py` adds the explicit dataset-family registry plus adapter interface for logical families and CKAN-id resolution
+  - the registry now includes the required initial families (`cig`, `smartcig`, `stazioni-appaltanti`, `aggiudicatari`) plus all vocabulary datasets already wired in the repository
+  - family metadata now captures title, category, coverage kind, source formats, query-view naming, update support, and adapter identity in one shared place
+  - existing CIG update routing and registered-family direct-to-Parquet routing now dispatch through the shared family adapters instead of embedding family-specific loader calls in the CLI layer
+  - tests now cover registry contents, temporal CKAN-id resolution, raw-dataset-to-family mapping, stable unsupported-family errors, and CLI adapter dispatch
 
 ## Planned milestones
 1. Expand the local query surface carefully without over-materializing data
