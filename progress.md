@@ -169,6 +169,18 @@
   - family metadata now captures title, category, coverage kind, source formats, query-view naming, update support, and adapter identity in one shared place
   - existing CIG update routing and registered-family direct-to-Parquet routing now dispatch through the shared family adapters instead of embedding family-specific loader calls in the CLI layer
   - tests now cover registry contents, temporal CKAN-id resolution, raw-dataset-to-family mapping, stable unsupported-family errors, and CLI adapter dispatch
+- Phase 6 metadata discoverability layer steps 1-2 completed:
+  - new `src/anac_explorator/metadata_views.py` adds typed internal row models for all 9 required metadata views without touching DuckDB or creating SQL views yet
+  - the module now loads schema mappings, data-dictionary artifacts, raw download manifests, and the vocabulary index through typed Python loaders instead of ad hoc JSON access
+  - pure-Python row builders now project current local artifacts and workflow dataclasses into `anac_datasets`, `anac_dataset_resources`, `anac_partitions`, `anac_registered_views`, `anac_loaded_resources`, `anac_schema_columns`, `anac_dictionary_fields`, `anac_crosswalks`, and `anac_update_status`
+  - nested dictionary dataclasses in `src/anac_explorator/models.py` now support `from_dict(...)` rehydration for metadata loading
+  - tests now cover artifact rehydration, schema/dictionary overlays, local resource and partition aggregation, registered-view summaries, crosswalk rows, and update-status aggregation
+- Phase 6 metadata discoverability layer steps 3-4 completed:
+  - `ensure_metadata_views(...)` now recomputes the full metadata layer on demand inside one DuckDB session by rebuilding temporary tables from Python-loaded artifacts and warehouse catalog rows
+  - the registration helper now materializes all 9 `anac_*` views with explicit schemas instead of relying on inferred JSON reads
+  - `run_local_query(...)` now bootstraps the metadata views before execution so `SELECT * FROM anac_datasets` works in normal query sessions without persistent metadata state
+  - unknown-relation recovery hints now see the ephemeral `anac_*` views during query error reporting while excluding internal temp staging tables
+  - tests now cover on-demand recomputation, end-to-end querying of `anac_datasets`, and the updated relation-hint behavior
 
 ## Planned milestones
 1. Expand the local query surface carefully without over-materializing data

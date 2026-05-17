@@ -37,6 +37,7 @@ from anac_explorator.models import (
     WarehousePartitionValue,
     WarehouseQueryResult,
 )
+from anac_explorator.metadata_views import ensure_metadata_views
 from anac_explorator.sample import download_dataset_resource
 from anac_explorator.schema import map_csv_schema
 from anac_explorator.selection import (
@@ -496,6 +497,7 @@ def run_local_query(
 
     connection = duckdb.connect(str(database_path), read_only=True)
     try:
+        ensure_metadata_views(connection, db_path=database_path)
         cursor = connection.execute(executable_sql)
         column_names = [str(column[0]) for column in (cursor.description or [])]
         raw_rows = cursor.fetchall()

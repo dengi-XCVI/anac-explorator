@@ -48,7 +48,8 @@ class ErrorMappingTests(unittest.TestCase):
         self.assertEqual(cli_error.code, "UNKNOWN_RELATION")
         self.assertEqual(cli_error.exit_code, 52)
         self.assertEqual(cli_error.details["relation"], "missing_view")
-        self.assertEqual(cli_error.details["available_metadata_views"], ["anac_datasets"])
+        self.assertIn("anac_datasets", cli_error.details["available_metadata_views"])
+        self.assertIn("anac_schema_columns", cli_error.details["available_metadata_views"])
         self.assertEqual(cli_error.details["available_dataset_views"], ["cig"])
 
     def test_resolve_command_error_maps_temporal_slice_failures(self) -> None:

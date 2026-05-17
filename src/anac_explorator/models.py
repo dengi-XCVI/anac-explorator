@@ -171,6 +171,19 @@ class JoinContract:
 
         return asdict(self)
 
+    @classmethod
+    def from_dict(cls, payload: dict[str, object]) -> "JoinContract":
+        """@notice Rebuild a join contract from a serialized dictionary."""
+
+        return cls(
+            target_dataset=str(payload["target_dataset"]),
+            target_table=str(payload["target_table"]),
+            source_field=str(payload["source_field"]),
+            target_field=str(payload["target_field"]),
+            target_label_field=str(payload["target_label_field"]),
+            join_type=str(payload.get("join_type", "left")),
+        )
+
 
 @dataclass(slots=True)
 class DataDictionaryCodeReference:
@@ -220,6 +233,48 @@ class DataDictionaryCodeReference:
         payload = asdict(self)
         payload["join_contract"] = None if self.join_contract is None else self.join_contract.to_dict()
         return payload
+
+    @classmethod
+    def from_dict(cls, payload: dict[str, object]) -> "DataDictionaryCodeReference":
+        """@notice Rebuild a code reference from a serialized dictionary."""
+
+        raw_join_contract = payload.get("join_contract")
+        return cls(
+            reference_kind=str(payload["reference_kind"]),
+            dataset_id=None if payload.get("dataset_id") in (None, "") else str(payload["dataset_id"]),
+            table_name=None if payload.get("table_name") in (None, "") else str(payload["table_name"]),
+            source_code_field=None
+            if payload.get("source_code_field") in (None, "")
+            else str(payload["source_code_field"]),
+            source_label_field=None
+            if payload.get("source_label_field") in (None, "")
+            else str(payload["source_label_field"]),
+            target_code_field=None
+            if payload.get("target_code_field") in (None, "")
+            else str(payload["target_code_field"]),
+            target_label_field=None
+            if payload.get("target_label_field") in (None, "")
+            else str(payload["target_label_field"]),
+            table_code_column=None
+            if payload.get("table_code_column") in (None, "")
+            else str(payload["table_code_column"]),
+            table_label_column=None
+            if payload.get("table_label_column") in (None, "")
+            else str(payload["table_label_column"]),
+            resolved_fields=[str(value) for value in payload.get("resolved_fields", [])],
+            external_vocabulary_status=str(payload.get("external_vocabulary_status", "unknown")),
+            join_contract=None
+            if not isinstance(raw_join_contract, dict)
+            else JoinContract.from_dict(raw_join_contract),
+            notes=str(payload.get("notes", "")),
+            artifact_path=None if payload.get("artifact_path") in (None, "") else str(payload["artifact_path"]),
+            entry_count=None if payload.get("entry_count") in (None, "") else int(payload["entry_count"]),
+            preview_entries=[
+                {str(key): str(value) for key, value in entry.items()}
+                for entry in payload.get("preview_entries", [])
+                if isinstance(entry, dict)
+            ],
+        )
 
 
 @dataclass(slots=True)
@@ -281,6 +336,31 @@ class DataDictionaryEntry:
         payload["code_reference"] = None if self.code_reference is None else self.code_reference.to_dict()
         return payload
 
+    @classmethod
+    def from_dict(cls, payload: dict[str, object]) -> "DataDictionaryEntry":
+        """@notice Rebuild a dictionary entry from a serialized dictionary."""
+
+        raw_code_reference = payload.get("code_reference")
+        return cls(
+            name=str(payload["name"]),
+            section=str(payload["section"]),
+            description=str(payload["description"]),
+            semantic_type=str(payload["semantic_type"]),
+            value_pattern=str(payload["value_pattern"]),
+            inferred_type=str(payload["inferred_type"]),
+            nullable=bool(payload["nullable"]),
+            non_empty_samples=[str(value) for value in payload.get("non_empty_samples", [])],
+            related_fields=[str(value) for value in payload.get("related_fields", [])],
+            paired_field=None if payload.get("paired_field") in (None, "") else str(payload["paired_field"]),
+            code_meaning_status=str(payload.get("code_meaning_status", "unknown")),
+            external_vocabulary_status=str(payload.get("external_vocabulary_status", "not_applicable")),
+            code_reference=None
+            if not isinstance(raw_code_reference, dict)
+            else DataDictionaryCodeReference.from_dict(raw_code_reference),
+            cross_year_notes=[str(value) for value in payload.get("cross_year_notes", [])],
+            notes=[str(value) for value in payload.get("notes", [])],
+        )
+
 
 @dataclass(slots=True)
 class DataDictionaryArtifact:
@@ -317,6 +397,23 @@ class DataDictionaryArtifact:
             "sections": self.sections,
             "entries": [entry.to_dict() for entry in self.entries],
         }
+
+    @classmethod
+    def from_dict(cls, payload: dict[str, object]) -> "DataDictionaryArtifact":
+        """@notice Rebuild a dictionary artifact from a serialized dictionary."""
+
+        raw_entries = payload.get("entries", [])
+        return cls(
+            dictionary_name=str(payload["dictionary_name"]),
+            dataset_id=str(payload["dataset_id"]),
+            source_schema_path=str(payload["source_schema_path"]),
+            comparison_path=None if payload.get("comparison_path") in (None, "") else str(payload["comparison_path"]),
+            vocabulary_index_path=None
+            if payload.get("vocabulary_index_path") in (None, "")
+            else str(payload["vocabulary_index_path"]),
+            sections=[str(value) for value in payload.get("sections", [])],
+            entries=[DataDictionaryEntry.from_dict(entry) for entry in raw_entries if isinstance(entry, dict)],
+        )
 
 
 @dataclass(slots=True)

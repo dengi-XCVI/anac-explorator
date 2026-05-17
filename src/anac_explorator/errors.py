@@ -364,6 +364,9 @@ def _collect_available_relations(db_path: object) -> dict[str, list[str]]:
 
     connection = duckdb.connect(str(path), read_only=True)
     try:
+        from anac_explorator.metadata_views import ensure_metadata_views
+
+        ensure_metadata_views(connection, db_path=path)
         rows = connection.execute(
             """
             SELECT table_name
@@ -382,7 +385,9 @@ def _collect_available_relations(db_path: object) -> dict[str, list[str]]:
 
     names = [str(row[0]) for row in rows]
     return {
-        "available_dataset_views": [name for name in names if not name.startswith("anac_")],
+        "available_dataset_views": [
+            name for name in names if not name.startswith("anac_") and not name.startswith("__tmp_")
+        ],
         "available_metadata_views": [name for name in names if name.startswith("anac_")],
     }
 
