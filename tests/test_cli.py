@@ -17,6 +17,7 @@ import duckdb
 
 from anac_explorator.ckan import CkanClientError
 from anac_explorator.cli import main
+from anac_explorator.models import CkanPackage, CkanResource, DownloadManifest, SchemaColumn, SchemaMapping
 from anac_explorator.paths import apply_effective_paths
 
 
@@ -56,6 +57,123 @@ class CliTests(unittest.TestCase):
         args = parser.parse_args(["download-dataset-csv", "bandi-cig-tipo-scelta-contraente"])
 
         self.assertEqual(args.dataset_id, "bandi-cig-tipo-scelta-contraente")
+
+    def test_datasets_parser_accepts_filters_and_uses_default_db_path(self) -> None:
+        """@notice Parse the new datasets surface with its discovery filters and shared DB path."""
+
+        parser = main.__globals__["build_parser"]()
+        args = apply_effective_paths(
+            parser.parse_args(
+                [
+                    "datasets",
+                    "cig",
+                    "--search",
+                    "pnrr",
+                    "--year",
+                    "2025",
+                    "--downloaded",
+                    "--source-format",
+                    "csv",
+                    "--format",
+                    "table",
+                ]
+            )
+        )
+
+        self.assertEqual(args.dataset, "cig")
+        self.assertEqual(args.search, "pnrr")
+        self.assertEqual(args.year, 2025)
+        self.assertTrue(args.downloaded)
+        self.assertEqual(args.source_format, "csv")
+        self.assertEqual(args.output_format, "table")
+        self.assertEqual(args.db_path, "data/warehouse/anac.duckdb")
+
+    def test_download_parser_accepts_temporal_flags_and_uses_shared_paths(self) -> None:
+        """@notice Parse the Phase 3 download command with its temporal and storage options."""
+
+        parser = main.__globals__["build_parser"]()
+        args = apply_effective_paths(
+            parser.parse_args(
+                [
+                    "download",
+                    "cig",
+                    "--year",
+                    "2025",
+                    "--month",
+                    "1",
+                    "--source-format",
+                    "csv",
+                    "--output-format",
+                    "both",
+                    "--format",
+                    "table",
+                ]
+            )
+        )
+
+        self.assertEqual(args.dataset, "cig")
+        self.assertEqual(args.year, "2025")
+        self.assertEqual(args.month, "1")
+        self.assertEqual(args.source_format, "csv")
+        self.assertEqual(args.download_output_format, "both")
+        self.assertEqual(args.output_format, "table")
+        self.assertEqual(args.output_dir, "data/raw")
+        self.assertEqual(args.schemas_dir, "schemas")
+        self.assertEqual(args.warehouse_dir, "data/warehouse")
+
+    def test_schema_parser_accepts_temporal_flags_and_uses_shared_paths(self) -> None:
+        """@notice Parse the Phase 3 schema command with target-selection and metadata-path options."""
+
+        parser = main.__globals__["build_parser"]()
+        args = apply_effective_paths(
+            parser.parse_args(
+                [
+                    "schema",
+                    "cig",
+                    "--year",
+                    "2025",
+                    "--month",
+                    "1",
+                    "--describe",
+                    "--format",
+                    "table",
+                ]
+            )
+        )
+
+        self.assertEqual(args.dataset, "cig")
+        self.assertEqual(args.year, "2025")
+        self.assertEqual(args.month, "1")
+        self.assertTrue(args.describe)
+        self.assertEqual(args.output_format, "table")
+        self.assertEqual(args.db_path, "data/warehouse/anac.duckdb")
+        self.assertEqual(args.schemas_dir, "schemas")
+        self.assertEqual(args.dictionaries_dir, "dictionaries")
+
+    def test_schema_parser_accepts_diff_operands(self) -> None:
+        """@notice Parse the schema diff mode with its two explicit target operands."""
+
+        parser = main.__globals__["build_parser"]()
+        args = parser.parse_args(["schema", "cig", "--diff", "2007-01", "2025-01"])
+
+        self.assertEqual(args.dataset, "cig")
+        self.assertEqual(args.diff, ["2007-01", "2025-01"])
+        self.assertFalse(args.ddl)
+        self.assertFalse(args.describe)
+
+    def test_schema_parser_rejects_conflicting_modes(self) -> None:
+        """@notice Keep schema inspection modes mutually exclusive at parse time."""
+
+        parser = main.__globals__["build_parser"]()
+
+        with redirect_stderr(io.StringIO()):
+            with self.assertRaises(SystemExit) as describe_vs_ddl:
+                parser.parse_args(["schema", "cig", "--describe", "--ddl"])
+            with self.assertRaises(SystemExit) as describe_vs_diff:
+                parser.parse_args(["schema", "cig", "--describe", "--diff", "2007-01", "2025-01"])
+
+        self.assertEqual(describe_vs_ddl.exception.code, 2)
+        self.assertEqual(describe_vs_diff.exception.code, 2)
 
     def test_build_data_dictionary_parser_uses_default_artifacts(self) -> None:
         """@notice Parse the data-dictionary subcommand with its default artifact paths."""
@@ -188,6 +306,179 @@ class CliTests(unittest.TestCase):
         update_mock.assert_called_once()
         self.assertEqual(update_mock.call_args.args[0], "cig")
         self.assertEqual(update_mock.call_args.kwargs["dataset_id"], "cig-2025")
+
+    def test_datasets_detail_prints_json_envelope_and_remote_warning(self) -> None:
+        """@notice Emit detail-mode JSON with the shared warning envelope when live CKAN refresh fails."""
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            self._write_manifest(
+                Path(temp_dir),
+                DownloadManifest(
+                    dataset_id="cig-2025",
+                    resource_id="demo-id",
+                    resource_name="cig_csv_2025_01",
+                    resource_format="csv",
+                    resource_url="https://example.invalid/cig_csv_2025_01.zip",
+                    transport="playwright",
+                    archive_path="data/raw/cig-2025/cig_csv_2025_01/cig_csv_2025_01.zip",
+                    materialized_path="data/raw/cig-2025/cig_csv_2025_01/extracted/cig_csv_2025_01.csv",
+                    materialized_kind="csv",
+                    cache_status="fresh",
+                    resume_supported=False,
+                    downloaded_at="2026-05-19T12:00:00",
+                ),
+            )
+            mock_client = Mock()
+            mock_client.package_show.side_effect = CkanClientError("blocked or filtered by WAF")
+
+            output = io.StringIO()
+            previous_cwd = os.getcwd()
+            os.chdir(temp_dir)
+            try:
+                with patch("anac_explorator.cli.CkanClient", return_value=mock_client):
+                    with redirect_stdout(output):
+                        exit_code = main(["datasets", "cig"])
+            finally:
+                os.chdir(previous_cwd)
+
+        payload = json.loads(output.getvalue())
+        self.assertEqual(exit_code, 0)
+        self.assertTrue(payload["ok"])
+        self.assertEqual(payload["command"], "datasets")
+        self.assertEqual(payload["data"]["dataset"], "cig")
+        self.assertEqual(payload["data"]["local_status"], "raw")
+        self.assertEqual(payload["warnings"][0]["code"], "REMOTE_METADATA_UNAVAILABLE")
+        self.assertEqual(payload["meta"]["paths"]["warehouse_db_path"], "data/warehouse/anac.duckdb")
+
+    def test_datasets_list_table_output_renders_filtered_catalog(self) -> None:
+        """@notice Render list mode through the shared table output path."""
+
+        output = io.StringIO()
+        with redirect_stdout(output):
+            exit_code = main(["datasets", "--search", "smart", "--format", "table"])
+
+        rendered = output.getvalue()
+        self.assertEqual(exit_code, 0)
+        self.assertIn("smartcig", rendered)
+        self.assertIn("summary", rendered)
+        self.assertIn("items", rendered)
+
+    def test_datasets_unknown_family_emits_stable_error(self) -> None:
+        """@notice Return DATASET_NOT_FOUND when detail mode targets an unknown family."""
+
+        output = io.StringIO()
+        with redirect_stdout(output):
+            exit_code = main(["datasets", "unknown-family"])
+
+        payload = json.loads(output.getvalue())
+        self.assertEqual(exit_code, 10)
+        self.assertFalse(payload["ok"])
+        self.assertEqual(payload["error"]["code"], "DATASET_NOT_FOUND")
+
+    def test_download_dry_run_returns_monthly_cig_plan_without_execution(self) -> None:
+        """@notice Emit the normalized download plan for one monthly CIG dry-run."""
+
+        mock_client = Mock()
+        mock_client.package_show.return_value = self._build_cig_package(
+            resources=[
+                CkanResource(
+                    id="cig-csv-01",
+                    name="cig_csv_2025_01",
+                    format="CSV",
+                    url="https://example.invalid/cig_2025_01.csv",
+                )
+            ]
+        )
+
+        output = io.StringIO()
+        with patch("anac_explorator.cli.CkanClient", return_value=mock_client):
+            with patch("anac_explorator.cli.execute_download_plan") as execute_mock:
+                with redirect_stdout(output):
+                    exit_code = main(["download", "cig", "--year", "2025", "--month", "1", "--dry-run"])
+
+        payload = json.loads(output.getvalue())
+        self.assertEqual(exit_code, 0)
+        self.assertTrue(payload["ok"])
+        self.assertEqual(payload["command"], "download")
+        self.assertEqual(payload["data"]["requested_selection"]["dataset"], "cig")
+        self.assertEqual(payload["data"]["requested_selection"]["output_format"], "parquet")
+        self.assertTrue(payload["data"]["requested_selection"]["dry_run"])
+        self.assertEqual(payload["data"]["requested_selection"]["selection_mode"], "range")
+        self.assertEqual(payload["data"]["requested_selection"]["requested_slices"], ["2025-01"])
+        self.assertEqual(payload["data"]["resolved_plan"]["resolved_dataset_ids"], ["cig-2025"])
+        self.assertEqual(payload["data"]["resolved_plan"]["resolved_resource_names"], ["cig_csv_2025_01"])
+        self.assertEqual(payload["data"]["resolved_plan"]["plan"][0]["action"], "download_and_load")
+        self.assertEqual(payload["data"]["applied_actions"], [])
+        self.assertIsNone(payload["data"]["validation_result"])
+        execute_mock.assert_not_called()
+
+    def test_download_source_format_unavailable_emits_stable_error(self) -> None:
+        """@notice Return DATASET_NOT_SUPPORTED when the requested source format is unavailable."""
+
+        mock_client = Mock()
+        mock_client.package_show.return_value = self._build_cig_package(
+            resources=[
+                CkanResource(
+                    id="cig-csv-01",
+                    name="cig_csv_2025_01",
+                    format="CSV",
+                    url="https://example.invalid/cig_2025_01.csv",
+                )
+            ]
+        )
+
+        output = io.StringIO()
+        with patch("anac_explorator.cli.CkanClient", return_value=mock_client):
+            with redirect_stdout(output):
+                exit_code = main(["download", "cig", "--year", "2025", "--month", "1", "--source-format", "json"])
+
+        payload = json.loads(output.getvalue())
+        self.assertEqual(exit_code, 11)
+        self.assertFalse(payload["ok"])
+        self.assertEqual(payload["command"], "download")
+        self.assertEqual(payload["error"]["code"], "DATASET_NOT_SUPPORTED")
+        self.assertEqual(payload["error"]["details"]["dataset"], "cig")
+        self.assertEqual(payload["error"]["details"]["source_format"], "json")
+
+    def test_schema_canonical_output_prints_shared_json_envelope(self) -> None:
+        """@notice Emit the canonical artifact-driven schema result through the shared Phase 3 envelope."""
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_path = Path(temp_dir)
+            self._write_schema_artifact(
+                temp_path / "schemas" / "cig_2025_01.schema.json",
+                SchemaMapping(
+                    source_path="data/raw/cig-2025/cig_csv_2025_01/extracted/cig.csv",
+                    delimiter=";",
+                    encoding="utf-8-sig",
+                    rows_sampled=2,
+                    row_length_mismatches=0,
+                    columns=[
+                        SchemaColumn(name="cig", inferred_type="text", nullable=False, non_empty_samples=["0001"]),
+                        SchemaColumn(name="importo", inferred_type="decimal", nullable=True, non_empty_samples=["10.50"]),
+                    ],
+                ),
+            )
+
+            output = io.StringIO()
+            with redirect_stdout(output):
+                exit_code = main(["schema", "cig", "--schemas-dir", str(temp_path / "schemas")])
+
+        payload = json.loads(output.getvalue())
+        self.assertEqual(exit_code, 0)
+        self.assertTrue(payload["ok"])
+        self.assertEqual(payload["command"], "schema")
+        self.assertEqual(payload["data"]["dataset"], "cig")
+        self.assertEqual(payload["data"]["mode"], "canonical")
+        self.assertIsNone(payload["data"]["target"])
+        self.assertEqual([column["name"] for column in payload["data"]["columns"]], ["cig", "importo"])
+        self.assertEqual(payload["data"]["columns"][0]["duckdb_type"], "VARCHAR")
+        self.assertTrue(payload["data"]["columns"][1]["nullable"])
+        self.assertIsNone(payload["data"]["diff"])
+        self.assertIsNone(payload["data"]["ddl"])
+        self.assertEqual(payload["warnings"], [])
+        self.assertEqual(payload["meta"]["paths"]["schemas_dir"], str(temp_path / "schemas"))
+        self.assertEqual(payload["meta"]["paths"]["dictionaries_dir"], "dictionaries")
 
     def test_validate_local_data_integrity_parser_uses_defaults(self) -> None:
         """@notice Parse the integrity-validation subcommand with its default warehouse artifacts."""
@@ -690,3 +981,29 @@ class CliTests(unittest.TestCase):
         payload = json.loads(output.getvalue())
         self.assertEqual(exit_code, 0)
         self.assertEqual(payload["data"]["row_count"], 1)
+
+    def _write_manifest(self, project_root: Path, manifest: DownloadManifest) -> None:
+        """@notice Persist one manifest under the default raw-data layout for datasets tests."""
+
+        manifest_path = project_root / "data" / "raw" / manifest.dataset_id / manifest.resource_name / "manifest.json"
+        manifest_path.parent.mkdir(parents=True, exist_ok=True)
+        manifest_path.write_text(json.dumps(manifest.to_dict()), encoding="utf-8")
+
+    @staticmethod
+    def _write_schema_artifact(path: Path, mapping: SchemaMapping) -> None:
+        """@notice Persist one serialized schema artifact for schema CLI integration tests."""
+
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(mapping.to_dict()), encoding="utf-8")
+
+    @staticmethod
+    def _build_cig_package(*, resources: list[CkanResource]) -> CkanPackage:
+        """@notice Build one fake monthly CIG CKAN package for CLI integration tests."""
+
+        return CkanPackage(
+            id="cig-2025",
+            name="cig-2025",
+            title="CIG 2025",
+            notes="Monthly CIG package",
+            resources=resources,
+        )

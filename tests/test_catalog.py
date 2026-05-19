@@ -2,12 +2,16 @@
 
 from __future__ import annotations
 
+import json
+import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import Mock, patch
 
-from anac_explorator.catalog import DATASET_FAMILY_REGISTRY
+from anac_explorator.catalog import DATASET_FAMILY_REGISTRY, get_dataset_family, list_dataset_families
+from anac_explorator.ckan import CkanClientError
 from anac_explorator.errors import CliCommandError
+from anac_explorator.models import CkanPackage, CkanResource, DownloadManifest
 from anac_explorator.selection import parse_temporal_selection
 from anac_explorator.vocabulary import VOCABULARY_DATASET_CONFIGS
 
@@ -190,7 +194,169 @@ class DatasetFamilyRegistryTests(unittest.TestCase):
 
         self.assertEqual(context.exception.code, "DATASET_UPDATE_NOT_SUPPORTED")
 
+    def test_list_dataset_families_applies_search_and_state_filters(self) -> None:
+        """@notice Filter the catalog by free text, remote year, source format, and local state."""
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            project_root = Path(temp_dir)
+            db_path = project_root / "data" / "warehouse" / "anac.duckdb"
+            self._write_manifest(
+                project_root,
+                DownloadManifest(
+                    dataset_id="cig-2025",
+                    resource_id="demo-id",
+                    resource_name="cig_csv_2025_01",
+                    resource_format="csv",
+                    resource_url="https://example.invalid/cig_csv_2025_01.zip",
+                    transport="playwright",
+                    archive_path="data/raw/cig-2025/cig_csv_2025_01/cig_csv_2025_01.zip",
+                    materialized_path="data/raw/cig-2025/cig_csv_2025_01/extracted/cig_csv_2025_01.csv",
+                    materialized_kind="csv",
+                    cache_status="fresh",
+                    resume_supported=False,
+                    downloaded_at="2026-05-19T12:00:00",
+                ),
+            )
+
+            downloaded = list_dataset_families(
+                db_path=db_path,
+                raw_dir=project_root / "data" / "raw",
+                schemas_dir=project_root / "schemas",
+                dictionaries_dir=project_root / "dictionaries",
+                vocabulary_index_path=project_root / "vocabularies" / "index.json",
+                downloaded=True,
+            )
+            missing = list_dataset_families(
+                db_path=db_path,
+                raw_dir=project_root / "data" / "raw",
+                schemas_dir=project_root / "schemas",
+                dictionaries_dir=project_root / "dictionaries",
+                vocabulary_index_path=project_root / "vocabularies" / "index.json",
+                missing=True,
+            )
+            searched = list_dataset_families(
+                db_path=db_path,
+                raw_dir=project_root / "data" / "raw",
+                schemas_dir=project_root / "schemas",
+                dictionaries_dir=project_root / "dictionaries",
+                vocabulary_index_path=project_root / "vocabularies" / "index.json",
+                search="smart",
+                year=2025,
+                source_format="json",
+            )
+
+        self.assertEqual([item.dataset for item in downloaded.items], ["cig"])
+        self.assertNotIn("cig", [item.dataset for item in missing.items])
+        self.assertEqual([item.dataset for item in searched.items], ["smartcig"])
+        self.assertEqual(downloaded.filters, {"downloaded": True})
+        self.assertEqual(missing.filters, {"missing": True})
+        self.assertEqual(
+            searched.filters,
+            {"search": "smart", "year": 2025, "source_format": "json"},
+        )
+
+    def test_get_dataset_family_returns_detail_payload_and_remote_warning_when_live_refresh_fails(self) -> None:
+        """@notice Keep local and registry detail visible when live CKAN metadata fails."""
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            project_root = Path(temp_dir)
+            db_path = project_root / "data" / "warehouse" / "anac.duckdb"
+            self._write_manifest(
+                project_root,
+                DownloadManifest(
+                    dataset_id="cig-2025",
+                    resource_id="demo-id",
+                    resource_name="cig_csv_2025_01",
+                    resource_format="csv",
+                    resource_url="https://example.invalid/cig_csv_2025_01.zip",
+                    transport="playwright",
+                    archive_path="data/raw/cig-2025/cig_csv_2025_01/cig_csv_2025_01.zip",
+                    materialized_path="data/raw/cig-2025/cig_csv_2025_01/extracted/cig_csv_2025_01.csv",
+                    materialized_kind="csv",
+                    cache_status="fresh",
+                    resume_supported=False,
+                    downloaded_at="2026-05-19T12:00:00",
+                ),
+            )
+            client = Mock()
+            client.package_show.side_effect = CkanClientError("blocked or filtered by WAF")
+
+            result = get_dataset_family(
+                "cig",
+                db_path=db_path,
+                raw_dir=project_root / "data" / "raw",
+                schemas_dir=project_root / "schemas",
+                dictionaries_dir=project_root / "dictionaries",
+                vocabulary_index_path=project_root / "vocabularies" / "index.json",
+                client=client,
+            )
+
+        payload = result.to_dict()
+        self.assertEqual(payload["dataset"], "cig")
+        self.assertEqual(payload["title"], "CIG")
+        self.assertEqual(payload["category"], "procurement")
+        self.assertEqual(payload["coverage_kind"], "periodic_monthly")
+        self.assertEqual(payload["local_status"], "raw")
+        self.assertEqual(payload["query_view_name"], "cig")
+        self.assertTrue(payload["update_supported"])
+        self.assertTrue(payload["dictionary_available"])
+        self.assertEqual(payload["vocabulary_views"], [])
+        self.assertEqual(payload["remote_coverage"]["status"], "registry")
+        self.assertEqual(result.warnings[0].code, "REMOTE_METADATA_UNAVAILABLE")
+        self.assertEqual(result.warnings[0].details["dataset"], "cig")
+
+    def test_get_dataset_family_uses_live_remote_metadata_when_available(self) -> None:
+        """@notice Enrich detail mode with live package metadata when CKAN access works."""
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            project_root = Path(temp_dir)
+            db_path = project_root / "data" / "warehouse" / "anac.duckdb"
+            client = Mock()
+            client.package_show.return_value = CkanPackage(
+                id="demo-package",
+                name="stazioni-appaltanti",
+                title="Stazioni appaltanti",
+                notes="Snapshot registry",
+                resources=[
+                    CkanResource(
+                        id="resource-1",
+                        name="stazioni_appaltanti_csv",
+                        format="CSV",
+                        url="https://example.invalid/stazioni.csv",
+                        last_modified="2026-05-19T10:00:00",
+                    )
+                ],
+            )
+
+            result = get_dataset_family(
+                "stazioni-appaltanti",
+                db_path=db_path,
+                raw_dir=project_root / "data" / "raw",
+                schemas_dir=project_root / "schemas",
+                dictionaries_dir=project_root / "dictionaries",
+                vocabulary_index_path=project_root / "vocabularies" / "index.json",
+                client=client,
+            )
+
+        self.assertEqual(result.warnings, [])
+        self.assertEqual(result.to_dict()["remote_coverage"]["status"], "live")
+        self.assertEqual(result.to_dict()["remote_coverage"]["packages"][0]["resource_count"], 1)
+
+    def test_get_dataset_family_raises_stable_not_found_for_unknown_family(self) -> None:
+        """@notice Surface DATASET_NOT_FOUND when detail mode targets an unknown logical family."""
+
+        with self.assertRaises(CliCommandError) as context:
+            get_dataset_family("unknown-family")
+
+        self.assertEqual(context.exception.code, "DATASET_NOT_FOUND")
+
+    def _write_manifest(self, project_root: Path, manifest: DownloadManifest) -> None:
+        """@notice Persist one manifest under the expected raw-data directory layout."""
+
+        manifest_path = project_root / "data" / "raw" / manifest.dataset_id / manifest.resource_name / "manifest.json"
+        manifest_path.parent.mkdir(parents=True, exist_ok=True)
+        manifest_path.write_text(json.dumps(manifest.to_dict()), encoding="utf-8")
+
 
 if __name__ == "__main__":
     unittest.main()
-

@@ -41,6 +41,7 @@ ERROR_CATALOG: dict[str, ErrorCatalogEntry] = {
 }
 
 _NETWORK_COMMANDS = {
+    "download",
     "package-show",
     "download-cig-sample",
     "download-dataset-csv",
@@ -238,7 +239,7 @@ def _resolve_network_error(command: str, exc: Exception, *, args: object | None)
     lowered = message.casefold()
     details = {
         "command": command,
-        "dataset_id": _get_attr(args, "dataset_id"),
+        "dataset_id": _get_attr(args, "dataset_id") or _get_attr(args, "dataset"),
         "transport": _get_attr(args, "transport"),
     }
     if "playwright is not installed" in lowered:

@@ -139,6 +139,7 @@ def apply_effective_paths(
 
     command = str(getattr(args, "command", ""))
     if hasattr(args, "output_dir") and command in {
+        "download",
         "download-dataset-csv",
         "download-dataset-resource",
         "download-dataset-to-parquet",
@@ -150,6 +151,8 @@ def apply_effective_paths(
         setattr(args, "data_dir", str(paths.raw_dir))
     if hasattr(args, "schemas_dir"):
         setattr(args, "schemas_dir", str(paths.schemas_dir))
+    if hasattr(args, "dictionaries_dir"):
+        setattr(args, "dictionaries_dir", str(paths.dictionaries_dir))
     if hasattr(args, "warehouse_dir"):
         setattr(args, "warehouse_dir", str(paths.warehouse_dir))
     if hasattr(args, "vocabulary_dir"):
@@ -187,6 +190,7 @@ def resolve_effective_paths_for_args(
     command = str(getattr(args, "command", ""))
 
     if command in {
+        "download",
         "download-dataset-csv",
         "download-dataset-resource",
         "download-dataset-to-parquet",
@@ -203,6 +207,8 @@ def resolve_effective_paths_for_args(
 
     if hasattr(args, "schemas_dir"):
         cli_paths["schemas_dir"] = getattr(args, "schemas_dir", None)
+    if hasattr(args, "dictionaries_dir"):
+        cli_paths["dictionaries_dir"] = getattr(args, "dictionaries_dir", None)
     if hasattr(args, "warehouse_dir"):
         cli_paths["warehouse_dir"] = getattr(args, "warehouse_dir", None)
     if hasattr(args, "db_path"):

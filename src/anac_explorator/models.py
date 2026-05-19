@@ -417,6 +417,70 @@ class DataDictionaryArtifact:
 
 
 @dataclass(slots=True)
+class SchemaInspectionTarget:
+    """@notice Describe one resolved local schema target for the Phase 3 schema surface."""
+
+    requested: str
+    resolved: str
+    schema_path: str
+    dictionary_path: str | None = None
+
+    def to_dict(self) -> dict[str, object]:
+        """@notice Convert the resolved schema target into a serializable dictionary."""
+
+        return asdict(self)
+
+
+@dataclass(slots=True)
+class SchemaInspectionColumn:
+    """@notice Describe one schema column with optional dictionary-backed semantic metadata."""
+
+    name: str
+    ordinal_position: int
+    inferred_type: str | None
+    duckdb_type: str | None
+    nullable: bool | None
+    section: str | None = None
+    description: str | None = None
+    semantic_type: str | None = None
+    value_pattern: str | None = None
+    paired_field: str | None = None
+    code_meaning_status: str | None = None
+    external_vocabulary_status: str | None = None
+    vocabulary_dataset_id: str | None = None
+    vocabulary_table: str | None = None
+
+    def to_dict(self) -> dict[str, object]:
+        """@notice Convert the schema column into a serializable dictionary."""
+
+        return asdict(self)
+
+
+@dataclass(slots=True)
+class SchemaInspectionResult:
+    """@notice Capture the artifact-driven schema inspection result for one dataset family."""
+
+    dataset: str
+    mode: str
+    target: SchemaInspectionTarget | None
+    columns: list[SchemaInspectionColumn] = field(default_factory=list)
+    diff: dict[str, object] | None = None
+    ddl: str | None = None
+
+    def to_dict(self) -> dict[str, object]:
+        """@notice Convert the schema inspection result into a serializable dictionary."""
+
+        return {
+            "dataset": self.dataset,
+            "mode": self.mode,
+            "target": None if self.target is None else self.target.to_dict(),
+            "columns": [column.to_dict() for column in self.columns],
+            "diff": self.diff,
+            "ddl": self.ddl,
+        }
+
+
+@dataclass(slots=True)
 class DownloadManifest:
     """@notice Persist cache and resume metadata for one downloaded resource.
 
@@ -859,6 +923,88 @@ class WarehouseCrosswalkRegistrationResult:
             "vocabulary_index_path": self.vocabulary_index_path,
             "status": self.status,
             "registered_views": [view.to_dict() for view in self.registered_views],
+        }
+
+
+@dataclass(slots=True)
+class DownloadPlanItem:
+    """@notice Describe one planned download action for a resolved resource slice.
+
+    @param slice Canonical CLI slice in `YYYY-MM` form when the family is temporal.
+    @param dataset_id CKAN dataset slug that owns the selected remote resource.
+    @param resource_name CKAN resource name that will be used for download.
+    @param source_format Selected remote source format such as `csv` or `json`.
+    @param action Planned high-level action for the slice.
+    @param reason Short explanation of why this action was selected.
+    """
+
+    slice: str | None
+    dataset_id: str
+    resource_name: str
+    source_format: str
+    action: str
+    reason: str
+
+    def to_dict(self) -> dict[str, object]:
+        """@notice Convert the planned download item into a serializable dictionary."""
+
+        return asdict(self)
+
+
+@dataclass(slots=True)
+class DownloadPlan:
+    """@notice Capture the reusable plan shared by dry-run and real download execution.
+
+    @param dataset Stable logical dataset family requested by the user.
+    @param output_format Local persistence mode such as `raw`, `parquet`, or `both`.
+    @param requested_scope Normalized scope and option payload that produced the plan.
+    @param normalized_slices Canonical CLI slices covered by the resolved plan.
+    @param resolved_dataset_ids CKAN dataset identifiers that will be queried or downloaded.
+    @param resolved_resource_names CKAN resource names selected by the planner.
+    @param plan Planned actions for the selected slices or resources.
+    """
+
+    dataset: str
+    output_format: str
+    requested_scope: dict[str, object]
+    normalized_slices: list[str] = field(default_factory=list)
+    resolved_dataset_ids: list[str] = field(default_factory=list)
+    resolved_resource_names: list[str] = field(default_factory=list)
+    plan: list[DownloadPlanItem] = field(default_factory=list)
+
+    def to_dict(self) -> dict[str, object]:
+        """@notice Convert the download plan into a serializable dictionary."""
+
+        return {
+            "dataset": self.dataset,
+            "output_format": self.output_format,
+            "selection": _to_json_compatible(self.requested_scope),
+            "normalized_slices": self.normalized_slices,
+            "resolved_dataset_ids": self.resolved_dataset_ids,
+            "resolved_resource_names": self.resolved_resource_names,
+            "plan": [item.to_dict() for item in self.plan],
+        }
+
+
+@dataclass(slots=True)
+class DownloadCommandResult:
+    """@notice Capture the normalized Phase 3 `download` command result payload."""
+
+    requested_selection: dict[str, object]
+    resolved_plan: DownloadPlan
+    applied_actions: list[DownloadedResourceArtifact | DatasetParquetDownloadResult] = field(default_factory=list)
+    validation_result: WarehouseIntegrityReport | None = None
+    dry_run: bool = False
+
+    def to_dict(self) -> dict[str, object]:
+        """@notice Convert the normalized `download` payload into a serializable mapping."""
+
+        return {
+            "requested_selection": _to_json_compatible(self.requested_selection),
+            "resolved_plan": self.resolved_plan.to_dict(),
+            "applied_actions": [action.to_dict() for action in self.applied_actions],
+            "validation_result": None if self.validation_result is None else self.validation_result.to_dict(),
+            "dry_run": self.dry_run,
         }
 
 

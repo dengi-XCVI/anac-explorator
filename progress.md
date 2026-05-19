@@ -1,7 +1,7 @@
 # Progress
 
 ## Current phase
-- Phase 3: CLI contract foundations
+- Phase 3: command implementation workstreams
 
 ## Current status
 - Bootstrap implementation complete:
@@ -181,6 +181,46 @@
   - `run_local_query(...)` now bootstraps the metadata views before execution so `SELECT * FROM anac_datasets` works in normal query sessions without persistent metadata state
   - unknown-relation recovery hints now see the ephemeral `anac_*` views during query error reporting while excluding internal temp staging tables
   - tests now cover on-demand recomputation, end-to-end querying of `anac_datasets`, and the updated relation-hint behavior
+- Phase 7 command implementation step 7.1 completed:
+  - new `datasets` CLI parser and handler now expose logical dataset discovery in list and single-family detail modes
+  - `src/anac_explorator/catalog.py` now merges registry metadata with on-demand `anac_*` local metadata plus optional live CKAN package refresh for detail mode
+  - list mode now supports normalized `--search`, `--downloaded`, `--missing`, `--year`, and `--source-format` filtering, while detail mode returns the required Phase 3 fields with stable JSON envelopes
+  - remote metadata failures in detail mode now degrade to structured warnings when local or registry metadata is still available instead of hiding the dataset entry
+  - tests now cover parser acceptance, filter behavior, detail payload shape, missing-family errors, table rendering, and remote-warning fallback behavior
+- Phase 7 command implementation step 7.2 steps 1-2 completed:
+  - `src/anac_explorator/models.py` now exposes `DownloadPlan` and `DownloadPlanItem` so dry-run and real execution can share one normalized planning structure
+  - dataset family adapters now own download planning concerns including output-mode validation, source-format normalization, temporal-flag validation, and remote resource resolution
+  - the registry now exposes a planning entrypoint for `cig`-style periodized families and snapshot families without touching the CLI or executing downloads yet
+  - monthly CIG planning now resolves canonical slices into CKAN dataset ids and matching `cig_csv_*` / `cig_json_*` resources, while snapshot families reject temporal selectors explicitly
+  - unit tests now cover CIG plan generation, latest-slice selection, snapshot validation, unsupported source formats, and warehouse-load capability checks
+- Phase 7 command implementation step 7.2 steps 3-5 completed:
+  - the new execution engine now consumes `DownloadPlan` objects and dispatches each planned action through the existing low-level download and direct-to-Parquet helpers instead of reimplementing workflow logic
+  - `raw` mode now stays on the manifest-backed download path only, while `parquet` and `both` modes reuse the existing download -> schema -> Parquet load workflow with clean force-flag passthrough
+  - `parquet` mode now prunes the raw working file after successful conversion by reusing the lower-level `keep_materialized=False` behavior, while `both` mode preserves the raw file with `keep_materialized=True`
+  - execution continues to inherit cache reuse from the existing low-level helpers unless `force_download` or `force_load` is requested explicitly
+  - tests now cover raw-only execution, Parquet cleanup, both-mode preservation, and force-flag forwarding
+- Phase 7 download cache refinement completed:
+  - cross-format execution now reuses existing raw artifacts to add only the missing Parquet output for `parquet` and `both` requests instead of redownloading the source resource
+  - Parquet-only execution can now reuse an existing warehouse slice directly when the raw working file is missing but the cached load is still valid
+  - regression tests now cover raw -> parquet reuse, raw -> both reuse, and cached-parquet reuse after the raw file disappears
+- Phase 7 command implementation step 7.2 step 6 completed:
+  - new Phase 3 `download` CLI surface now resolves logical dataset-family requests, shared temporal selectors, source-format choices, and output-format modes through the shared planner and execution engine
+  - the handler now returns one normalized result payload with `requested_selection`, `resolved_plan`, `applied_actions`, and optional `validation_result`, so dry-run and real execution share the same JSON envelope shape
+  - dry-run now emits the exact monthly CIG plan without mutating local state, while unavailable source formats return the stable `DATASET_NOT_SUPPORTED` error through the new CLI surface
+  - CLI coverage now includes parser acceptance for `download` plus integration tests for monthly CIG dry-run and source-format-unavailable failures
+- Phase 7 command implementation step 7.3 backend steps 2, 3, 4, and 7 completed:
+  - new `src/anac_explorator/schema_service.py` resolves local schema artifacts by logical family in canonical mode and targeted `YYYY` / `YYYY-MM` mode without performing implicit downloads
+  - year targets now fall back deterministically to the first available monthly schema in that year when only slice-level artifacts exist, while missing local artifacts raise the stable `SCHEMA_NOT_AVAILABLE` error
+  - describe-mode enrichment now joins raw schema columns with local dictionary metadata so semantic fields such as descriptions, semantic types, paired fields, code-meaning status, and vocabulary references are available through one backend result object
+  - tests now cover semantic describe enrichment, year-target resolution, and stable missing-schema failures
+- Phase 7 command implementation step 7.3 backend steps 5-6 completed:
+  - the schema backend now exposes a DDL helper that resolves the family query view and reads the raw SQL definition through the `anac_registered_views` metadata view, which now carries `view_sql`
+  - schema diff mode now reuses the existing `compare_schema_mappings(...)` utility instead of inventing a second drift-detection path, and returns left/right resolved targets alongside the shared comparison payload
+  - tests now cover valid DDL SQL retrieval through metadata views and diff-mode comparison between two schema targets
+- Phase 7 command implementation step 7.3 step 1 completed:
+  - `cli.py` now exposes the Phase 3 `schema` command, wires canonical/targeted inspection, DDL mode, and diff mode to the shared schema backend helpers, and keeps artifact-driven schema output as the default when no mode flags are passed
+  - parser handling now makes `--describe`, `--ddl`, and `--diff LEFT RIGHT` mutually exclusive, while the handler rejects ambiguous temporal combinations for DDL and diff mode and normalizes single-target year / slice requests through the shared temporal parser
+  - schema CLI results now flow through the centralized Phase 3 envelope, and CLI coverage now includes parser acceptance, conflicting-mode rejection, and canonical schema JSON output
 
 ## Planned milestones
 1. Expand the local query surface carefully without over-materializing data

@@ -1,19 +1,35 @@
-"""@notice Explicit dataset-family registry and adapter dispatch helpers."""
+"""@notice Explicit dataset-family registry, catalog discovery, and adapter dispatch helpers."""
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+import json
+import re
+from dataclasses import dataclass, field, replace
+from pathlib import Path
 from typing import TYPE_CHECKING, Iterable, Sequence
 
+import duckdb
+
+from anac_explorator.ckan import CkanClientError
 from anac_explorator.errors import CliCommandError
-from anac_explorator.loader import download_dataset_to_parquet, sync_cig_periods_to_parquet
-from anac_explorator.models import DatasetIncrementalUpdateResult, WarehouseLoadResult
-from anac_explorator.selection import TemporalSelection
+from anac_explorator.loader import download_dataset_to_parquet, load_downloaded_resource, sync_cig_periods_to_parquet
+from anac_explorator.metadata_views import ensure_metadata_views
+from anac_explorator.models import (
+    CommandWarning,
+    CkanResource,
+    DatasetIncrementalUpdateResult,
+    DatasetParquetDownloadResult,
+    DownloadManifest,
+    DownloadPlan,
+    DownloadPlanItem,
+    DownloadedResourceArtifact,
+    WarehouseLoadResult,
+)
+from anac_explorator.sample import SampleDownloadError, download_dataset_resource, select_resource
+from anac_explorator.selection import TemporalSelection, select_available_slices
 from anac_explorator.vocabulary import VOCABULARY_DATASET_CONFIGS
 
 if TYPE_CHECKING:
-    from pathlib import Path
-
     from anac_explorator.ckan import CkanClient
 
 
@@ -76,6 +92,16 @@ class DatasetFamilyDefinition:
         }
 
 
+@dataclass(frozen=True, slots=True)
+class _ResolvedRemoteResource:
+    """@notice Capture one remote resource selected by a family adapter."""
+
+    slice: str | None
+    dataset_id: str
+    resource: CkanResource
+    source_format: str
+
+
 class DatasetFamilyAdapter:
     """@notice Base adapter that resolves CKAN ids and optional family operations."""
 
@@ -86,6 +112,9 @@ class DatasetFamilyAdapter:
         coverage_kind: str,
         remote_first_year: int | None = None,
         remote_last_year: int | None = None,
+        default_source_format: str = "csv",
+        warehouse_load_supported: bool = False,
+        update_supported: bool = False,
     ) -> None:
         """@notice Initialize the shared adapter metadata."""
 
@@ -93,9 +122,91 @@ class DatasetFamilyAdapter:
         self.coverage_kind = coverage_kind
         self.remote_first_year = remote_first_year
         self.remote_last_year = remote_last_year
+        self.default_source_format = default_source_format.casefold()
+        self.warehouse_load_supported = warehouse_load_supported
+        self.update_supported = update_supported
 
     def resolve_remote_dataset_ids(self, selection: TemporalSelection | None = None) -> list[str]:
         """@notice Resolve the logical family to one or more CKAN dataset ids."""
+
+        raise NotImplementedError
+
+    def plan_download(
+        self,
+        client: "CkanClient",
+        *,
+        selection: TemporalSelection | None = None,
+        preferred_resource_name: str | None = None,
+        source_format: str = "auto",
+        output_format: str = "parquet",
+    ) -> DownloadPlan:
+        """@notice Build the reusable download plan for one logical family request."""
+
+        normalized_selection = TemporalSelection(mode="all") if selection is None else selection
+        normalized_output_format = output_format.casefold()
+        if normalized_output_format not in {"raw", "parquet", "both"}:
+            raise ValueError(f"Unsupported output format {output_format!r}.")
+        if normalized_output_format in {"parquet", "both"} and not self.warehouse_load_supported:
+            raise CliCommandError(
+                "DATASET_NOT_SUPPORTED",
+                f"Dataset family {self.family!r} does not support warehouse loading for output format {normalized_output_format!r}.",
+                details={
+                    "dataset": self.family,
+                    "output_format": normalized_output_format,
+                },
+            )
+
+        resolved_source_format = self._resolve_requested_source_format(source_format)
+        resources = self.resolve_remote_resources(
+            client,
+            selection=normalized_selection,
+            preferred_resource_name=preferred_resource_name,
+            source_format=resolved_source_format,
+        )
+        normalized_slices = sorted({resource.slice for resource in resources if resource.slice is not None})
+        resolved_dataset_ids = list(dict.fromkeys(resource.dataset_id for resource in resources))
+        resolved_resource_names = list(dict.fromkeys(resource.resource.name for resource in resources))
+        action = self._planned_action_for_output_format(normalized_output_format)
+        reason = f"output_format_{normalized_output_format}"
+        return DownloadPlan(
+            dataset=self.family,
+            output_format=normalized_output_format,
+            requested_scope={
+                "selection_mode": normalized_selection.mode,
+                "requested_slices": list(normalized_selection.slices),
+                "requested_years": list(normalized_selection.years),
+                "requested_months": list(normalized_selection.months),
+                "start_slice": normalized_selection.start_slice,
+                "end_slice": normalized_selection.end_slice,
+                "resource_name": preferred_resource_name,
+                "source_format": source_format.casefold(),
+                "resolved_source_format": resolved_source_format,
+            },
+            normalized_slices=normalized_slices,
+            resolved_dataset_ids=resolved_dataset_ids,
+            resolved_resource_names=resolved_resource_names,
+            plan=[
+                DownloadPlanItem(
+                    slice=resource.slice,
+                    dataset_id=resource.dataset_id,
+                    resource_name=resource.resource.name,
+                    source_format=resource.source_format,
+                    action=action,
+                    reason=reason,
+                )
+                for resource in resources
+            ],
+        )
+
+    def resolve_remote_resources(
+        self,
+        client: "CkanClient",
+        *,
+        selection: TemporalSelection,
+        preferred_resource_name: str | None,
+        source_format: str,
+    ) -> list[_ResolvedRemoteResource]:
+        """@notice Resolve the exact remote resources that satisfy one download request."""
 
         raise NotImplementedError
 
@@ -156,11 +267,42 @@ class DatasetFamilyAdapter:
             details={"dataset": self.family},
         )
 
+    def _resolve_requested_source_format(self, source_format: str) -> str:
+        """@notice Normalize `auto|csv|json` into one concrete remote source format."""
+
+        normalized_source_format = source_format.casefold()
+        if normalized_source_format not in {"auto", "csv", "json"}:
+            raise ValueError(f"Unsupported source format {source_format!r}.")
+        if normalized_source_format == "auto":
+            return self.default_source_format
+        return normalized_source_format
+
+    @staticmethod
+    def _planned_action_for_output_format(output_format: str) -> str:
+        """@notice Derive the planned action token from the requested output format."""
+
+        if output_format == "raw":
+            return "download"
+        if output_format == "parquet":
+            return "download_and_load"
+        return "download_and_load_keep_raw"
+
 
 class PeriodizedDatasetFamilyAdapter(DatasetFamilyAdapter):
     """@notice Resolve one monthly family whose CKAN ids follow `<prefix>-<year>`."""
 
-    def __init__(self, *, family: str, dataset_prefix: str, first_year: int, last_year: int) -> None:
+    def __init__(
+        self,
+        *,
+        family: str,
+        dataset_prefix: str,
+        first_year: int,
+        last_year: int,
+        supported_source_formats: Sequence[str] = ("csv",),
+        default_source_format: str = "csv",
+        warehouse_load_supported: bool = False,
+        update_supported: bool = False,
+    ) -> None:
         """@notice Initialize the periodized dataset metadata."""
 
         super().__init__(
@@ -168,14 +310,88 @@ class PeriodizedDatasetFamilyAdapter(DatasetFamilyAdapter):
             coverage_kind="periodic_monthly",
             remote_first_year=first_year,
             remote_last_year=last_year,
+            default_source_format=default_source_format,
+            warehouse_load_supported=warehouse_load_supported,
+            update_supported=update_supported,
         )
         self.dataset_prefix = dataset_prefix
+        self.supported_source_formats = tuple(value.casefold() for value in supported_source_formats)
 
     def resolve_remote_dataset_ids(self, selection: TemporalSelection | None = None) -> list[str]:
         """@notice Resolve the selected period span to yearly CKAN dataset ids."""
 
         years = self._resolve_years(selection)
         return [f"{self.dataset_prefix}-{year_value:04d}" for year_value in years]
+
+    def resolve_remote_resources(
+        self,
+        client: "CkanClient",
+        *,
+        selection: TemporalSelection,
+        preferred_resource_name: str | None,
+        source_format: str,
+    ) -> list[_ResolvedRemoteResource]:
+        """@notice Resolve one or more periodized remote resources for the selected slices."""
+
+        if source_format not in set(self.supported_source_formats):
+            raise CliCommandError(
+                "DATASET_NOT_SUPPORTED",
+                f"Dataset family {self.family!r} does not expose {source_format!r} resources.",
+                details={"dataset": self.family, "source_format": source_format},
+            )
+
+        dataset_ids = self.resolve_remote_dataset_ids(selection)
+        resolved_resources: list[_ResolvedRemoteResource] = []
+        for dataset_id in dataset_ids:
+            package = client.package_show(dataset_id)
+            resolved_resources.extend(self._extract_periodized_resources(dataset_id, package.resources, source_format))
+        if not resolved_resources:
+            raise CliCommandError(
+                "DATASET_NOT_SUPPORTED",
+                f"Dataset family {self.family!r} does not expose downloadable {source_format!r} resources.",
+                details={"dataset": self.family, "source_format": source_format},
+            )
+
+        if preferred_resource_name is not None:
+            matching_resources = [resource for resource in resolved_resources if resource.resource.name == preferred_resource_name]
+            if not matching_resources:
+                raise CliCommandError(
+                    "DATASET_NOT_SUPPORTED",
+                    f"Could not find resource {preferred_resource_name!r}.",
+                    details={"dataset": self.family, "resource_name": preferred_resource_name},
+                )
+            if selection.mode != "all":
+                try:
+                    selected_slices = set(select_available_slices(selection, [resource.slice for resource in matching_resources if resource.slice is not None]))
+                except ValueError as exc:
+                    raise CliCommandError(
+                        "TEMPORAL_SLICE_NOT_FOUND",
+                        str(exc),
+                        details={"dataset": self.family, "requested_slices": list(selection.slices)},
+                        cause=exc,
+                    ) from exc
+                matching_resources = [resource for resource in matching_resources if resource.slice in selected_slices]
+                if not matching_resources:
+                    raise CliCommandError(
+                        "TEMPORAL_SLICE_NOT_FOUND",
+                        f"Resource {preferred_resource_name!r} does not match the requested temporal selection.",
+                        details={"dataset": self.family, "resource_name": preferred_resource_name},
+                    )
+            selected_resources = matching_resources
+        else:
+            available_slices = [resource.slice for resource in resolved_resources if resource.slice is not None]
+            try:
+                selected_slices = select_available_slices(selection, available_slices)
+            except ValueError as exc:
+                raise CliCommandError(
+                    "TEMPORAL_SLICE_NOT_FOUND",
+                    str(exc),
+                    details={"dataset": self.family, "requested_slices": list(selection.slices)},
+                    cause=exc,
+                ) from exc
+            selected_resources = [resource for resource in resolved_resources if resource.slice in set(selected_slices)]
+
+        return sorted(selected_resources, key=lambda resource: ("" if resource.slice is None else resource.slice, resource.resource.name))
 
     def matches_dataset_id(self, dataset_id: str) -> bool:
         """@notice Match the dataset id prefix and validated year range."""
@@ -216,15 +432,58 @@ class PeriodizedDatasetFamilyAdapter(DatasetFamilyAdapter):
             )
         return sorted(set(explicit_years))
 
+    def _extract_periodized_resources(
+        self,
+        dataset_id: str,
+        resources: Sequence[CkanResource],
+        source_format: str,
+    ) -> list[_ResolvedRemoteResource]:
+        """@notice Extract the family's periodized resources from one CKAN package payload."""
+
+        pattern = re.compile(rf"{re.escape(self.dataset_prefix)}_{re.escape(source_format)}_(\d{{4}})_(\d{{2}})$", re.IGNORECASE)
+        resolved_resources: list[_ResolvedRemoteResource] = []
+        for resource in resources:
+            if resource.format.casefold() != source_format:
+                continue
+            match = pattern.fullmatch(resource.name.casefold())
+            if match is None:
+                continue
+            slice_value = f"{match.group(1)}-{match.group(2)}"
+            resolved_resources.append(
+                _ResolvedRemoteResource(
+                    slice=slice_value,
+                    dataset_id=dataset_id,
+                    resource=resource,
+                    source_format=source_format,
+                )
+            )
+        return resolved_resources
+
 
 class SnapshotDatasetFamilyAdapter(DatasetFamilyAdapter):
     """@notice Resolve one snapshot family that maps to exactly one CKAN dataset id."""
 
-    def __init__(self, *, family: str, dataset_id: str) -> None:
+    def __init__(
+        self,
+        *,
+        family: str,
+        dataset_id: str,
+        supported_source_formats: Sequence[str] = ("csv",),
+        default_source_format: str = "csv",
+        warehouse_load_supported: bool = False,
+        update_supported: bool = False,
+    ) -> None:
         """@notice Initialize the fixed snapshot mapping."""
 
-        super().__init__(family=family, coverage_kind="snapshot")
+        super().__init__(
+            family=family,
+            coverage_kind="snapshot",
+            default_source_format=default_source_format,
+            warehouse_load_supported=warehouse_load_supported,
+            update_supported=update_supported,
+        )
         self.dataset_id = dataset_id
+        self.supported_source_formats = tuple(value.casefold() for value in supported_source_formats)
 
     def resolve_remote_dataset_ids(self, selection: TemporalSelection | None = None) -> list[str]:
         """@notice Resolve the one snapshot dataset id and reject temporal selectors."""
@@ -236,6 +495,47 @@ class SnapshotDatasetFamilyAdapter(DatasetFamilyAdapter):
                 details={"dataset": self.family, "coverage_kind": self.coverage_kind},
             )
         return [self.dataset_id]
+
+    def resolve_remote_resources(
+        self,
+        client: "CkanClient",
+        *,
+        selection: TemporalSelection,
+        preferred_resource_name: str | None,
+        source_format: str,
+    ) -> list[_ResolvedRemoteResource]:
+        """@notice Resolve the one snapshot resource selected for download."""
+
+        self.resolve_remote_dataset_ids(selection)
+        if source_format not in set(self.supported_source_formats):
+            raise CliCommandError(
+                "DATASET_NOT_SUPPORTED",
+                f"Dataset family {self.family!r} does not expose {source_format!r} resources.",
+                details={"dataset": self.family, "source_format": source_format},
+            )
+
+        package = client.package_show(self.dataset_id)
+        try:
+            resource = select_resource(
+                package.resources,
+                preferred_name=preferred_resource_name,
+                preferred_format=source_format.upper(),
+            )
+        except SampleDownloadError as exc:
+            raise CliCommandError(
+                "DATASET_NOT_SUPPORTED",
+                str(exc),
+                details={"dataset": self.family, "source_format": source_format},
+                cause=exc,
+            ) from exc
+        return [
+            _ResolvedRemoteResource(
+                slice=None,
+                dataset_id=self.dataset_id,
+                resource=resource,
+                source_format=source_format,
+            )
+        ]
 
     def matches_dataset_id(self, dataset_id: str) -> bool:
         """@notice Match one exact snapshot dataset id."""
@@ -321,6 +621,14 @@ class CigDatasetFamilyAdapter(PeriodizedDatasetFamilyAdapter):
         )
 
 
+FamilyAdapter = DatasetFamilyAdapter
+PeriodizedAdapter = PeriodizedDatasetFamilyAdapter
+SnapshotAdapter = SnapshotDatasetFamilyAdapter
+
+
+DownloadExecutionArtifact = DownloadedResourceArtifact | DatasetParquetDownloadResult
+
+
 class DatasetFamilyRegistry:
     """@notice Hold the explicit logical-family registry used by the Phase 3 CLI."""
 
@@ -364,6 +672,26 @@ class DatasetFamilyRegistry:
 
         return self.get_family(dataset).adapter.resolve_remote_dataset_ids(selection=selection)
 
+    def plan_download(
+        self,
+        dataset: str,
+        client: "CkanClient",
+        *,
+        selection: TemporalSelection | None = None,
+        preferred_resource_name: str | None = None,
+        source_format: str = "auto",
+        output_format: str = "parquet",
+    ) -> DownloadPlan:
+        """@notice Build a reusable download plan through the family's adapter."""
+
+        return self.get_family(dataset).adapter.plan_download(
+            client,
+            selection=selection,
+            preferred_resource_name=preferred_resource_name,
+            source_format=source_format,
+            output_format=output_format,
+        )
+
     def download_to_parquet(self, dataset: str, client: "CkanClient", **kwargs: object) -> WarehouseLoadResult:
         """@notice Dispatch a direct-to-Parquet download through the family's adapter."""
 
@@ -373,6 +701,628 @@ class DatasetFamilyRegistry:
         """@notice Dispatch an incremental update through the family's adapter."""
 
         return self.get_family(dataset).adapter.update(client, **kwargs)
+
+
+def _reuse_cached_parquet_result(
+    *,
+    manifest_path: Path,
+    warehouse_root: Path,
+    delimiter: str,
+    encoding: str,
+) -> DatasetParquetDownloadResult | None:
+    """@notice Reuse an existing Parquet load when the raw working file was intentionally pruned."""
+
+    if not manifest_path.exists():
+        return None
+
+    manifest = DownloadManifest.from_dict(json.loads(manifest_path.read_text(encoding="utf-8")))
+    materialized_path = Path(manifest.materialized_path)
+    if materialized_path.exists() or manifest.archive_path is not None:
+        return None
+
+    try:
+        load_result = load_downloaded_resource(
+            manifest_path,
+            warehouse_dir=warehouse_root,
+            delimiter=delimiter,
+            encoding=encoding,
+            force_load=False,
+        )
+    except FileNotFoundError:
+        return None
+
+    if load_result.load_status != "cache_hit":
+        return None
+
+    return DatasetParquetDownloadResult(
+        dataset_id=manifest.dataset_id,
+        resource_name=manifest.resource_name,
+        manifest_path=str(manifest_path),
+        download_cache_status=manifest.cache_status,
+        schema_path=load_result.schema_path,
+        schema_generated=False,
+        removed_materialized_path=False,
+        load_result=load_result,
+    )
+
+
+def execute_download_plan(
+    plan: DownloadPlan,
+    client: "CkanClient",
+    *,
+    output_dir: str | Path = "data/raw",
+    schemas_dir: str | Path = "schemas",
+    warehouse_dir: str | Path = "data/warehouse",
+    preferred_schema_path: str | Path | None = None,
+    vocabulary_index_path: str | Path = "vocabularies/index.json",
+    delimiter: str = ";",
+    encoding: str = "utf-8-sig",
+    schema_sample_limit: int = 2_000,
+    register_crosswalks: bool = True,
+    force_download: bool = False,
+    force_load: bool = False,
+) -> list[DownloadExecutionArtifact]:
+    """@notice Execute a reusable download plan through the existing low-level helpers."""
+
+    output_root = Path(output_dir)
+    schemas_root = Path(schemas_dir)
+    warehouse_root = Path(warehouse_dir)
+    schema_path = None if preferred_schema_path is None else Path(preferred_schema_path)
+    vocabulary_index = Path(vocabulary_index_path)
+
+    applied: list[DownloadExecutionArtifact] = []
+    for plan_item in plan.plan:
+        if plan.output_format == "raw":
+            applied.append(
+                download_dataset_resource(
+                    client,
+                    dataset_id=plan_item.dataset_id,
+                    output_dir=output_root,
+                    preferred_resource_name=plan_item.resource_name,
+                    preferred_format=plan_item.source_format.upper(),
+                    force_download=force_download,
+                )
+            )
+            continue
+
+        if plan_item.source_format != "csv":
+            raise CliCommandError(
+                "DATASET_NOT_SUPPORTED",
+                f"Dataset family {plan.dataset!r} does not support Parquet loading from {plan_item.source_format!r} resources.",
+                details={
+                    "dataset": plan.dataset,
+                    "output_format": plan.output_format,
+                    "resource_name": plan_item.resource_name,
+                    "source_format": plan_item.source_format,
+                },
+            )
+
+        if plan.output_format == "parquet" and not force_download and not force_load:
+            cached_result = _reuse_cached_parquet_result(
+                manifest_path=output_root / plan_item.dataset_id / plan_item.resource_name / "manifest.json",
+                warehouse_root=warehouse_root,
+                delimiter=delimiter,
+                encoding=encoding,
+            )
+            if cached_result is not None:
+                applied.append(cached_result)
+                continue
+
+        applied.append(
+            download_dataset_to_parquet(
+                client,
+                dataset_id=plan_item.dataset_id,
+                output_dir=output_root,
+                schemas_dir=schemas_root,
+                warehouse_dir=warehouse_root,
+                preferred_resource_name=plan_item.resource_name,
+                schema_path=schema_path,
+                vocabulary_index_path=vocabulary_index,
+                delimiter=delimiter,
+                encoding=encoding,
+                schema_sample_limit=schema_sample_limit,
+                keep_materialized=plan.output_format == "both",
+                register_crosswalks=register_crosswalks,
+                force_download=force_download,
+                force_load=force_load,
+            )
+        )
+    return applied
+
+
+@dataclass(slots=True)
+class DatasetLocalCoverage:
+    """@notice Summarize the local materialization state for one logical dataset family."""
+
+    slice_count: int
+    first_slice: str | None
+    last_slice: str | None
+    resource_count: int
+    raw_resource_count: int
+    loaded_resource_count: int
+
+    def to_dict(self) -> dict[str, object]:
+        """@notice Convert the local-coverage summary into a serializable mapping."""
+
+        return {
+            "slice_count": self.slice_count,
+            "first_slice": self.first_slice,
+            "last_slice": self.last_slice,
+            "resource_count": self.resource_count,
+            "raw_resource_count": self.raw_resource_count,
+            "loaded_resource_count": self.loaded_resource_count,
+        }
+
+
+@dataclass(slots=True)
+class DatasetCatalogEntry:
+    """@notice Capture the merged local and remote discoverability state for one family."""
+
+    dataset: str
+    title: str
+    category: str
+    description: str
+    coverage_kind: str
+    available_source_formats: list[str]
+    remote_dataset_ids: list[str]
+    remote_coverage: dict[str, object]
+    local_status: str
+    local_coverage: DatasetLocalCoverage
+    query_view_name: str | None
+    update_supported: bool
+    dictionary_available: bool
+    vocabulary_views: list[str]
+    aliases: list[str] = field(default_factory=list, repr=False)
+
+    def to_dict(self, *, include_extended: bool) -> dict[str, object]:
+        """@notice Convert the merged entry into a JSON-friendly payload."""
+
+        payload: dict[str, object] = {
+            "dataset": self.dataset,
+            "title": self.title,
+            "coverage_kind": self.coverage_kind,
+            "available_source_formats": self.available_source_formats,
+            "local_status": self.local_status,
+            "update_supported": self.update_supported,
+        }
+        if include_extended:
+            payload.update(
+                {
+                    "category": self.category,
+                    "description": self.description,
+                    "remote_dataset_ids": self.remote_dataset_ids,
+                    "remote_coverage": self.remote_coverage,
+                    "local_coverage": self.local_coverage.to_dict(),
+                    "query_view_name": self.query_view_name,
+                    "dictionary_available": self.dictionary_available,
+                    "vocabulary_views": self.vocabulary_views,
+                }
+            )
+        return payload
+
+
+@dataclass(slots=True)
+class DatasetCatalogListResult:
+    """@notice Hold the filtered list-mode result for `datasets`."""
+
+    items: list[DatasetCatalogEntry]
+    filters: dict[str, object]
+    warnings: list[CommandWarning] = field(default_factory=list)
+
+    def to_dict(self, *, include_extended: bool) -> dict[str, object]:
+        """@notice Convert the list result into the documented datasets payload."""
+
+        return {
+            "items": [item.to_dict(include_extended=include_extended) for item in self.items],
+            "item_count": len(self.items),
+            "filters": self.filters,
+        }
+
+
+@dataclass(slots=True)
+class DatasetCatalogDetailResult:
+    """@notice Hold the single-family detail result for `datasets`."""
+
+    item: DatasetCatalogEntry
+    warnings: list[CommandWarning] = field(default_factory=list)
+
+    def to_dict(self) -> dict[str, object]:
+        """@notice Convert the detail result into the documented detail payload."""
+
+        return self.item.to_dict(include_extended=True)
+
+
+def list_dataset_families(
+    *,
+    db_path: str | Path = "data/warehouse/anac.duckdb",
+    raw_dir: str | Path = "data/raw",
+    schemas_dir: str | Path = "schemas",
+    dictionaries_dir: str | Path = "dictionaries",
+    vocabulary_index_path: str | Path = "vocabularies/index.json",
+    registry: DatasetFamilyRegistry | None = None,
+    search: str | None = None,
+    year: int | None = None,
+    downloaded: bool = False,
+    missing: bool = False,
+    source_format: str | None = None,
+) -> DatasetCatalogListResult:
+    """@notice List logical dataset families with normalized search and filter support."""
+
+    registry = DATASET_FAMILY_REGISTRY if registry is None else registry
+    normalized_filters = _normalize_dataset_filters(
+        search=search,
+        year=year,
+        downloaded=downloaded,
+        missing=missing,
+        source_format=source_format,
+    )
+    items = [
+        entry
+        for entry in _load_dataset_catalog_entries(
+            db_path=Path(db_path),
+            raw_dir=Path(raw_dir),
+            schemas_dir=Path(schemas_dir),
+            dictionaries_dir=Path(dictionaries_dir),
+            vocabulary_index_path=Path(vocabulary_index_path),
+            registry=registry,
+        )
+        if _matches_dataset_filters(entry, normalized_filters)
+    ]
+    return DatasetCatalogListResult(items=items, filters=normalized_filters)
+
+
+def get_dataset_family(
+    dataset: str,
+    *,
+    db_path: str | Path = "data/warehouse/anac.duckdb",
+    raw_dir: str | Path = "data/raw",
+    schemas_dir: str | Path = "schemas",
+    dictionaries_dir: str | Path = "dictionaries",
+    vocabulary_index_path: str | Path = "vocabularies/index.json",
+    registry: DatasetFamilyRegistry | None = None,
+    client: "CkanClient | None" = None,
+    search: str | None = None,
+    year: int | None = None,
+    downloaded: bool = False,
+    missing: bool = False,
+    source_format: str | None = None,
+) -> DatasetCatalogDetailResult:
+    """@notice Return one logical dataset family with the required detail-mode fields."""
+
+    registry = DATASET_FAMILY_REGISTRY if registry is None else registry
+    normalized_filters = _normalize_dataset_filters(
+        search=search,
+        year=year,
+        downloaded=downloaded,
+        missing=missing,
+        source_format=source_format,
+    )
+    family = registry.get_family(dataset)
+    entries = {
+        entry.dataset: entry
+        for entry in _load_dataset_catalog_entries(
+            db_path=Path(db_path),
+            raw_dir=Path(raw_dir),
+            schemas_dir=Path(schemas_dir),
+            dictionaries_dir=Path(dictionaries_dir),
+            vocabulary_index_path=Path(vocabulary_index_path),
+            registry=registry,
+        )
+    }
+    entry = entries.get(family.dataset)
+    if entry is None:
+        raise CliCommandError(
+            "DATASET_NOT_FOUND",
+            f"Unknown dataset family {dataset!r}.",
+            details={"dataset": dataset},
+        )
+    if not _matches_dataset_filters(entry, normalized_filters):
+        raise CliCommandError(
+            "DATASET_NOT_FOUND",
+            f"Dataset family {dataset!r} did not match the requested filters.",
+            details={"dataset": dataset, "filters": normalized_filters},
+        )
+    warnings: list[CommandWarning] = []
+    if client is not None:
+        entry, warnings = _enrich_entry_with_live_remote_metadata(entry, client)
+    return DatasetCatalogDetailResult(item=entry, warnings=warnings)
+
+
+def _normalize_dataset_filters(
+    *,
+    search: str | None,
+    year: int | None,
+    downloaded: bool,
+    missing: bool,
+    source_format: str | None,
+) -> dict[str, object]:
+    """@notice Normalize list/detail filters into one stable internal mapping."""
+
+    if downloaded and missing:
+        raise ValueError("Cannot combine --downloaded and --missing.")
+    filters: dict[str, object] = {}
+    normalized_search = None if search is None else search.strip()
+    if normalized_search:
+        filters["search"] = normalized_search.casefold()
+    if year is not None:
+        filters["year"] = int(year)
+    if downloaded:
+        filters["downloaded"] = True
+    if missing:
+        filters["missing"] = True
+    if source_format is not None:
+        filters["source_format"] = source_format.strip().casefold()
+    return filters
+
+
+def _load_dataset_catalog_entries(
+    *,
+    db_path: Path,
+    raw_dir: Path,
+    schemas_dir: Path,
+    dictionaries_dir: Path,
+    vocabulary_index_path: Path,
+    registry: DatasetFamilyRegistry,
+) -> list[DatasetCatalogEntry]:
+    """@notice Load merged catalog entries by querying the on-demand metadata views."""
+
+    connection = _open_catalog_connection(db_path)
+    try:
+        ensure_metadata_views(
+            connection,
+            db_path=db_path,
+            raw_dir=raw_dir,
+            schemas_dir=schemas_dir,
+            dictionaries_dir=dictionaries_dir,
+            vocabulary_index_path=vocabulary_index_path,
+            registry=registry,
+        )
+        dataset_rows = _fetch_relation_rows(connection, "SELECT * FROM anac_datasets ORDER BY dataset")
+        resource_rows = _fetch_relation_rows(
+            connection,
+            "SELECT dataset, local_status FROM anac_dataset_resources ORDER BY dataset, dataset_id, resource_name",
+        )
+        dictionary_rows = _fetch_relation_rows(
+            connection,
+            """
+            SELECT dataset, vocabulary_table
+            FROM anac_dictionary_fields
+            WHERE vocabulary_table IS NOT NULL AND vocabulary_table <> ''
+            ORDER BY dataset, vocabulary_table
+            """,
+        )
+    finally:
+        connection.close()
+
+    resource_status_counts: dict[str, dict[str, int]] = {}
+    for row in resource_rows:
+        dataset = str(row["dataset"])
+        status = str(row["local_status"]).casefold()
+        resource_status_counts.setdefault(dataset, {})
+        resource_status_counts[dataset][status] = resource_status_counts[dataset].get(status, 0) + 1
+
+    vocabulary_views_by_dataset: dict[str, list[str]] = {}
+    for row in dictionary_rows:
+        dataset = str(row["dataset"])
+        vocabulary_table = str(row["vocabulary_table"])
+        if vocabulary_table not in vocabulary_views_by_dataset.setdefault(dataset, []):
+            vocabulary_views_by_dataset[dataset].append(vocabulary_table)
+
+    entries: list[DatasetCatalogEntry] = []
+    for row in dataset_rows:
+        dataset = str(row["dataset"])
+        available_source_formats = _decode_json_text_list(row["available_source_formats"])
+        remote_dataset_ids = _decode_json_text_list(row["remote_dataset_ids"])
+        local_coverage = DatasetLocalCoverage(
+            slice_count=int(row["local_slice_count"]),
+            first_slice=_nullable_text(row["local_first_slice"]),
+            last_slice=_nullable_text(row["local_last_slice"]),
+            resource_count=sum(resource_status_counts.get(dataset, {}).values()),
+            raw_resource_count=resource_status_counts.get(dataset, {}).get("raw", 0),
+            loaded_resource_count=resource_status_counts.get(dataset, {}).get("loaded", 0),
+        )
+        query_view_name = _nullable_text(row["query_view_name"])
+        aliases = [dataset, *remote_dataset_ids]
+        if query_view_name is not None:
+            aliases.append(query_view_name)
+        entries.append(
+            DatasetCatalogEntry(
+                dataset=dataset,
+                title=str(row["title"]),
+                category=str(row["category"]),
+                description=str(row["description"]),
+                coverage_kind=str(row["coverage_kind"]),
+                available_source_formats=sorted({value.casefold() for value in available_source_formats}),
+                remote_dataset_ids=remote_dataset_ids,
+                remote_coverage={
+                    "status": "registry",
+                    "dataset_ids": remote_dataset_ids,
+                    "dataset_count": len(remote_dataset_ids),
+                    "first_year": row["remote_first_year"],
+                    "last_year": row["remote_last_year"],
+                    "source_formats": sorted({value.casefold() for value in available_source_formats}),
+                },
+                local_status=_derive_family_local_status(local_coverage),
+                local_coverage=local_coverage,
+                query_view_name=query_view_name,
+                update_supported=bool(row["update_supported"]),
+                dictionary_available=bool(row["dictionary_available"]),
+                vocabulary_views=sorted(vocabulary_views_by_dataset.get(dataset, [])),
+                aliases=sorted({alias.casefold() for alias in aliases if alias}),
+            )
+        )
+    return entries
+
+
+def _enrich_entry_with_live_remote_metadata(
+    entry: DatasetCatalogEntry,
+    client: "CkanClient",
+) -> tuple[DatasetCatalogEntry, list[CommandWarning]]:
+    """@notice Attempt a live CKAN refresh for detail mode without losing local fallback state."""
+
+    live_formats = set(entry.available_source_formats)
+    packages: list[dict[str, object]] = []
+    failures: list[dict[str, str]] = []
+    for dataset_id in entry.remote_dataset_ids:
+        try:
+            package = client.package_show(dataset_id)
+        except CkanClientError as exc:
+            failures.append({"dataset_id": dataset_id, "message": str(exc)})
+            continue
+        package_formats = sorted(
+            {
+                resource.format.strip().casefold()
+                for resource in package.resources
+                if resource.format.strip()
+            }
+        )
+        live_formats.update(package_formats)
+        packages.append(
+            {
+                "dataset_id": dataset_id,
+                "name": package.name,
+                "title": package.title,
+                "resource_count": len(package.resources),
+                "source_formats": package_formats,
+                "latest_resource_modified": max(
+                    (resource.last_modified for resource in package.resources if resource.last_modified),
+                    default=None,
+                ),
+            }
+        )
+
+    if not failures:
+        return (
+            replace(
+                entry,
+                available_source_formats=sorted(live_formats),
+                remote_coverage={
+                    **entry.remote_coverage,
+                    "status": "live",
+                    "source_formats": sorted(live_formats),
+                    "packages": packages,
+                },
+            ),
+            [],
+        )
+
+    warning = CommandWarning(
+        code="REMOTE_METADATA_UNAVAILABLE",
+        message=f"Remote metadata refresh failed for dataset family {entry.dataset!r}; returning registry and local metadata.",
+        details={
+            "dataset": entry.dataset,
+            "failed_dataset_ids": [failure["dataset_id"] for failure in failures],
+            "failure_count": len(failures),
+            "reason": failures[0]["message"],
+        },
+    )
+    remote_status = "partial" if packages else "registry"
+    enriched_packages: list[dict[str, object]] = packages if packages else []
+    return (
+        replace(
+            entry,
+            available_source_formats=sorted(live_formats),
+            remote_coverage={
+                **entry.remote_coverage,
+                "status": remote_status,
+                "source_formats": sorted(live_formats),
+                "packages": enriched_packages,
+            },
+        ),
+        [warning],
+    )
+
+
+def _matches_dataset_filters(entry: DatasetCatalogEntry, filters: dict[str, object]) -> bool:
+    """@notice Apply the normalized list/detail filters to one merged catalog entry."""
+
+    search = filters.get("search")
+    if isinstance(search, str) and search not in _catalog_search_haystack(entry):
+        return False
+    if filters.get("downloaded") is True and entry.local_status == "missing":
+        return False
+    if filters.get("missing") is True and entry.local_status != "missing":
+        return False
+    year = filters.get("year")
+    if isinstance(year, int) and not _entry_has_remote_year(entry, year):
+        return False
+    source_format = filters.get("source_format")
+    if isinstance(source_format, str) and source_format not in set(entry.available_source_formats):
+        return False
+    return True
+
+
+def _catalog_search_haystack(entry: DatasetCatalogEntry) -> str:
+    """@notice Build the normalized free-text haystack used by `--search`."""
+
+    return " ".join(
+        [
+            entry.dataset.casefold(),
+            entry.title.casefold(),
+            entry.description.casefold(),
+            *entry.aliases,
+        ]
+    )
+
+
+def _entry_has_remote_year(entry: DatasetCatalogEntry, year: int) -> bool:
+    """@notice Report whether one dataset family advertises remote coverage for a year."""
+
+    first_year = entry.remote_coverage.get("first_year")
+    last_year = entry.remote_coverage.get("last_year")
+    if isinstance(first_year, int) and isinstance(last_year, int):
+        return first_year <= year <= last_year
+    return False
+
+
+def _derive_family_local_status(local_coverage: DatasetLocalCoverage) -> str:
+    """@notice Collapse detailed local counts into the documented family-local status."""
+
+    if local_coverage.loaded_resource_count > 0 or local_coverage.slice_count > 0:
+        return "loaded"
+    if local_coverage.raw_resource_count > 0:
+        return "raw"
+    return "missing"
+
+
+def _open_catalog_connection(db_path: Path) -> duckdb.DuckDBPyConnection:
+    """@notice Open a read-only warehouse connection or an in-memory fallback when absent."""
+
+    if db_path.exists():
+        return duckdb.connect(str(db_path), read_only=True)
+    return duckdb.connect(":memory:")
+
+
+def _fetch_relation_rows(connection: duckdb.DuckDBPyConnection, sql: str) -> list[dict[str, object]]:
+    """@notice Execute one metadata query and return dictionary-shaped rows."""
+
+    cursor = connection.execute(sql)
+    column_names = [column[0] for column in cursor.description]
+    return [
+        {column_name: row[index] for index, column_name in enumerate(column_names)}
+        for row in cursor.fetchall()
+    ]
+
+
+def _decode_json_text_list(value: object) -> list[str]:
+    """@notice Decode the JSON-text array representation used by metadata temp views."""
+
+    if value in (None, ""):
+        return []
+    if isinstance(value, list):
+        return [str(item) for item in value]
+    decoded = json.loads(str(value))
+    if not isinstance(decoded, list):
+        return []
+    return [str(item) for item in decoded]
+
+
+def _nullable_text(value: object) -> str | None:
+    """@notice Normalize nullable text columns from metadata-view rows."""
+
+    if value in (None, ""):
+        return None
+    return str(value)
 
 
 def _build_dataset_family_registry() -> DatasetFamilyRegistry:
@@ -389,7 +1339,16 @@ def _build_dataset_family_registry() -> DatasetFamilyRegistry:
             query_view_name="cig",
             update_supported=True,
             dictionary_available=True,
-            adapter=CigDatasetFamilyAdapter(family="cig", dataset_prefix="cig", first_year=2007, last_year=2025),
+            adapter=CigDatasetFamilyAdapter(
+                family="cig",
+                dataset_prefix="cig",
+                first_year=2007,
+                last_year=2025,
+                supported_source_formats=("csv", "json"),
+                default_source_format="csv",
+                warehouse_load_supported=True,
+                update_supported=True,
+            ),
         ),
         DatasetFamilyDefinition(
             dataset="smartcig",
@@ -401,7 +1360,14 @@ def _build_dataset_family_registry() -> DatasetFamilyRegistry:
             query_view_name="smartcig",
             update_supported=False,
             dictionary_available=False,
-            adapter=PeriodizedDatasetFamilyAdapter(family="smartcig", dataset_prefix="smartcig", first_year=2011, last_year=2025),
+            adapter=PeriodizedDatasetFamilyAdapter(
+                family="smartcig",
+                dataset_prefix="smartcig",
+                first_year=2011,
+                last_year=2025,
+                supported_source_formats=("csv", "json"),
+                default_source_format="csv",
+            ),
         ),
         DatasetFamilyDefinition(
             dataset="stazioni-appaltanti",
@@ -413,7 +1379,12 @@ def _build_dataset_family_registry() -> DatasetFamilyRegistry:
             query_view_name="stazioni_appaltanti",
             update_supported=False,
             dictionary_available=False,
-            adapter=SnapshotDatasetFamilyAdapter(family="stazioni-appaltanti", dataset_id="stazioni-appaltanti"),
+            adapter=SnapshotDatasetFamilyAdapter(
+                family="stazioni-appaltanti",
+                dataset_id="stazioni-appaltanti",
+                supported_source_formats=("csv",),
+                default_source_format="csv",
+            ),
         ),
         DatasetFamilyDefinition(
             dataset="aggiudicatari",
@@ -425,7 +1396,12 @@ def _build_dataset_family_registry() -> DatasetFamilyRegistry:
             query_view_name="aggiudicatari",
             update_supported=False,
             dictionary_available=False,
-            adapter=SnapshotDatasetFamilyAdapter(family="aggiudicatari", dataset_id="aggiudicatari"),
+            adapter=SnapshotDatasetFamilyAdapter(
+                family="aggiudicatari",
+                dataset_id="aggiudicatari",
+                supported_source_formats=("csv",),
+                default_source_format="csv",
+            ),
         ),
     ]
 
@@ -441,7 +1417,12 @@ def _build_dataset_family_registry() -> DatasetFamilyRegistry:
                 query_view_name=config.tables[0].name if config.tables else None,
                 update_supported=False,
                 dictionary_available=False,
-                adapter=SnapshotDatasetFamilyAdapter(family=dataset_id, dataset_id=dataset_id),
+                adapter=SnapshotDatasetFamilyAdapter(
+                    family=dataset_id,
+                    dataset_id=dataset_id,
+                    supported_source_formats=("csv",),
+                    default_source_format="csv",
+                ),
             )
         )
 
@@ -463,4 +1444,3 @@ def _slug_to_title(value: str) -> str:
 
 
 DATASET_FAMILY_REGISTRY = _build_dataset_family_registry()
-

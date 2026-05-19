@@ -92,6 +92,7 @@ _METADATA_VIEW_SCHEMAS: dict[str, list[tuple[str, str]]] = {
         ("parquet_root", "VARCHAR"),
         ("parquet_file_count", "BIGINT"),
         ("updated_at", "VARCHAR"),
+        ("view_sql", "VARCHAR"),
     ],
     "anac_loaded_resources": [
         ("manifest_path", "VARCHAR"),
@@ -351,6 +352,7 @@ class AnacRegisteredViewsRow:
     parquet_root: str
     parquet_file_count: int
     updated_at: str | None
+    view_sql: str
 
     def to_dict(self) -> dict[str, object]:
         """@notice Convert the row into a serializable dictionary."""
@@ -643,6 +645,7 @@ def build_registered_views_rows(
             parquet_root=load_result.parquet_root,
             parquet_file_count=max(load_result.registered_parquet_files, 1),
             updated_at=updated_lookup.get(load_result.view_name),
+            view_sql=load_result.view_sql,
         )
     return sorted(rows_by_view.values(), key=lambda row: row.view_name)
 
@@ -1185,7 +1188,7 @@ def _load_registered_views_catalog_rows(
         return []
     rows = connection.execute(
         """
-        SELECT view_name, table_name, parquet_root, parquet_file_count, updated_at
+        SELECT view_name, table_name, parquet_root, parquet_file_count, updated_at, view_sql
         FROM registered_views
         ORDER BY view_name
         """
@@ -1197,8 +1200,9 @@ def _load_registered_views_catalog_rows(
             parquet_root=str(parquet_root_value),
             parquet_file_count=int(parquet_file_count_value),
             updated_at=None if updated_at_value in (None, "") else str(updated_at_value),
+            view_sql=str(view_sql_value),
         )
-        for view_name_value, table_name_value, parquet_root_value, parquet_file_count_value, updated_at_value in rows
+        for view_name_value, table_name_value, parquet_root_value, parquet_file_count_value, updated_at_value, view_sql_value in rows
     ]
 
 

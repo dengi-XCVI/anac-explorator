@@ -334,6 +334,7 @@ class MetadataViewsTests(unittest.TestCase):
         self.assertEqual(period_rows[0].month, 3)
         self.assertEqual(registered_rows[0].parquet_file_count, 3)
         self.assertEqual(registered_rows[0].updated_at, "2026-05-19T13:00:00")
+        self.assertEqual(registered_rows[0].view_sql, "")
         self.assertEqual(crosswalk_rows[0].dataset_id, "bandi-cig-tipo-scelta-contraente")
         self.assertEqual(crosswalk_rows[0].row_count, 39)
 

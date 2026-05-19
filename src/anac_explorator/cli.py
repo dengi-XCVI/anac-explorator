@@ -38,7 +38,8 @@ from anac_explorator.ckan import (
     DEFAULT_TRANSPORT,
     DEFAULT_USER_AGENT,
 )
-from anac_explorator.catalog import DATASET_FAMILY_REGISTRY
+from anac_explorator.catalog import DATASET_FAMILY_REGISTRY, execute_download_plan
+from anac_explorator.catalog import get_dataset_family, list_dataset_families
 from anac_explorator.cleaner import clean_csv_resource, clean_json_resource
 from anac_explorator.comparison import compare_schema_mappings, load_schema_mapping
 from anac_explorator.config import (
@@ -60,10 +61,10 @@ from anac_explorator.loader import (
     load_downloaded_resource,
     run_local_query,
 )
-from anac_explorator.models import CommandOutput
+from anac_explorator.models import CommandOutput, DownloadCommandResult
 from anac_explorator.output import emit_error_result, print_json_result, print_table_result, print_yaml_result
 from anac_explorator.parsing import parse_csv_resource, parse_json_resource
-from anac_explorator.paths import apply_effective_paths
+from anac_explorator.paths import DEFAULT_CIG_SCHEMA_PATH, apply_effective_paths
 from anac_explorator.sample import (
     SampleDownloadError,
     download_cig_monthly_sample,
@@ -72,6 +73,7 @@ from anac_explorator.sample import (
 )
 from anac_explorator.selection import parse_temporal_selection
 from anac_explorator.schema import map_csv_schema
+from anac_explorator.schema_service import diff_schema_targets, inspect_schema, inspect_schema_ddl
 from anac_explorator.vocabulary import VOCABULARY_DATASET_CONFIGS, build_vocabulary_crosswalks
 
 
@@ -100,6 +102,272 @@ def build_parser() -> argparse.ArgumentParser:
         help="Suppress confirmations for destructive or write-enabled actions.",
     )
     subparsers = parser.add_subparsers(dest="command", required=True)
+
+    datasets_parser = subparsers.add_parser(
+        "datasets",
+        help="Discover logical dataset families with local materialization and remote coverage metadata.",
+    )
+    datasets_parser.add_argument(
+        "dataset",
+        nargs="?",
+        help="Optional logical dataset family identifier for single-dataset detail mode.",
+    )
+    datasets_parser.add_argument(
+        "--search",
+        help="Search dataset id, title, description, and aliases.",
+    )
+    datasets_parser.add_argument(
+        "--year",
+        type=int,
+        help="Filter to dataset families that advertise remote coverage for one year.",
+    )
+    datasets_parser.add_argument(
+        "--downloaded",
+        action="store_true",
+        help="Show only families with local raw or loaded materialization.",
+    )
+    datasets_parser.add_argument(
+        "--missing",
+        action="store_true",
+        help="Show only families that are not yet materialized locally.",
+    )
+    datasets_parser.add_argument(
+        "--long",
+        action="store_true",
+        help="Include the extended dataset fields in list mode.",
+    )
+    datasets_parser.add_argument(
+        "--source-format",
+        choices=["csv", "json"],
+        help="Filter by available remote source format.",
+    )
+    datasets_parser.add_argument(
+        "--format",
+        dest="output_format",
+        choices=["json", "table"],
+        default=None,
+        help="Output format for dataset catalog discovery.",
+    )
+    datasets_parser.add_argument(
+        "--db-path",
+        help="Path to the local DuckDB database used for local metadata discovery.",
+    )
+    datasets_parser.add_argument(
+        "--base-url",
+        default=DEFAULT_CKAN_BASE_URL,
+        help="CKAN action API base URL.",
+    )
+    datasets_parser.add_argument(
+        "--timeout",
+        type=int,
+        default=30,
+        help="Request timeout in seconds.",
+    )
+    datasets_parser.add_argument(
+        "--user-agent",
+        default=os.getenv("ANAC_EXPLORATOR_USER_AGENT", DEFAULT_USER_AGENT),
+        help="User-Agent header for CKAN metadata requests.",
+    )
+    datasets_parser.add_argument(
+        "--accept-language",
+        default=os.getenv("ANAC_EXPLORATOR_ACCEPT_LANGUAGE", DEFAULT_ACCEPT_LANGUAGE),
+        help="Accept-Language header for CKAN metadata requests.",
+    )
+    datasets_parser.add_argument(
+        "--referer",
+        default=os.getenv("ANAC_EXPLORATOR_REFERER", DEFAULT_REFERER),
+        help="Referer header for CKAN metadata requests.",
+    )
+    datasets_parser.add_argument(
+        "--proxy-url",
+        default=os.getenv("ANAC_EXPLORATOR_PROXY_URL"),
+        help="Optional HTTP(S) proxy URL used for CKAN metadata requests.",
+    )
+    datasets_parser.add_argument(
+        "--transport",
+        choices=["auto", "http", "playwright"],
+        default=os.getenv("ANAC_EXPLORATOR_TRANSPORT", DEFAULT_TRANSPORT),
+        help="Transport used for CKAN metadata requests.",
+    )
+    datasets_parser.set_defaults(handler=_handle_datasets)
+
+    download_parser = subparsers.add_parser(
+        "download",
+        help="Resolve one logical dataset family into raw artifacts and optional warehouse loads.",
+    )
+    download_parser.add_argument("dataset", help="Logical dataset family identifier, such as cig.")
+    download_parser.add_argument(
+        "--year",
+        help="One year or inclusive year range in YYYY or YYYY-YYYY form.",
+    )
+    download_parser.add_argument(
+        "--month",
+        help="One month or inclusive month range in M or M-M form, used together with --year.",
+    )
+    download_parser.add_argument(
+        "--slice",
+        dest="slice_value",
+        help="Explicit slice list in canonical YYYY-MM[,YYYY-MM,...] form.",
+    )
+    download_parser.add_argument(
+        "--latest",
+        action="store_true",
+        help="Resolve the newest remote slice for periodized families.",
+    )
+    download_parser.add_argument(
+        "--resource-name",
+        help="Exact CKAN resource name override when a family exposes multiple resources.",
+    )
+    download_parser.add_argument(
+        "--source-format",
+        choices=["auto", "csv", "json"],
+        default="auto",
+        help="Required remote source format.",
+    )
+    download_parser.add_argument(
+        "--output-format",
+        dest="download_output_format",
+        choices=["parquet", "raw", "both"],
+        default="parquet",
+        help="Local persistence mode for the selected resources.",
+    )
+    download_parser.add_argument(
+        "--force-download",
+        action="store_true",
+        help="Re-fetch the raw source even when a manifest-backed cache already exists.",
+    )
+    download_parser.add_argument(
+        "--force-load",
+        action="store_true",
+        help="Re-run warehouse loading even when the Parquet slice is already registered.",
+    )
+    download_parser.add_argument(
+        "--validate",
+        action="store_true",
+        help="Run local integrity validation after successful warehouse loads.",
+    )
+    download_parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Return the resolved plan without downloading or loading any resources.",
+    )
+    download_parser.add_argument(
+        "--format",
+        dest="output_format",
+        choices=["json", "table"],
+        default=None,
+        help="Output format for the normalized download result.",
+    )
+    download_parser.add_argument(
+        "--output-dir",
+        help="Base directory used for raw manifests, archives, and materialized files.",
+    )
+    download_parser.add_argument(
+        "--schemas-dir",
+        help="Directory used for generated or reused schema artifacts during warehouse loading.",
+    )
+    download_parser.add_argument(
+        "--schema-path",
+        help="Optional schema artifact override for warehouse loading or post-load validation.",
+    )
+    download_parser.add_argument(
+        "--warehouse-dir",
+        help="Base directory for the local DuckDB database and Parquet files.",
+    )
+    download_parser.add_argument(
+        "--base-url",
+        default=DEFAULT_CKAN_BASE_URL,
+        help="CKAN action API base URL.",
+    )
+    download_parser.add_argument(
+        "--timeout",
+        type=int,
+        default=30,
+        help="Request timeout in seconds.",
+    )
+    download_parser.add_argument(
+        "--user-agent",
+        default=os.getenv("ANAC_EXPLORATOR_USER_AGENT", DEFAULT_USER_AGENT),
+        help="User-Agent header for CKAN metadata and download requests.",
+    )
+    download_parser.add_argument(
+        "--accept-language",
+        default=os.getenv("ANAC_EXPLORATOR_ACCEPT_LANGUAGE", DEFAULT_ACCEPT_LANGUAGE),
+        help="Accept-Language header for CKAN metadata and download requests.",
+    )
+    download_parser.add_argument(
+        "--referer",
+        default=os.getenv("ANAC_EXPLORATOR_REFERER", DEFAULT_REFERER),
+        help="Referer header for CKAN metadata and download requests.",
+    )
+    download_parser.add_argument(
+        "--proxy-url",
+        default=os.getenv("ANAC_EXPLORATOR_PROXY_URL"),
+        help="Optional HTTP(S) proxy URL used for CKAN metadata and download requests.",
+    )
+    download_parser.add_argument(
+        "--transport",
+        choices=["auto", "http", "playwright"],
+        default=os.getenv("ANAC_EXPLORATOR_TRANSPORT", DEFAULT_TRANSPORT),
+        help="Transport used for CKAN metadata and download requests.",
+    )
+    download_parser.set_defaults(handler=_handle_download)
+
+    schema_parser = subparsers.add_parser(
+        "schema",
+        help="Inspect artifact-driven dataset schemas, semantic overlays, historical diffs, or warehouse DDL.",
+    )
+    schema_parser.add_argument("dataset", help="Logical dataset family identifier, such as cig.")
+    schema_parser.add_argument(
+        "--year",
+        help="One target year in YYYY form. Combine with --month for one monthly slice.",
+    )
+    schema_parser.add_argument(
+        "--month",
+        help="One target month in M form, used together with --year.",
+    )
+    schema_parser.add_argument(
+        "--slice",
+        dest="slice_value",
+        help="One explicit target slice in canonical YYYY-MM form.",
+    )
+    schema_modes = schema_parser.add_mutually_exclusive_group()
+    schema_modes.add_argument(
+        "--describe",
+        action="store_true",
+        help="Enrich schema columns with local dictionary and vocabulary metadata when available.",
+    )
+    schema_modes.add_argument(
+        "--ddl",
+        action="store_true",
+        help="Return the registered DuckDB view definition instead of artifact-driven column metadata.",
+    )
+    schema_modes.add_argument(
+        "--diff",
+        nargs=2,
+        metavar=("LEFT", "RIGHT"),
+        help="Compare two schema targets, each in canonical, YYYY, or YYYY-MM form.",
+    )
+    schema_parser.add_argument(
+        "--format",
+        dest="output_format",
+        choices=["json", "table"],
+        default=None,
+        help="Output format for the normalized schema result.",
+    )
+    schema_parser.add_argument(
+        "--db-path",
+        help="Path to the local DuckDB database used for warehouse DDL inspection.",
+    )
+    schema_parser.add_argument(
+        "--schemas-dir",
+        help="Directory containing local schema artifacts.",
+    )
+    schema_parser.add_argument(
+        "--dictionaries-dir",
+        help="Directory containing local data-dictionary artifacts.",
+    )
+    schema_parser.set_defaults(handler=_handle_schema)
 
     package_show = subparsers.add_parser(
         "package-show",
@@ -890,7 +1158,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         )
         return cli_error.exit_code
 
-    if command == "config" and output_format == "table":
+    if output_format == "table":
         print_table_result(command, result, started_at_ns=started_at_ns)
         return 0
     if command == "config" and output_format == "yaml":
@@ -983,6 +1251,237 @@ def _handle_package_show(args: argparse.Namespace) -> dict[str, object]:
     )
     package = client.package_show(args.dataset_id)
     return package.to_dict()
+
+
+def _handle_datasets(args: argparse.Namespace) -> CommandOutput:
+    """@notice Execute the `datasets` CLI subcommand."""
+
+    client = None
+    if args.dataset is not None:
+        client = CkanClient(
+            base_url=args.base_url,
+            timeout=args.timeout,
+            user_agent=args.user_agent,
+            accept_language=args.accept_language,
+            referer=args.referer,
+            proxy_url=args.proxy_url,
+            transport=args.transport,
+        )
+
+    common_kwargs = {
+        "db_path": Path(args.db_path),
+        "raw_dir": args.effective_paths.raw_dir,
+        "schemas_dir": args.effective_paths.schemas_dir,
+        "dictionaries_dir": args.effective_paths.dictionaries_dir,
+        "vocabulary_index_path": args.effective_paths.vocabulary_index_path,
+        "registry": DATASET_FAMILY_REGISTRY,
+        "search": args.search,
+        "year": args.year,
+        "downloaded": args.downloaded,
+        "missing": args.missing,
+        "source_format": args.source_format,
+    }
+    if args.dataset is None:
+        result = list_dataset_families(**common_kwargs)
+        return CommandOutput(
+            data=result.to_dict(include_extended=bool(args.long)),
+            warnings=result.warnings,
+        )
+
+    result = get_dataset_family(
+        args.dataset,
+        client=client,
+        **common_kwargs,
+    )
+    return CommandOutput(
+        data=result.to_dict(),
+        warnings=result.warnings,
+    )
+
+
+def _handle_download(args: argparse.Namespace) -> DownloadCommandResult:
+    """@notice Execute the Phase 3 `download` CLI subcommand."""
+
+    temporal_selection = parse_temporal_selection(
+        year=args.year,
+        month=args.month,
+        slice_value=args.slice_value,
+        latest=args.latest,
+    )
+    client = CkanClient(
+        base_url=args.base_url,
+        timeout=args.timeout,
+        user_agent=args.user_agent,
+        accept_language=args.accept_language,
+        referer=args.referer,
+        proxy_url=args.proxy_url,
+        transport=args.transport,
+    )
+    plan = DATASET_FAMILY_REGISTRY.plan_download(
+        args.dataset,
+        client,
+        selection=temporal_selection,
+        preferred_resource_name=args.resource_name,
+        source_format=args.source_format,
+        output_format=args.download_output_format,
+    )
+    if plan.output_format == "raw" and args.force_load:
+        raise CliCommandError(
+            "VALIDATION_FAILED",
+            "--force-load requires --output-format parquet or both.",
+            details={
+                "dataset": plan.dataset,
+                "output_format": plan.output_format,
+            },
+        )
+    if plan.output_format == "raw" and args.validate:
+        raise CliCommandError(
+            "VALIDATION_FAILED",
+            "--validate requires --output-format parquet or both.",
+            details={
+                "dataset": plan.dataset,
+                "output_format": plan.output_format,
+            },
+        )
+
+    requested_selection = {
+        "dataset": plan.dataset,
+        "output_format": plan.output_format,
+        "dry_run": bool(args.dry_run),
+        "validate": bool(args.validate),
+        "force_download": bool(args.force_download),
+        "force_load": bool(args.force_load),
+        **plan.requested_scope,
+    }
+    applied_actions = []
+    validation_result = None
+    if not args.dry_run:
+        applied_actions = execute_download_plan(
+            plan,
+            client,
+            output_dir=Path(args.output_dir),
+            schemas_dir=Path(args.schemas_dir),
+            warehouse_dir=Path(args.warehouse_dir),
+            preferred_schema_path=None if args.schema_path is None else Path(args.schema_path),
+            vocabulary_index_path=args.effective_paths.vocabulary_index_path,
+            force_download=args.force_download,
+            force_load=args.force_load,
+        )
+        if args.validate:
+            if plan.dataset != "cig":
+                raise CliCommandError(
+                    "DATASET_NOT_SUPPORTED",
+                    f"Integrity validation is not available for dataset family {plan.dataset!r} yet.",
+                    details={"dataset": plan.dataset},
+                )
+            validation_schema_path = (
+                Path(args.schema_path)
+                if args.schema_path is not None
+                else args.effective_paths.schemas_dir / DEFAULT_CIG_SCHEMA_PATH.name
+            )
+            validation_result = validate_local_data_integrity(
+                args.effective_paths.warehouse_db_path,
+                dataset_type=plan.dataset,
+                schema_path=validation_schema_path,
+                vocabulary_index_path=args.effective_paths.vocabulary_index_path,
+            )
+
+    return DownloadCommandResult(
+        requested_selection=requested_selection,
+        resolved_plan=plan,
+        applied_actions=applied_actions,
+        validation_result=validation_result,
+        dry_run=bool(args.dry_run),
+    )
+
+
+def _handle_schema(args: argparse.Namespace) -> object:
+    """@notice Execute the Phase 3 `schema` CLI subcommand."""
+
+    if args.diff is not None:
+        if _schema_has_temporal_flags(args):
+            raise CliCommandError(
+                "VALIDATION_FAILED",
+                "--diff cannot be combined with --year, --month, or --slice.",
+                details={"dataset": args.dataset, "diff": list(args.diff)},
+            )
+        return diff_schema_targets(
+            args.dataset,
+            left_target=args.diff[0],
+            right_target=args.diff[1],
+            schemas_dir=args.effective_paths.schemas_dir,
+            dictionaries_dir=args.effective_paths.dictionaries_dir,
+            registry=DATASET_FAMILY_REGISTRY,
+        )
+
+    if args.ddl:
+        if _schema_has_temporal_flags(args):
+            raise CliCommandError(
+                "VALIDATION_FAILED",
+                "--ddl cannot be combined with --year, --month, or --slice.",
+                details={"dataset": args.dataset},
+            )
+        return inspect_schema_ddl(
+            args.dataset,
+            db_path=args.effective_paths.warehouse_db_path,
+            registry=DATASET_FAMILY_REGISTRY,
+        )
+
+    return inspect_schema(
+        args.dataset,
+        target=_resolve_schema_cli_target(args),
+        describe=bool(args.describe),
+        schemas_dir=args.effective_paths.schemas_dir,
+        dictionaries_dir=args.effective_paths.dictionaries_dir,
+        registry=DATASET_FAMILY_REGISTRY,
+    )
+
+
+def _resolve_schema_cli_target(args: argparse.Namespace) -> str | None:
+    """@notice Normalize the shared temporal flags into one schema target token."""
+
+    selection = parse_temporal_selection(
+        year=args.year,
+        month=args.month,
+        slice_value=args.slice_value,
+    )
+    if selection.mode == "all":
+        return None
+    if selection.mode == "slice":
+        if len(selection.slices) != 1:
+            raise CliCommandError(
+                "VALIDATION_FAILED",
+                "schema accepts exactly one --slice target unless --diff is used.",
+                details={"dataset": args.dataset, "requested_slices": selection.slices},
+            )
+        return selection.slices[0]
+    if selection.mode == "range":
+        if args.year not in (None, "") and args.month in (None, ""):
+            if len(selection.years) != 1:
+                raise CliCommandError(
+                    "VALIDATION_FAILED",
+                    "schema accepts exactly one target year unless --diff is used.",
+                    details={"dataset": args.dataset, "requested_years": selection.years},
+                )
+            return f"{selection.years[0]:04d}"
+        if len(selection.slices) != 1:
+            raise CliCommandError(
+                "VALIDATION_FAILED",
+                "schema accepts exactly one targeted slice unless --diff is used.",
+                details={"dataset": args.dataset, "requested_slices": selection.slices},
+            )
+        return selection.slices[0]
+    raise CliCommandError(
+        "VALIDATION_FAILED",
+        f"Unsupported schema selection mode {selection.mode!r}.",
+        details={"dataset": args.dataset, "selection_mode": selection.mode},
+    )
+
+
+def _schema_has_temporal_flags(args: argparse.Namespace) -> bool:
+    """@notice Report whether the schema command received any explicit target-selection flags."""
+
+    return any(value not in (None, "") for value in (args.year, args.month, args.slice_value))
 
 
 def _handle_inspect_csv_schema(args: argparse.Namespace) -> dict[str, object]:

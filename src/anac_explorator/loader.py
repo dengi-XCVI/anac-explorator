@@ -737,12 +737,16 @@ def _load_cached_load_result(
 
     parquet_path_value, row_count_value, stored_schema_path = row
     current_schema_path = None if schema_path is None else str(schema_path)
-    if stored_schema_path != current_schema_path:
+    if current_schema_path is not None and stored_schema_path != current_schema_path:
         return None
     if str(parquet_path_value) != str(target_plan.parquet_path):
         return None
     if not Path(str(parquet_path_value)).exists():
         return None
+
+    resolved_schema_path = current_schema_path
+    if resolved_schema_path is None and stored_schema_path is not None:
+        resolved_schema_path = str(stored_schema_path)
 
     registered_files, view_sql = _refresh_registered_view(
         connection,
@@ -763,7 +767,7 @@ def _load_cached_load_result(
         table_name=target_plan.table_name,
         view_name=target_plan.view_name,
         manifest_path=str(manifest_path),
-        schema_path=current_schema_path,
+        schema_path=resolved_schema_path,
         source_path=manifest.materialized_path,
         warehouse_dir=str(warehouse_root),
         duckdb_path=str(warehouse_root / "anac.duckdb"),
