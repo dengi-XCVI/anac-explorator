@@ -1295,6 +1295,8 @@ class WarehouseQueryResult:
     @param column_names Ordered result column names.
     @param row_count Number of rows returned to the caller.
     @param rows JSON-friendly result rows keyed by column name.
+    @param plan Structured EXPLAIN rows when plan inspection was requested.
+    @param output_path Export path when the query wrote CSV or Parquet output directly.
     """
 
     db_path: str
@@ -1303,12 +1305,15 @@ class WarehouseQueryResult:
     column_names: list[str] = field(default_factory=list)
     row_count: int = 0
     rows: list[dict[str, object]] = field(default_factory=list)
+    plan: list[dict[str, object]] | None = None
+    output_path: str | None = None
 
     def to_dict(self) -> dict[str, object]:
         """@notice Convert the warehouse query result into a serializable dictionary."""
 
         return {
             "db_path": self.db_path,
+            "sql": self.sql_query,
             "sql_query": self.sql_query,
             "row_limit": self.row_limit,
             "column_names": self.column_names,
@@ -1317,6 +1322,35 @@ class WarehouseQueryResult:
                 {key: _to_json_compatible(value) for key, value in row.items()}
                 for row in self.rows
             ],
+            "plan": None
+            if self.plan is None
+            else [
+                {key: _to_json_compatible(value) for key, value in row.items()}
+                for row in self.plan
+            ],
+            "output_path": self.output_path,
+        }
+
+
+@dataclass(slots=True)
+class StatsCommandResult:
+    """@notice Capture one Phase 3 stats result payload."""
+
+    scope: str
+    dataset: str | None
+    summary: dict[str, object]
+    partitions: list[dict[str, object]] | None = None
+    profile: dict[str, object] | None = None
+
+    def to_dict(self) -> dict[str, object]:
+        """@notice Convert the stats result into a serializable dictionary."""
+
+        return {
+            "scope": self.scope,
+            "dataset": self.dataset,
+            "summary": _to_json_compatible(self.summary),
+            "partitions": None if self.partitions is None else _to_json_compatible(self.partitions),
+            "profile": None if self.profile is None else _to_json_compatible(self.profile),
         }
 
 

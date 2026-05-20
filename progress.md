@@ -221,6 +221,41 @@
   - `cli.py` now exposes the Phase 3 `schema` command, wires canonical/targeted inspection, DDL mode, and diff mode to the shared schema backend helpers, and keeps artifact-driven schema output as the default when no mode flags are passed
   - parser handling now makes `--describe`, `--ddl`, and `--diff LEFT RIGHT` mutually exclusive, while the handler rejects ambiguous temporal combinations for DDL and diff mode and normalizes single-target year / slice requests through the shared temporal parser
   - schema CLI results now flow through the centralized Phase 3 envelope, and CLI coverage now includes parser acceptance, conflicting-mode rejection, and canonical schema JSON output
+- Phase 7 command implementation step 7.4 backend steps 1, 2, and 5 completed:
+  - `run_local_query(...)` now exposes the Phase 3 backend contract for query execution: it bootstraps metadata discoverability views before execution, keeps read-only mode as the default, and accepts an explicit `allow_write` opt-in for mutating statements
+  - the SQL policy guard now strips leading whitespace and SQL comments before inspecting the first statement keyword, so blocked writes such as `INSERT`, `UPDATE`, `DELETE`, `DROP`, `ALTER`, `CREATE`, and `COPY ... TO` reliably raise the stable `WRITE_QUERY_BLOCKED` error unless writes are explicitly enabled
+  - backend query execution now translates policy failures, missing databases, unknown DuckDB relations, and generic DuckDB execution failures into the shared Phase 3 query errors, including recovery hints for `UNKNOWN_RELATION`
+  - focused unit coverage now verifies metadata-backed read-only selects, blocked writes without opt-in, opt-in writes, and structured unknown-relation recovery payloads
+- Phase 7 command implementation step 7.4 backend steps 3-4 completed:
+  - `run_local_query(...)` now supports `explain=True`, prefixes the user SQL with `EXPLAIN`, and returns the structured DuckDB plan rows through the query result payload instead of ordinary result rows
+  - the backend now distinguishes stdout-oriented query routing from file exports, so `json` and `table` continue to materialize rows in memory while `csv` and `parquet` stream results directly to the requested output path without mixing export flows into the later CLI renderer
+  - exported query results now report their `output_path`, preserve column metadata, and count the exported rows, while explain mode leaves `rows` empty and fills the new `plan` payload
+  - focused unit coverage now verifies explain-mode payloads and CSV file export behavior end to end
+- Phase 7 command implementation step 7.4 frontend wiring completed:
+  - `cli.py` now exposes the Phase 3 `query` command, wires `--format`, `--output`, `--row-limit`, `--explain`, `--allow-write`, and `--db-path` to the safe backend query runner, and keeps stdout-facing results on the centralized shared envelope path
+  - write SQL is now guarded twice at the CLI boundary: mutating statements require both `--allow-write` and `--yes`, while the backend still enforces the read-only policy as a second safety layer
+  - the new CLI surface can query metadata discoverability views such as `anac_datasets` directly, and parser/runtime coverage now verifies the new query flags, confirmation-gated writes, and successful metadata-view querying through the command itself
+- Phase 7 command implementation step 7.4 timeout/config follow-up completed:
+  - the Phase 3 `query` command now exposes `--timeout`, and the option is resolved from the new `query.timeout` config domain when the CLI flag is omitted
+  - backend query execution now enforces a real execution timeout by running the DuckDB operation under a watchdog and calling `connection.interrupt()` when the configured limit is exceeded, with timeout failures translated into the shared `QUERY_ERROR` payload plus timeout context
+  - config, parser, and backend coverage now verifies `query.timeout` persistence/resolution, query CLI timeout wiring, and structured timeout error translation
+- Phase 7 command implementation step 7.5 backend tasks 2-4 completed:
+  - new `src/anac_explorator/stats.py` now computes global and per-dataset stats strictly from the `anac_*` metadata layer, so the backend can report family counts, loaded-resource counts, partition counts, row counts, and freshness timestamps without scanning user tables
+  - dataset summaries now merge dataset-registry metadata with metadata-view aggregates such as registered Parquet view counts, loaded-resource totals, local slice coverage, schema-column counts, and dictionary/crosswalk availability
+  - partition mode now returns ordered `anac_partitions` rows for periodized families only, while snapshot families remain explicitly unsupported for that view
+  - focused unit coverage now verifies empty-warehouse global stats, dataset summary aggregation, and periodized partition listing
+- Phase 7 command implementation step 7.5 task 5 completed:
+  - the stats backend now exposes a profile helper that resolves the registered local query relation for a dataset family and runs one generated DuckDB aggregate query across the live data
+  - profile results now report per-column null counts and ratios, approximate distinct counts via `APPROX_COUNT_DISTINCT`, and min/max values for orderable scalar types while skipping non-meaningful boolean ranges
+  - focused unit coverage now verifies profile metrics against a small fixture relation with nulls, repeated values, numeric ranges, dates, and booleans
+- Phase 7 command implementation step 7.5 tasks 1 and 6 completed:
+  - `cli.py` now exposes the Phase 3 `stats` command, resolving no-argument calls to the global metadata summary and dataset-targeted calls to the dataset summary through the shared result envelope
+  - `--partitions` and `--profile` now route to their dedicated stats backend helpers, while the default path stays on the fast metadata-backed summary unless live profiling is requested explicitly
+  - snapshot families now reject `stats --partitions` with the stable `DATASET_NOT_SUPPORTED` error, and parser/runtime coverage now verifies the new stats flags plus the snapshot-family guard
+- Phase 7 command implementation step 7.5 scoped-stats follow-up completed:
+  - the `stats` CLI now accepts the shared temporal flags (`--year`, `--month`, `--slice`, `--latest`) and promotes scoped dataset requests to the `slice` result scope instead of treating all stats calls as full-family summaries
+  - scoped dataset summaries and partition listings now filter to the selected local slices, while scoped profile mode constrains its live DuckDB aggregate scan to the selected year/month partitions through the registered query view
+  - snapshot families now reject temporal stats requests through the shared family-adapter validation path, and new parser/backend/runtime coverage verifies scoped summary filtering, scoped profile filtering, and the snapshot temporal guard
 
 ## Planned milestones
 1. Expand the local query surface carefully without over-materializing data

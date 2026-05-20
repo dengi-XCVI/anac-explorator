@@ -11,10 +11,12 @@ import csv
 import hashlib
 import json
 import re
+import threading
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from typing import Callable
 from zipfile import ZipFile
 
 import duckdb
@@ -22,7 +24,12 @@ import duckdb
 from anac_explorator.ckan import CkanClient
 from anac_explorator.cleaner import DATETIME_FORMATS, DATE_FORMATS, NULL_MARKERS
 from anac_explorator.comparison import load_schema_mapping
-from anac_explorator.errors import enforce_read_only_query
+from anac_explorator.errors import (
+    QueryPolicyError,
+    detect_mutating_query,
+    enforce_read_only_query,
+    resolve_query_execution_error,
+)
 from anac_explorator.models import (
     CkanResource,
     DatasetParquetDownloadResult,
@@ -479,39 +486,192 @@ def run_local_query(
     sql_query: str,
     *,
     row_limit: int = 1_000,
+    allow_write: bool = False,
+    explain: bool = False,
+    output_format: str = "json",
+    output_path: str | Path | None = None,
+    timeout_seconds: int | None = None,
 ) -> WarehouseQueryResult:
     """@notice Execute one SQL query against the local DuckDB warehouse and return JSON-friendly rows."""
 
     database_path = Path(db_path)
-    if not database_path.exists():
-        raise FileNotFoundError(f"DuckDB database not found: {database_path}")
-
-    normalized_query = sql_query.strip().rstrip(";")
-    if not normalized_query:
-        raise ValueError("SQL query must not be empty.")
-    enforce_read_only_query(normalized_query)
-
-    executable_sql = normalized_query
-    if row_limit > 0:
-        executable_sql = f"SELECT * FROM ({normalized_query}) AS warehouse_query LIMIT {row_limit}"
-
-    connection = duckdb.connect(str(database_path), read_only=True)
     try:
-        ensure_metadata_views(connection, db_path=database_path)
-        cursor = connection.execute(executable_sql)
-        column_names = [str(column[0]) for column in (cursor.description or [])]
-        raw_rows = cursor.fetchall()
-    finally:
-        connection.close()
+        if not database_path.exists():
+            raise FileNotFoundError(f"DuckDB database not found: {database_path}")
+
+        normalized_query = sql_query.strip().rstrip(";")
+        if not normalized_query:
+            raise ValueError("SQL query must not be empty.")
+        if timeout_seconds is not None and timeout_seconds <= 0:
+            raise ValueError("Query timeout must be greater than 0 seconds.")
+
+        normalized_output_format = output_format.casefold()
+        if normalized_output_format not in {"json", "table", "csv", "parquet"}:
+            raise ValueError(f"Unsupported query output format {output_format!r}.")
+        if explain and normalized_output_format in {"csv", "parquet"}:
+            raise ValueError("Explain mode supports table or json output only.")
+        if normalized_output_format in {"csv", "parquet"} and output_path is None:
+            raise ValueError(f"Query output format {normalized_output_format!r} requires an output path.")
+
+        mutating_keyword = detect_mutating_query(normalized_query)
+        enforce_read_only_query(normalized_query, allow_write=allow_write)
+        if mutating_keyword is not None and normalized_output_format in {"csv", "parquet"}:
+            raise ValueError("Direct file output requires a row-returning query.")
+
+        executable_sql = _build_query_execution_sql(
+            normalized_query,
+            row_limit=row_limit,
+            explain=explain,
+            mutating_keyword=mutating_keyword,
+        )
+
+        connection = duckdb.connect(str(database_path), read_only=not allow_write)
+        try:
+            ensure_metadata_views(connection, db_path=database_path)
+            column_names, row_count, raw_rows, plan_rows, exported_output_path = _execute_query_operation_with_timeout(
+                connection,
+                timeout_seconds=timeout_seconds,
+                operation=lambda: _run_query_operation(
+                    connection,
+                    executable_sql,
+                    explain=explain,
+                    output_format=normalized_output_format,
+                    output_path=None if output_path is None else Path(output_path),
+                ),
+            )
+        finally:
+            connection.close()
+    except (QueryPolicyError, FileNotFoundError, ValueError, TimeoutError, duckdb.Error) as exc:
+        raise resolve_query_execution_error(
+            exc,
+            db_path=database_path,
+            sql_query=None if "normalized_query" not in locals() else normalized_query,
+            timeout_seconds=timeout_seconds,
+        ) from exc
 
     rows = [dict(zip(column_names, row)) for row in raw_rows]
+    if explain:
+        rows = []
     return WarehouseQueryResult(
         db_path=str(database_path),
         sql_query=normalized_query,
         row_limit=row_limit,
         column_names=column_names,
-        row_count=len(rows),
+        row_count=row_count,
         rows=rows,
+        plan=plan_rows,
+        output_path=exported_output_path,
+    )
+
+
+def _run_query_operation(
+    connection: duckdb.DuckDBPyConnection,
+    sql_query: str,
+    *,
+    explain: bool,
+    output_format: str,
+    output_path: Path | None,
+) -> tuple[list[str], int, list[tuple[object, ...]], list[dict[str, object]] | None, str | None]:
+    """@notice Execute one prepared query plan and return its rows, plan, or export metadata."""
+
+    if output_format in {"csv", "parquet"}:
+        if output_path is None:
+            raise ValueError(f"Query output format {output_format!r} requires an output path.")
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        column_names = _query_column_names(connection, sql_query)
+        row_count = _count_query_rows(connection, sql_query)
+        _export_query_results(
+            connection,
+            sql_query,
+            output_path=output_path,
+            output_format=output_format,
+        )
+        return column_names, row_count, [], None, str(output_path)
+
+    cursor = connection.execute(sql_query)
+    column_names = [str(column[0]) for column in (cursor.description or [])]
+    raw_rows = [] if cursor.description is None else cursor.fetchall()
+    plan_rows = [dict(zip(column_names, row)) for row in raw_rows] if explain else None
+    return column_names, len(raw_rows), raw_rows, plan_rows, None
+
+
+def _execute_query_operation_with_timeout(
+    connection: duckdb.DuckDBPyConnection,
+    *,
+    timeout_seconds: int | None,
+    operation: Callable[[], tuple[list[str], int, list[tuple[object, ...]], list[dict[str, object]] | None, str | None]],
+):
+    """@notice Execute one query operation and interrupt DuckDB if it exceeds the configured timeout."""
+
+    if timeout_seconds is None:
+        return operation()
+
+    result: dict[str, object] = {}
+    failure: dict[str, BaseException] = {}
+
+    def _runner() -> None:
+        try:
+            result["value"] = operation()
+        except BaseException as exc:  # noqa: BLE001 - propagate original failure after the join.
+            failure["error"] = exc
+
+    worker = threading.Thread(target=_runner, daemon=True)
+    worker.start()
+    worker.join(timeout_seconds)
+    if worker.is_alive():
+        connection.interrupt()
+        worker.join(5)
+        raise TimeoutError(f"Query exceeded timeout of {timeout_seconds} seconds.")
+    if "error" in failure:
+        raise failure["error"]
+    return result["value"]
+
+
+def _build_query_execution_sql(
+    normalized_query: str,
+    *,
+    row_limit: int,
+    explain: bool,
+    mutating_keyword: str | None,
+) -> str:
+    """@notice Normalize one query into the exact SQL executed for rows, plans, or exports."""
+
+    if explain:
+        return f"EXPLAIN {normalized_query}"
+    if row_limit > 0 and mutating_keyword is None:
+        return f"SELECT * FROM ({normalized_query}) AS warehouse_query LIMIT {row_limit}"
+    return normalized_query
+
+
+def _query_column_names(connection: duckdb.DuckDBPyConnection, sql_query: str) -> list[str]:
+    """@notice Probe the output columns for one row-returning query without materializing rows."""
+
+    cursor = connection.execute(f"SELECT * FROM ({sql_query}) AS warehouse_query LIMIT 0")
+    return [str(column[0]) for column in (cursor.description or [])]
+
+
+def _count_query_rows(connection: duckdb.DuckDBPyConnection, sql_query: str) -> int:
+    """@notice Count the rows produced by one query or limited query wrapper."""
+
+    return int(connection.execute(f"SELECT COUNT(*) FROM ({sql_query}) AS warehouse_query").fetchone()[0])
+
+
+def _export_query_results(
+    connection: duckdb.DuckDBPyConnection,
+    sql_query: str,
+    *,
+    output_path: Path,
+    output_format: str,
+) -> None:
+    """@notice Export one query result directly to CSV or Parquet without materializing rows in Python."""
+
+    if output_format == "csv":
+        connection.execute(
+            f"COPY ({sql_query}) TO {_sql_literal(str(output_path))} (FORMAT CSV, HEADER)"
+        )
+        return
+    connection.execute(
+        f"COPY ({sql_query}) TO {_sql_literal(str(output_path))} (FORMAT PARQUET, COMPRESSION ZSTD)"
     )
 
 

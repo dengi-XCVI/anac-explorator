@@ -105,11 +105,15 @@ class QueryConfig:
     """@notice Effective local-query defaults."""
 
     row_limit: int
+    timeout: int
 
     def to_dict(self) -> dict[str, object]:
         """@notice Convert the query settings into a JSON-serializable mapping."""
 
-        return {"row_limit": self.row_limit}
+        return {
+            "row_limit": self.row_limit,
+            "timeout": self.timeout,
+        }
 
 
 @dataclass(frozen=True, slots=True)
@@ -341,6 +345,7 @@ CONFIG_FIELD_SPECS: dict[str, _ConfigFieldSpec] = {
         "ANAC_DOWNLOAD_SKIP_CROSSWALKS",
     ),
     "query.row_limit": _ConfigFieldSpec("query.row_limit", 1_000, _coerce_non_negative_int, "ANAC_QUERY_ROW_LIMIT"),
+    "query.timeout": _ConfigFieldSpec("query.timeout", 30, _coerce_positive_int, "ANAC_QUERY_TIMEOUT", "ANAC_EXPLORATOR_QUERY_TIMEOUT"),
     "output.format": _ConfigFieldSpec("output.format", "json", _coerce_choice("json", "table"), "ANAC_OUTPUT_FORMAT"),
 }
 
@@ -353,6 +358,7 @@ _CONFIG_COMMAND_OPTION_KEYS = {
     "proxy_url": ("transport.proxy_url", "--proxy-url"),
     "transport": ("transport.default", "--transport"),
     "row_limit": ("query.row_limit", "--row-limit"),
+    "query_timeout": ("query.timeout", "--timeout"),
     "output_format": ("output.format", "--format"),
 }
 _CONFIG_COMMAND_BOOLEAN_KEYS = {
@@ -475,7 +481,10 @@ def resolve_effective_config(
             keep_materialized=bool(values["download.keep_materialized"]),
             skip_crosswalks=bool(values["download.skip_crosswalks"]),
         ),
-        query=QueryConfig(row_limit=int(values["query.row_limit"])),
+        query=QueryConfig(
+            row_limit=int(values["query.row_limit"]),
+            timeout=int(values["query.timeout"]),
+        ),
         output=OutputConfig(format=str(values["output.format"])),
     )
     return ResolvedConfig(

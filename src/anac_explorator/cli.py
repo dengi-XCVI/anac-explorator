@@ -54,7 +54,7 @@ from anac_explorator.config import (
     unset_config_value,
 )
 from anac_explorator.dictionary import build_cig_data_dictionary
-from anac_explorator.errors import CliCommandError, resolve_command_error
+from anac_explorator.errors import CliCommandError, detect_mutating_query, resolve_command_error
 from anac_explorator.integrity import validate_local_data_integrity
 from anac_explorator.loader import (
     download_dataset_to_parquet,
@@ -74,6 +74,7 @@ from anac_explorator.sample import (
 from anac_explorator.selection import parse_temporal_selection
 from anac_explorator.schema import map_csv_schema
 from anac_explorator.schema_service import diff_schema_targets, inspect_schema, inspect_schema_ddl
+from anac_explorator.stats import compute_dataset_stats, compute_global_stats, list_dataset_partitions, profile_dataset
 from anac_explorator.vocabulary import VOCABULARY_DATASET_CONFIGS, build_vocabulary_crosswalks
 
 
@@ -368,6 +369,106 @@ def build_parser() -> argparse.ArgumentParser:
         help="Directory containing local data-dictionary artifacts.",
     )
     schema_parser.set_defaults(handler=_handle_schema)
+
+    query_parser = subparsers.add_parser(
+        "query",
+        help="Execute safe SQL against the local DuckDB warehouse and metadata discoverability views.",
+    )
+    query_parser.add_argument("sql_query", help="SQL query executed against the local DuckDB warehouse.")
+    query_parser.add_argument(
+        "--db-path",
+        help="Path to the local DuckDB database.",
+    )
+    query_parser.add_argument(
+        "--row-limit",
+        type=int,
+        default=1_000,
+        help="Maximum number of rows returned to stdout or exported output. Use 0 to retain all.",
+    )
+    query_parser.add_argument(
+        "--timeout",
+        dest="query_timeout",
+        type=int,
+        default=None,
+        help="Maximum execution time in seconds for one query operation.",
+    )
+    query_parser.add_argument(
+        "--format",
+        dest="output_format",
+        choices=["json", "table", "csv", "parquet"],
+        default=None,
+        help="Output format for stdout rendering or direct export.",
+    )
+    query_parser.add_argument(
+        "--output",
+        help="Required output path for csv or parquet exports.",
+    )
+    query_parser.add_argument(
+        "--explain",
+        action="store_true",
+        help="Return the structured DuckDB execution plan instead of query result rows.",
+    )
+    query_parser.add_argument(
+        "--allow-write",
+        action="store_true",
+        help="Opt into write SQL when combined with --yes.",
+    )
+    query_parser.add_argument(
+        "--yes",
+        action="store_true",
+        help="Confirm write SQL when combined with --allow-write.",
+    )
+    query_parser.set_defaults(handler=_handle_query)
+
+    stats_parser = subparsers.add_parser(
+        "stats",
+        help="Summarize local storage coverage and optionally inspect live dataset values.",
+    )
+    stats_parser.add_argument(
+        "dataset",
+        nargs="?",
+        help="Optional logical dataset family identifier for dataset-level stats.",
+    )
+    stats_parser.add_argument(
+        "--year",
+        help="One year or inclusive year range in YYYY or YYYY-YYYY form.",
+    )
+    stats_parser.add_argument(
+        "--month",
+        help="One month or inclusive month range in M or M-M form, used together with --year.",
+    )
+    stats_parser.add_argument(
+        "--slice",
+        dest="slice_value",
+        help="Explicit slice list in canonical YYYY-MM[,YYYY-MM,...] form.",
+    )
+    stats_parser.add_argument(
+        "--latest",
+        action="store_true",
+        help="Restrict stats to the latest locally loaded temporal slice when available.",
+    )
+    stats_parser.add_argument(
+        "--profile",
+        action="store_true",
+        help="Run a live DuckDB column-profile pass for the selected dataset family.",
+    )
+    stats_parser.add_argument(
+        "--partitions",
+        action="store_true",
+        help="Include ordered local partition coverage for temporal dataset families.",
+    )
+    stats_parser.add_argument(
+        "--format",
+        dest="output_format",
+        choices=["json", "table"],
+        default=None,
+        help="Output format for the stats result.",
+    )
+    stats_parser.add_argument(
+        "--db-path",
+        help="Path to the local DuckDB database used for stats and profiling.",
+    )
+    stats_parser.set_defaults(handler=_handle_stats)
 
     package_show = subparsers.add_parser(
         "package-show",
@@ -1437,6 +1538,86 @@ def _handle_schema(args: argparse.Namespace) -> object:
     )
 
 
+def _handle_query(args: argparse.Namespace) -> dict[str, object]:
+    """@notice Execute the Phase 3 `query` CLI subcommand."""
+
+    mutating_keyword = detect_mutating_query(args.sql_query)
+    if mutating_keyword is not None and not args.allow_write:
+        raise CliCommandError(
+            "WRITE_QUERY_BLOCKED",
+            "Write SQL requires both --allow-write and --yes.",
+            details={
+                "db_path": args.db_path,
+                "sql_query": args.sql_query,
+                "blocked_keyword": mutating_keyword,
+                "allow_write": False,
+                "confirmation_required": True,
+            },
+        )
+    if mutating_keyword is not None and not args.yes:
+        raise CliCommandError(
+            "WRITE_QUERY_BLOCKED",
+            "Write SQL requires --yes together with --allow-write.",
+            details={
+                "db_path": args.db_path,
+                "sql_query": args.sql_query,
+                "blocked_keyword": mutating_keyword,
+                "allow_write": True,
+                "confirmation_required": True,
+            },
+        )
+
+    return run_local_query(
+        Path(args.db_path),
+        args.sql_query,
+        row_limit=args.row_limit,
+        allow_write=bool(args.allow_write),
+        explain=bool(args.explain),
+        output_format="json" if args.output_format is None else str(args.output_format),
+        output_path=None if args.output is None else Path(args.output),
+        timeout_seconds=args.query_timeout,
+    ).to_dict()
+
+
+def _handle_stats(args: argparse.Namespace) -> dict[str, object]:
+    """@notice Execute the Phase 3 `stats` CLI subcommand."""
+
+    common_kwargs = _stats_common_kwargs(args)
+    temporal_selection = _resolve_stats_selection(args)
+    if args.dataset is None:
+        if args.profile:
+            raise CliCommandError(
+                "VALIDATION_FAILED",
+                "--profile requires a dataset family argument.",
+                details={"scope": "global"},
+            )
+        if args.partitions:
+            raise CliCommandError(
+                "VALIDATION_FAILED",
+                "--partitions requires a dataset family argument.",
+                details={"scope": "global"},
+            )
+        if temporal_selection.mode != "all":
+            raise CliCommandError(
+                "VALIDATION_FAILED",
+                "Temporal flags require a dataset family argument.",
+                details={"scope": "global", "selection_mode": temporal_selection.mode},
+            )
+        return compute_global_stats(**common_kwargs).to_dict()
+
+    if args.partitions:
+        result = list_dataset_partitions(args.dataset, selection=temporal_selection, **common_kwargs)
+    elif args.profile:
+        result = profile_dataset(args.dataset, selection=temporal_selection, **common_kwargs)
+    else:
+        result = compute_dataset_stats(args.dataset, selection=temporal_selection, **common_kwargs)
+
+    payload = result.to_dict()
+    if args.partitions and args.profile:
+        payload["profile"] = profile_dataset(args.dataset, selection=temporal_selection, **common_kwargs).profile
+    return payload
+
+
 def _resolve_schema_cli_target(args: argparse.Namespace) -> str | None:
     """@notice Normalize the shared temporal flags into one schema target token."""
 
@@ -1482,6 +1663,30 @@ def _schema_has_temporal_flags(args: argparse.Namespace) -> bool:
     """@notice Report whether the schema command received any explicit target-selection flags."""
 
     return any(value not in (None, "") for value in (args.year, args.month, args.slice_value))
+
+
+def _resolve_stats_selection(args: argparse.Namespace):
+    """@notice Normalize the shared temporal flags into one stats selection object."""
+
+    return parse_temporal_selection(
+        year=args.year,
+        month=args.month,
+        slice_value=args.slice_value,
+        latest=bool(args.latest),
+    )
+
+
+def _stats_common_kwargs(args: argparse.Namespace) -> dict[str, object]:
+    """@notice Build the shared backend arguments for local stats helpers."""
+
+    return {
+        "db_path": args.effective_paths.warehouse_db_path,
+        "raw_dir": args.effective_paths.raw_dir,
+        "schemas_dir": args.effective_paths.schemas_dir,
+        "dictionaries_dir": args.effective_paths.dictionaries_dir,
+        "vocabulary_index_path": args.effective_paths.vocabulary_index_path,
+        "registry": DATASET_FAMILY_REGISTRY,
+    }
 
 
 def _handle_inspect_csv_schema(args: argparse.Namespace) -> dict[str, object]:

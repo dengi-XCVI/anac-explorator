@@ -62,12 +62,17 @@ class ConfigTests(unittest.TestCase):
             config_path = Path(temp_dir) / "config.json"
 
             stored = set_config_value(config_path, "query.row_limit", "250")
+            timeout_value = set_config_value(config_path, "query.timeout", "45")
             persisted_after_set = load_persisted_config(config_path)
+            removed_timeout = unset_config_value(config_path, "query.timeout")
             removed = unset_config_value(config_path, "query.row_limit")
             persisted_after_unset = load_persisted_config(config_path)
 
         self.assertEqual(stored, 250)
+        self.assertEqual(timeout_value, 45)
         self.assertEqual(persisted_after_set["query"]["row_limit"], 250)
+        self.assertEqual(persisted_after_set["query"]["timeout"], 45)
+        self.assertTrue(removed_timeout)
         self.assertTrue(removed)
         self.assertEqual(persisted_after_unset, {})
 
@@ -99,6 +104,18 @@ class ConfigTests(unittest.TestCase):
 
         self.assertTrue(payload["download"]["keep_materialized"])
         self.assertEqual(payload["transport"]["timeout"], 45)
+
+    def test_resolve_effective_config_includes_query_timeout(self) -> None:
+        """@notice Expose the query-timeout setting through the effective query config domain."""
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            config_path = Path(temp_dir) / "config.json"
+            save_persisted_config(config_path, {"query": {"timeout": 18}})
+
+            resolved = resolve_effective_config(config_path=config_path)
+
+        self.assertEqual(resolved.config.query.timeout, 18)
+        self.assertEqual(resolved.sources["query"]["timeout"], "config_file")
 
 
 if __name__ == "__main__":

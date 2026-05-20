@@ -115,23 +115,115 @@ class QueryPolicyError(RuntimeError):
         self.keyword = keyword
 
 
-def enforce_read_only_query(sql_query: str) -> None:
-    """@notice Reject obviously mutating SQL before it reaches DuckDB execution."""
+def detect_mutating_query(sql_query: str) -> str | None:
+    """@notice Return the leading mutating SQL keyword after stripping whitespace and comments."""
 
     normalized = _strip_leading_sql_comments(sql_query)
     if not normalized:
-        return
+        return None
 
     keyword_match = re.match(r"([A-Za-z]+)", normalized)
     if keyword_match is None:
-        return
+        return None
 
     keyword = keyword_match.group(1).upper()
     if keyword not in _WRITE_KEYWORDS:
-        return
+        return None
     if keyword == "COPY" and " TO " not in normalized.upper():
+        return None
+    return keyword
+
+
+def enforce_read_only_query(sql_query: str, *, allow_write: bool = False) -> None:
+    """@notice Reject obviously mutating SQL before it reaches DuckDB execution."""
+
+    if allow_write:
+        return
+    keyword = detect_mutating_query(sql_query)
+    if keyword is None:
         return
     raise QueryPolicyError(sql_query, keyword)
+
+
+def resolve_query_execution_error(
+    exc: Exception,
+    *,
+    db_path: str | Path | None = None,
+    sql_query: str | None = None,
+    timeout_seconds: int | None = None,
+) -> CliCommandError:
+    """@notice Translate backend query execution failures into stable Phase 3 query errors."""
+
+    details = {
+        "db_path": None if db_path is None else str(db_path),
+        "sql_query": sql_query,
+    }
+    if timeout_seconds is not None:
+        details["timeout_seconds"] = timeout_seconds
+    if isinstance(exc, QueryPolicyError):
+        return CliCommandError(
+            "WRITE_QUERY_BLOCKED",
+            f"Write SQL is blocked: {exc.keyword}.",
+            details={
+                **details,
+                "blocked_keyword": exc.keyword,
+            },
+            cause=exc,
+        )
+    if isinstance(exc, FileNotFoundError):
+        missing_path = str(db_path) if db_path is not None else _missing_path(exc)
+        return CliCommandError(
+            "LOCAL_DATASET_NOT_AVAILABLE",
+            f"DuckDB database not found: {missing_path}",
+            details={
+                **details,
+                "path": missing_path,
+            },
+            cause=exc,
+        )
+    if isinstance(exc, TimeoutError):
+        return CliCommandError(
+            "QUERY_ERROR",
+            str(exc),
+            details=details,
+            cause=exc,
+        )
+    if isinstance(exc, duckdb.Error):
+        missing_relation = _extract_missing_relation(str(exc))
+        if missing_relation is not None:
+            return CliCommandError(
+                "UNKNOWN_RELATION",
+                f"Relation '{missing_relation}' does not exist.",
+                details={
+                    **details,
+                    "relation": missing_relation,
+                    **_collect_available_relations(None if db_path is None else str(db_path)),
+                },
+                cause=exc,
+            )
+        return CliCommandError(
+            "QUERY_ERROR",
+            str(exc),
+            details=details,
+            cause=exc,
+        )
+    if isinstance(exc, ValueError):
+        return CliCommandError(
+            "QUERY_ERROR",
+            str(exc),
+            details=details,
+            cause=exc,
+        )
+
+    return CliCommandError(
+        "QUERY_ERROR",
+        str(exc),
+        details={
+            **details,
+            "exception_type": type(exc).__name__,
+        },
+        cause=exc,
+    )
 
 
 def resolve_command_error(command: str, exc: Exception, *, args: object | None = None) -> CliCommandError:
@@ -140,7 +232,7 @@ def resolve_command_error(command: str, exc: Exception, *, args: object | None =
     if isinstance(exc, CliCommandError):
         return exc
 
-    if command == "query-local-data":
+    if command in {"query", "query-local-data"}:
         return _resolve_query_error(exc, args=args)
     if isinstance(exc, FileNotFoundError):
         return _resolve_file_not_found(command, exc, args=args)
@@ -169,66 +261,11 @@ def resolve_command_error(command: str, exc: Exception, *, args: object | None =
 def _resolve_query_error(exc: Exception, *, args: object | None) -> CliCommandError:
     """@notice Map query-command failures to the documented query error codes."""
 
-    details = {
-        "db_path": _get_attr(args, "db_path"),
-        "sql_query": _get_attr(args, "sql_query"),
-    }
-    if isinstance(exc, QueryPolicyError):
-        return CliCommandError(
-            "WRITE_QUERY_BLOCKED",
-            f"Write SQL is blocked: {exc.keyword}.",
-            details={
-                **details,
-                "blocked_keyword": exc.keyword,
-            },
-            cause=exc,
-        )
-    if isinstance(exc, FileNotFoundError):
-        missing_path = str(_get_attr(args, "db_path") or _missing_path(exc))
-        return CliCommandError(
-            "LOCAL_DATASET_NOT_AVAILABLE",
-            f"DuckDB database not found: {missing_path}",
-            details={
-                **details,
-                "path": missing_path,
-            },
-            cause=exc,
-        )
-    if isinstance(exc, duckdb.Error):
-        missing_relation = _extract_missing_relation(str(exc))
-        if missing_relation is not None:
-            return CliCommandError(
-                "UNKNOWN_RELATION",
-                f"Relation '{missing_relation}' does not exist.",
-                details={
-                    **details,
-                    "relation": missing_relation,
-                    **_collect_available_relations(_get_attr(args, "db_path")),
-                },
-                cause=exc,
-            )
-        return CliCommandError(
-            "QUERY_ERROR",
-            str(exc),
-            details=details,
-            cause=exc,
-        )
-    if isinstance(exc, ValueError):
-        return CliCommandError(
-            "QUERY_ERROR",
-            str(exc),
-            details=details,
-            cause=exc,
-        )
-
-    return CliCommandError(
-        "QUERY_ERROR",
-        str(exc),
-        details={
-            **details,
-            "exception_type": type(exc).__name__,
-        },
-        cause=exc,
+    return resolve_query_execution_error(
+        exc,
+        db_path=_get_attr(args, "db_path"),
+        sql_query=_get_attr(args, "sql_query"),
+        timeout_seconds=_get_attr(args, "query_timeout"),
     )
 
 

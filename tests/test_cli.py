@@ -175,6 +175,62 @@ class CliTests(unittest.TestCase):
         self.assertEqual(describe_vs_ddl.exception.code, 2)
         self.assertEqual(describe_vs_diff.exception.code, 2)
 
+    def test_query_parser_accepts_output_and_safety_flags(self) -> None:
+        """@notice Parse the Phase 3 query command with its routing and write-safety options."""
+
+        parser = main.__globals__["build_parser"]()
+        args = apply_effective_paths(
+            parser.parse_args(
+                [
+                    "query",
+                    "SELECT * FROM anac_datasets",
+                    "--timeout",
+                    "15",
+                    "--format",
+                    "csv",
+                    "--output",
+                    "out.csv",
+                    "--allow-write",
+                ]
+            )
+        )
+
+        self.assertEqual(args.sql_query, "SELECT * FROM anac_datasets")
+        self.assertEqual(args.query_timeout, 15)
+        self.assertEqual(args.output_format, "csv")
+        self.assertEqual(args.output, "out.csv")
+        self.assertTrue(args.allow_write)
+        self.assertEqual(args.db_path, "data/warehouse/anac.duckdb")
+
+    def test_stats_parser_accepts_dataset_scope_flags_and_uses_default_db_path(self) -> None:
+        """@notice Parse the Phase 3 stats command with optional dataset inspection flags."""
+
+        parser = main.__globals__["build_parser"]()
+        args = apply_effective_paths(
+            parser.parse_args(
+                [
+                    "stats",
+                    "cig",
+                    "--year",
+                    "2025",
+                    "--month",
+                    "1",
+                    "--profile",
+                    "--partitions",
+                    "--format",
+                    "table",
+                ]
+            )
+        )
+
+        self.assertEqual(args.dataset, "cig")
+        self.assertEqual(args.year, "2025")
+        self.assertEqual(args.month, "1")
+        self.assertTrue(args.profile)
+        self.assertTrue(args.partitions)
+        self.assertEqual(args.output_format, "table")
+        self.assertEqual(args.db_path, "data/warehouse/anac.duckdb")
+
     def test_build_data_dictionary_parser_uses_default_artifacts(self) -> None:
         """@notice Parse the data-dictionary subcommand with its default artifact paths."""
 
@@ -479,6 +535,172 @@ class CliTests(unittest.TestCase):
         self.assertEqual(payload["warnings"], [])
         self.assertEqual(payload["meta"]["paths"]["schemas_dir"], str(temp_path / "schemas"))
         self.assertEqual(payload["meta"]["paths"]["dictionaries_dir"], "dictionaries")
+
+    def test_query_write_requires_allow_write_and_yes(self) -> None:
+        """@notice Permit write SQL only when both the opt-in and confirmation flags are present."""
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            db_path = Path(temp_dir) / "warehouse.duckdb"
+            db_path.parent.mkdir(parents=True, exist_ok=True)
+            connection = duckdb.connect(str(db_path))
+            try:
+                connection.execute("CREATE TABLE demo (id INTEGER, label VARCHAR)")
+            finally:
+                connection.close()
+
+            blocked_without_allow = io.StringIO()
+            with redirect_stdout(blocked_without_allow):
+                exit_code_without_allow = main(
+                    ["query", "INSERT INTO demo VALUES (1, 'one')", "--db-path", str(db_path)]
+                )
+
+            blocked_without_yes = io.StringIO()
+            with redirect_stdout(blocked_without_yes):
+                exit_code_without_yes = main(
+                    [
+                        "query",
+                        "INSERT INTO demo VALUES (1, 'one')",
+                        "--db-path",
+                        str(db_path),
+                        "--allow-write",
+                    ]
+                )
+
+            allowed_output = io.StringIO()
+            with redirect_stdout(allowed_output):
+                exit_code_allowed = main(
+                    [
+                        "query",
+                        "INSERT INTO demo VALUES (1, 'one')",
+                        "--db-path",
+                        str(db_path),
+                        "--allow-write",
+                        "--yes",
+                    ]
+                )
+
+            verify_output = io.StringIO()
+            with redirect_stdout(verify_output):
+                verify_exit_code = main(
+                    [
+                        "query",
+                        "SELECT id, label FROM demo ORDER BY id",
+                        "--db-path",
+                        str(db_path),
+                    ]
+                )
+
+        blocked_without_allow_payload = json.loads(blocked_without_allow.getvalue())
+        blocked_without_yes_payload = json.loads(blocked_without_yes.getvalue())
+        allowed_payload = json.loads(allowed_output.getvalue())
+        verify_payload = json.loads(verify_output.getvalue())
+
+        self.assertEqual(exit_code_without_allow, 50)
+        self.assertFalse(blocked_without_allow_payload["ok"])
+        self.assertEqual(blocked_without_allow_payload["command"], "query")
+        self.assertEqual(blocked_without_allow_payload["error"]["code"], "WRITE_QUERY_BLOCKED")
+
+        self.assertEqual(exit_code_without_yes, 50)
+        self.assertFalse(blocked_without_yes_payload["ok"])
+        self.assertEqual(blocked_without_yes_payload["error"]["code"], "WRITE_QUERY_BLOCKED")
+        self.assertTrue(blocked_without_yes_payload["error"]["details"]["confirmation_required"])
+
+        self.assertEqual(exit_code_allowed, 0)
+        self.assertTrue(allowed_payload["ok"])
+        self.assertEqual(allowed_payload["command"], "query")
+
+        self.assertEqual(verify_exit_code, 0)
+        self.assertTrue(verify_payload["ok"])
+        self.assertEqual(verify_payload["data"]["row_count"], 1)
+        self.assertEqual(verify_payload["data"]["rows"][0]["label"], "one")
+
+    def test_query_metadata_view_query_succeeds_via_cli(self) -> None:
+        """@notice Route a metadata-view select through the new Phase 3 query surface."""
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            db_path = Path(temp_dir) / "warehouse.duckdb"
+            db_path.parent.mkdir(parents=True, exist_ok=True)
+            duckdb.connect(str(db_path)).close()
+
+            output = io.StringIO()
+            with redirect_stdout(output):
+                exit_code = main(
+                    [
+                        "query",
+                        "SELECT dataset, update_supported FROM anac_datasets ORDER BY dataset",
+                        "--db-path",
+                        str(db_path),
+                    ]
+                )
+
+        payload = json.loads(output.getvalue())
+        self.assertEqual(exit_code, 0)
+        self.assertTrue(payload["ok"])
+        self.assertEqual(payload["command"], "query")
+        self.assertGreaterEqual(payload["data"]["row_count"], 3)
+        self.assertEqual(payload["data"]["rows"][0]["dataset"], "aggiudicatari")
+        self.assertFalse(payload["data"]["rows"][0]["update_supported"])
+        self.assertEqual(payload["meta"]["paths"]["warehouse_db_path"], str(db_path))
+
+    def test_query_uses_configured_timeout_when_flag_is_absent(self) -> None:
+        """@notice Fill the query timeout from config when the CLI flag is not provided."""
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            config_path = Path(temp_dir) / "config.json"
+            config_path.write_text(json.dumps({"query": {"timeout": 9}}), encoding="utf-8")
+
+            mocked_result = Mock()
+            mocked_result.to_dict.return_value = {
+                "sql": "SELECT 1",
+                "row_limit": 1000,
+                "row_count": 1,
+                "column_names": ["1"],
+                "rows": [{"1": 1}],
+                "plan": None,
+                "output_path": None,
+                "db_path": "data/warehouse/anac.duckdb",
+                "sql_query": "SELECT 1",
+            }
+
+            output = io.StringIO()
+            with patch("anac_explorator.cli.run_local_query", return_value=mocked_result) as query_mock:
+                with redirect_stdout(output):
+                    exit_code = main(["--config", str(config_path), "query", "SELECT 1"])
+
+        payload = json.loads(output.getvalue())
+        self.assertEqual(exit_code, 0)
+        self.assertTrue(payload["ok"])
+        self.assertEqual(query_mock.call_args.kwargs["timeout_seconds"], 9)
+
+    def test_stats_partitions_rejects_snapshot_dataset_families(self) -> None:
+        """@notice Reject --partitions for snapshot dataset families with the stable shared error envelope."""
+
+        output = io.StringIO()
+        with redirect_stdout(output):
+            exit_code = main(["stats", "aggiudicatari", "--partitions"])
+
+        payload = json.loads(output.getvalue())
+        self.assertEqual(exit_code, 11)
+        self.assertFalse(payload["ok"])
+        self.assertEqual(payload["command"], "stats")
+        self.assertEqual(payload["error"]["code"], "DATASET_NOT_SUPPORTED")
+        self.assertEqual(payload["error"]["details"]["dataset"], "aggiudicatari")
+        self.assertEqual(payload["error"]["details"]["coverage_kind"], "snapshot")
+
+    def test_stats_temporal_flags_reject_snapshot_dataset_families(self) -> None:
+        """@notice Reject scoped stats on snapshot families through the shared adapter validation."""
+
+        output = io.StringIO()
+        with redirect_stdout(output):
+            exit_code = main(["stats", "aggiudicatari", "--year", "2025"])
+
+        payload = json.loads(output.getvalue())
+        self.assertEqual(exit_code, 11)
+        self.assertFalse(payload["ok"])
+        self.assertEqual(payload["command"], "stats")
+        self.assertEqual(payload["error"]["code"], "DATASET_NOT_SUPPORTED")
+        self.assertEqual(payload["error"]["details"]["dataset"], "aggiudicatari")
+        self.assertEqual(payload["error"]["details"]["coverage_kind"], "snapshot")
 
     def test_validate_local_data_integrity_parser_uses_defaults(self) -> None:
         """@notice Parse the integrity-validation subcommand with its default warehouse artifacts."""
