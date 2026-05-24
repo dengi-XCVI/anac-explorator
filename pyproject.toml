@@ -18,6 +18,7 @@ dependencies = [
 ]
 
 [project.scripts]
+anacx = "anac_explorator.cli:main"
 anac-explorator = "anac_explorator.cli:main"
 
 [tool.setuptools]

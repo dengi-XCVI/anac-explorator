@@ -281,6 +281,26 @@
   - the Phase 3 `config` CLI surface remains organized around the six subcommands (`show`, `get`, `set`, `unset`, `reset`, `validate`), and `cli.py` now routes each one through the shared backend helper layer instead of duplicating config logic in the frontend
   - `config reset` stays guarded behind `--yes`, while all config responses continue to flow through the shared result envelope and `config show --format yaml` still renders the clean effective-config view
   - CLI coverage now verifies parser acceptance for `config show`, safe reset failure without `--yes`, and envelope-backed effective-config output for `show`
+- Phase 7 command implementation step 7.8 planning completed:
+  - `src/anac_explorator/models.py` now defines `DropPlan` and `DropPlanTarget`, so future dry-run and apply flows can share one normalized local-pruning plan with aggregate byte totals
+  - the family-adapter contract now exposes `build_drop_plan(...)`, and the CIG adapter delegates to a new backend planner in `src/anac_explorator/drop.py` that reads local period state, applies shared temporal selection, expands raw/parquet layer targets, and computes exact on-disk byte sizes
+  - focused unit coverage now verifies slice-scoped CIG drop planning, accurate file-size accounting, and raw-layer filtering without implementing deletion or CLI wiring yet
+- Phase 7 command implementation step 7.8 execution completed:
+  - the family-adapter contract now also exposes drop-plan execution, and the CIG drop backend can unlink the targeted raw and Parquet files from disk through one normalized `DropPlan`
+  - post-drop cleanup now prunes or rewrites the relevant warehouse catalog references in `loaded_resources`, `dataset_period_manifest`, and `registered_views` so the Phase 6 metadata layer no longer advertises deleted file paths or stale cached artifacts
+  - focused unit coverage now verifies raw-only pruning keeps Parquet query state while replacing stale raw references, and full-layer pruning removes both the files and the associated metadata rows
+- Phase 7 command implementation step 7.8 frontend wiring completed:
+  - `cli.py` now exposes the Phase 3 `drop` command, routes shared temporal selectors plus `--layer`, `--resource-id`, and `--dry-run` to the backend drop planner, and returns the normalized drop payload through the shared result envelope
+  - destructive drop execution is now guarded at the CLI boundary: when `--dry-run` is absent, the command requires `--yes` and otherwise aborts with the standard validation error envelope instead of deleting any files
+  - CLI coverage now verifies parser acceptance for temporal/layer drop flags, shared-envelope dry-run output including disk-space totals, and the safe `--yes` guard for non-dry-run execution
+- CLI naming update completed:
+  - the canonical installed executable is now `anacx`, and argparse help now renders that name as the top-level program surface
+  - the default persisted config path now lives under `~/.config/anacx/`, while an existing legacy `anac-explorator` config path is still reused automatically for compatibility
+  - user-facing command examples in the repository documentation now consistently target `anacx`, while `anac-explorator` remains documented only as a compatibility alias
+- Final Phase 3 review completed:
+  - the Step 8+ migration, testing, and definition-of-done checklist from `cli-implementation-plan.md` was reviewed against the implemented CLI and no blocking publication gaps were found
+  - legacy low-level commands remain available through the same parser and executable, while `anacx` plus the eight Phase 3 commands are now documented as the canonical interface
+  - `architecture-summary.md`, `specification.md`, and `README.md` were refreshed to reflect the completed Phase 3 architecture, compatibility path, config/env model, and recommended user workflows
 
 ## Planned milestones
 1. Expand the local query surface carefully without over-materializing data

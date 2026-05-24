@@ -6,10 +6,10 @@ Implement the Phase 3 CLI defined in `cli-specification.md` on top of the curren
 
 This plan is intentionally written as the **execution roadmap** for the implementation phase. The intended delivery outcome is:
 
-1. a stable `anac` command surface,
+1. a stable `anacx` command surface,
 2. a shared JSON contract for agents,
 3. metadata discoverability views for SQL and schema exploration,
-4. command parity for `datasets`, `download`, `schema`, `query`, `stats`, `update`, and `config`,
+4. command parity for `datasets`, `download`, `schema`, `query`, `stats`, `update`, `config`, and `drop`,
 5. backward-compatible migration from the current legacy CLI surface.
 
 ---
@@ -82,7 +82,9 @@ The recommended order is:
 8. `query`
 9. `stats`
 10. `update`
-11. migration / compatibility polish
+11. `config`
+12. `drop`
+13. migration / compatibility polish
 
 ---
 
@@ -101,11 +103,12 @@ The implementation does not need to land in exactly these files, but this split 
 | `src/anac_explorator/catalog.py` | dataset-family registry and local/remote resolution |
 | `src/anac_explorator/metadata_views.py` | discoverability-view materialization / registration |
 | `src/anac_explorator/stats.py` | stats aggregation and profiling helpers |
-| `src/anac_explorator/loader.py` | reuse and extend for Phase 3 download/update flows |
+| `src/anac_explorator/loader.py` | reuse and extend for Phase 3 download/update/drop flows |
+| `src/anac_explorator/drop.py` | local prune planning, byte accounting, and state-cleanup helpers |
 | `src/anac_explorator/integrity.py` | reuse validation entrypoints for `download --validate` and `update --validate` |
 | `tests/test_cli.py` | parser and top-level CLI regression coverage |
 | `tests/test_pipeline_integration.py` | end-to-end command workflows |
-| new focused tests | config, selection, metadata views, stats, update behavior |
+| new focused tests | config, selection, metadata views, stats, update, and drop behavior |
 
 If `cli.py` becomes unwieldy, extract command-specific helper functions first; do not start by splitting into many subpackages before the contracts are stable.
 
@@ -240,7 +243,7 @@ This is the prerequisite work. No Phase 3 command should be finalized before the
 
 #### Required behavior
 
-1. The same selection grammar works across `download`, `schema`, `stats`, and `update`.
+1. The same selection grammar works across `download`, `schema`, `stats`, `update`, and `drop`.
 2. Invalid combinations are rejected consistently.
 3. The normalized representation is easy to pass into dataset-family adapters.
 
@@ -716,7 +719,7 @@ Reuse the current `sync_cig_periods_to_parquet(...)` behavior where possible, bu
 
 #### Step 4: Implement global update mode
 
-`anac update` without `DATASET` should:
+`anacx update` without `DATASET` should:
 
 1. inspect locally present dataset families,
 2. filter to update-capable families,
@@ -783,6 +786,86 @@ Implement persistent configuration management for Phase 3.
 
 ---
 
+## 7.8 `drop`
+
+### Goals
+
+Safely remove local dataset files, selected temporal slices, or individual resources while keeping local metadata state aligned with the physical disk layout.
+
+### Dependencies
+
+- dataset registry and family adapters
+- temporal selection parser
+- shared output and error models
+- metadata discoverability layer
+
+### Implementation tasks
+
+#### Step 1: Extend the family adapter API
+
+Add a `build_drop_plan(scope, layers)` method to the base adapter.
+
+It should map the requested scope:
+
+- full dataset family
+- temporal subsets such as one year or slice set
+- individual resource identifiers
+
+into concrete local deletion targets across:
+
+- raw manifests, archives, and extracted files
+- Parquet slices and related warehouse-side artifacts
+
+#### Step 2: Implement dry-run and byte accounting first
+
+Before deleting anything, `--dry-run` must return:
+
+- exact file paths targeted for deletion
+- per-target size in bytes
+- aggregate size to be freed in both raw bytes and human-readable form
+- layer information for each target
+
+#### Step 3: Add scope resolution through the shared temporal parser
+
+`drop` must reuse `selection.py` so periodized families can accept the same temporal grammar as the other Phase 3 dataset commands.
+
+#### Step 4: Implement layer filtering
+
+Support:
+
+- `--layer raw`
+- `--layer parquet`
+- `--layer all`
+
+This should let users prune intermediate raw files after a successful Parquet load without deleting the queryable warehouse payload.
+
+#### Step 5: Implement safe execution and state cleanup
+
+After applying a confirmed plan, the command must:
+
+1. delete the targeted physical files,
+2. prune or rewrite the affected local manifests and related local state,
+3. refresh any warehouse metadata that would otherwise drift,
+4. ensure the Phase 6 `anac_loaded_resources` and related views immediately reflect the new on-disk reality.
+
+#### Step 6: Enforce safety guards
+
+`drop` is destructive and must require `--yes` for non-interactive execution.
+
+### Tests
+
+1. `drop cig --dry-run` calculates the correct file count and aggregate size
+2. `drop cig --year 2023` drops only the 2023 local slices and updates local state
+3. `drop cig --layer raw` deletes intermediate files while leaving Parquet intact
+4. missing `--yes` safely aborts the operation
+5. `stats` reflects the reduced storage footprint after a drop
+
+### Done criteria
+
+- Users can surgically prune local storage without `rm -rf`, and local metadata never drifts from physical disk state.
+
+---
+
 ## 8. Migration and backwards compatibility
 
 The Phase 3 surface should not break existing users abruptly.
@@ -791,7 +874,7 @@ The Phase 3 surface should not break existing users abruptly.
 
 Implement migration in three steps:
 
-1. introduce new `anac` commands
+1. introduce new `anacx` commands
 2. keep existing legacy commands working
 3. progressively rewire legacy handlers to call the new shared internals
 
@@ -830,6 +913,7 @@ The implementation must expand tests in lockstep with the command work.
 | Query policy | read-only enforcement and error translation |
 | Stats | summary and profile outputs |
 | Update | dry-run planning and applied sync behavior |
+| Drop | dry-run planning, layer filtering, and metadata cleanup |
 
 ### 9.2 Existing tests to preserve
 
@@ -853,6 +937,7 @@ In addition to updating `tests/test_cli.py`, add focused test modules:
 - `tests/test_stats.py`
 - `tests/test_phase3_query.py`
 - `tests/test_phase3_update.py`
+- `tests/test_drop.py`
 
 ### 9.4 End-to-end scenarios to add
 
@@ -862,6 +947,7 @@ In addition to updating `tests/test_cli.py`, add focused test modules:
 4. `stats cig --partitions --format json`
 5. `update cig --dry-run --format json`
 6. `config show --format json`
+7. `drop cig --dry-run --format json`
 
 ---
 
@@ -910,6 +996,12 @@ Must be complete before `schema`, `query`, and `stats` are considered stable:
 - compatibility path documented
 - legacy commands routed through shared helpers where practical
 
+### Checkpoint 7 - local pruning ready
+
+- `drop` stable for `cig`
+- local metadata cleanup verified after file deletion
+- stats and metadata views reflect post-drop state
+
 ---
 
 ## 11. Recommended execution order
@@ -929,8 +1021,9 @@ This is the step-by-step build order to follow during implementation.
 11. Implement `stats`.
 12. Wrap the current CIG sync logic behind the new `update` contract.
 13. Implement `config` subcommands.
-14. Rewire legacy commands or aliases to the new shared helpers where feasible.
-15. Expand tests and then update README/help text once the implementation is stable.
+14. Implement `drop`, starting with `cig` and shared layer filtering.
+15. Rewire legacy commands or aliases to the new shared helpers where feasible.
+16. Expand tests and then update README/help text once the implementation is stable.
 
 ---
 
@@ -938,10 +1031,10 @@ This is the step-by-step build order to follow during implementation.
 
 Phase 3 CLI implementation is done when all of the following are true:
 
-1. `anac` exposes the seven commands from the specification.
+1. `anacx` exposes the eight commands from the specification.
 2. `--format json` returns the stable envelope and command-specific payload for each command.
-3. metadata discoverability views are queryable through `anac query`.
-4. `download`, `schema`, `query`, `stats`, and `update` all work for the current CIG baseline.
+3. metadata discoverability views are queryable through `anacx query`.
+4. `download`, `schema`, `query`, `stats`, `update`, and `drop` all work for the current CIG baseline.
 5. `config` persists and validates effective defaults.
 6. the test suite covers the new command contracts and does not regress existing Phase 1 / Phase 2 behavior.
 

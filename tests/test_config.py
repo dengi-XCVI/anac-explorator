@@ -31,7 +31,19 @@ class ConfigTests(unittest.TestCase):
 
         path = default_config_path(env={"XDG_CONFIG_HOME": "/tmp/xdg-config"})
 
-        self.assertEqual(str(path), "/tmp/xdg-config/anac-explorator/config.json")
+        self.assertEqual(str(path), "/tmp/xdg-config/anacx/config.json")
+
+    def test_default_config_path_falls_back_to_legacy_directory_when_present(self) -> None:
+        """@notice Keep using an existing legacy config path until it is migrated."""
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            legacy_path = Path(temp_dir) / "anac-explorator" / "config.json"
+            legacy_path.parent.mkdir(parents=True, exist_ok=True)
+            legacy_path.write_text("{}", encoding="utf-8")
+
+            path = default_config_path(env={"XDG_CONFIG_HOME": temp_dir})
+
+        self.assertEqual(path, legacy_path)
 
     def test_resolve_effective_config_prefers_anac_env_over_compat_and_file(self) -> None:
         """@notice Merge defaults, config file, compatibility env, and ANAC env deterministically."""

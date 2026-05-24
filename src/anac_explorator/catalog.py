@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING, Iterable, Sequence
 import duckdb
 
 from anac_explorator.ckan import CkanClientError
+from anac_explorator.drop import execute_drop_plan, plan_cig_drop
 from anac_explorator.errors import CliCommandError
 from anac_explorator.integrity import validate_local_data_integrity
 from anac_explorator.loader import (
@@ -25,6 +26,8 @@ from anac_explorator.models import (
     CkanResource,
     DatasetIncrementalUpdateResult,
     DatasetParquetDownloadResult,
+    DropPlan,
+    DropPlanTarget,
     DownloadManifest,
     DownloadPlan,
     DownloadPlanItem,
@@ -318,6 +321,36 @@ class DatasetFamilyAdapter:
         details={"dataset": self.family},
         )
 
+    def build_drop_plan(
+        self,
+        scope: TemporalSelection | None = None,
+        layers: str = "all",
+        *,
+        warehouse_dir: "Path" = Path("data/warehouse"),
+        resource_ids: Sequence[str] | None = None,
+    ) -> DropPlan:
+        """@notice Build the reusable drop plan when the family supports local pruning."""
+
+        raise CliCommandError(
+            "DATASET_NOT_SUPPORTED",
+            f"Dataset family {self.family!r} does not support local drop planning yet.",
+            details={"dataset": self.family},
+        )
+
+    def apply_drop_plan(
+        self,
+        *,
+        plan: DropPlan,
+        warehouse_dir: "Path" = Path("data/warehouse"),
+    ) -> list[DropPlanTarget]:
+        """@notice Execute one reusable drop plan when the family supports local pruning."""
+
+        raise CliCommandError(
+            "DATASET_NOT_SUPPORTED",
+            f"Dataset family {self.family!r} does not support local drop execution yet.",
+            details={"dataset": self.family},
+        )
+
     def _resolve_requested_source_format(self, source_format: str) -> str:
         """@notice Normalize `auto|csv|json` into one concrete remote source format."""
 
@@ -597,6 +630,36 @@ class SnapshotDatasetFamilyAdapter(DatasetFamilyAdapter):
 class CigDatasetFamilyAdapter(PeriodizedDatasetFamilyAdapter):
     """@notice Provide the currently implemented Phase 3 family operations for CIG."""
 
+    def build_drop_plan(
+        self,
+        scope: TemporalSelection | None = None,
+        layers: str = "all",
+        *,
+        warehouse_dir: "Path" = Path("data/warehouse"),
+        resource_ids: Sequence[str] | None = None,
+    ) -> DropPlan:
+        """@notice Build the family-level dry-run plan for local CIG pruning."""
+
+        return plan_cig_drop(
+            scope=scope,
+            layers=layers,
+            warehouse_dir=warehouse_dir,
+            resource_ids=resource_ids,
+        )
+
+    def apply_drop_plan(
+        self,
+        *,
+        plan: DropPlan,
+        warehouse_dir: "Path" = Path("data/warehouse"),
+    ) -> list[DropPlanTarget]:
+        """@notice Execute the family-level CIG drop plan and reconcile local state."""
+
+        return execute_drop_plan(
+            plan,
+            warehouse_dir=warehouse_dir,
+        )
+
     def download_to_parquet(
         self,
         client: "CkanClient",
@@ -845,6 +908,16 @@ class DatasetFamilyRegistry:
         """@notice Execute the reusable incremental-update plan through the family's adapter."""
 
         return self.get_family(dataset).adapter.apply_update_plan(client, **kwargs)
+
+    def build_drop_plan(self, dataset: str, **kwargs: object) -> DropPlan:
+        """@notice Build the reusable local drop plan through the family's adapter."""
+
+        return self.get_family(dataset).adapter.build_drop_plan(**kwargs)
+
+    def apply_drop_plan(self, dataset: str, **kwargs: object) -> list[DropPlanTarget]:
+        """@notice Execute the reusable local drop plan through the family's adapter."""
+
+        return self.get_family(dataset).adapter.apply_drop_plan(**kwargs)
 
 
 def _reuse_cached_parquet_result(

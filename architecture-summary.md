@@ -2,118 +2,104 @@
 
 ## Current architecture state
 
-The project is currently a **research-complete, ingestion-and-storage baseline ANAC tool**. It already covers:
+The project now ships a **completed Phase 3 CLI surface** on top of the earlier research, download, schema, and DuckDB/Parquet pipeline work. The system is best described as:
 
-1. **dataset discovery and access hardening**
-2. **raw resource download and local materialization**
-3. **schema inspection and cross-year comparison**
-4. **controlled-vocabulary and data-dictionary enrichment**
-5. **resource parsing and cleaning for later loading**
-6. **DuckDB/Parquet loading plus local SQL view registration**
-7. **incremental monthly CIG period sync with slice replacement**
-8. **read-only warehouse integrity validation for the current CIG slice**
+> **artifact-driven, CLI-first, DuckDB-backed, and currently strongest on the monthly CIG family**
 
-It does **not** yet implement a broader cross-dataset integrity framework or a richer end-user analytical interface beyond the local SQL facade, and the current integrity workflow still targets the monthly CIG family only.
+What changed in the Phase 3 completion pass is not a new storage engine, but a new **stable command contract** around the existing baseline:
 
-## The architecture as it exists today
+1. a canonical `anacx` executable
+2. a shared JSON result envelope and stable error model
+3. a shared config and path-resolution layer
+4. a dataset-family registry and temporal selection model
+5. SQL-queryable metadata discoverability views
+6. stable `datasets`, `download`, `schema`, `query`, `stats`, `update`, `config`, and `drop` commands
 
-| Layer | Responsibility | Main files | Current status |
-| --- | --- | --- | --- |
-| Source system | ANAC CKAN metadata plus downloadable CSV/JSON resources | `research/ANAC-data.md` | External dependency |
-| Access layer | Reach CKAN and resource endpoints through HTTP or Playwright | `src/anac_explorator/ckan.py`, `src/anac_explorator/browser.py` | Implemented |
-| Download/cache layer | Resolve a resource, download it, materialize it, and persist a manifest-backed cache | `src/anac_explorator/sample.py` | Implemented |
-| Schema/research layer | Inspect raw CSVs and compare schemas across years | `src/anac_explorator/schema.py`, `src/anac_explorator/comparison.py` | Implemented |
-| Semantic enrichment layer | Build vocabulary crosswalks, join contracts, gap analysis, and the field dictionary | `src/anac_explorator/vocabulary.py`, `src/anac_explorator/dictionary.py` | Implemented |
-| Parse/clean layer | Turn CSV/JSON into structured Python objects and cleaned records | `src/anac_explorator/parsing.py`, `src/anac_explorator/cleaner.py`, `src/anac_explorator/models.py` | Implemented |
-| Interface layer | Expose all current workflows through the CLI and module entrypoints | `src/anac_explorator/cli.py`, `src/anac_explorator/__main__.py` | Implemented |
-| Persistence/query layer | Load manifest-backed resources into partitioned Parquet and expose DuckDB views over them | `src/anac_explorator/loader.py`, `src/anac_explorator/cli.py`, `src/anac_explorator/models.py` | Implemented baseline |
-| Integrity layer | Validate warehouse metadata, row counts, schema consistency, uniqueness, and vocabulary joins | `src/anac_explorator/integrity.py`, `src/anac_explorator/cli.py`, `src/anac_explorator/models.py` | Implemented first slice |
+## Major layers
 
-## Practical data flow
+| Layer | Responsibility | Main files |
+| --- | --- | --- |
+| Source system | ANAC CKAN metadata plus downloadable CSV/JSON resources | `research/ANAC-data.md` |
+| Access layer | Reach CKAN and resource endpoints through HTTP or Playwright | `src/anac_explorator/ckan.py`, `src/anac_explorator/browser.py` |
+| Config and paths | Merge defaults, config files, env vars, and CLI overrides into one runtime config | `src/anac_explorator/config.py`, `src/anac_explorator/paths.py` |
+| Shared command contract | Normalize success/error payloads and stdout/stderr behavior | `src/anac_explorator/models.py`, `src/anac_explorator/output.py`, `src/anac_explorator/errors.py` |
+| Family registry and selection | Resolve logical dataset families, temporal scopes, and adapter capabilities | `src/anac_explorator/catalog.py`, `src/anac_explorator/selection.py` |
+| Download/cache layer | Download resources, persist manifests, and reuse local cache state | `src/anac_explorator/sample.py` |
+| Schema and semantic artifacts | Inspect schemas, compare history, build vocabulary crosswalks, and publish dictionaries | `src/anac_explorator/schema.py`, `src/anac_explorator/comparison.py`, `src/anac_explorator/vocabulary.py`, `src/anac_explorator/dictionary.py`, `src/anac_explorator/schema_service.py` |
+| Warehouse layer | Load manifest-backed resources into Parquet, maintain DuckDB catalog tables, and expose logical views | `src/anac_explorator/loader.py` |
+| Metadata discoverability layer | Rebuild the `anac_*` discoverability views from local artifacts and warehouse state | `src/anac_explorator/metadata_views.py` |
+| Stats/update/drop orchestration | Summarize local state, plan/apply CIG updates, and safely prune local storage | `src/anac_explorator/stats.py`, `src/anac_explorator/drop.py`, `src/anac_explorator/catalog.py` |
+| CLI and compatibility surface | Expose the Phase 3 commands plus retained legacy shims | `src/anac_explorator/cli.py`, `src/anac_explorator/__main__.py` |
 
-Today the main flow is:
+## Canonical local state surfaces
 
-`ANAC CKAN -> CkanClient/PlaywrightFetcher -> download_dataset_resource/download_dataset_to_parquet -> manifest-backed raw files and schemas -> vocabulary/dictionary artifacts -> load_downloaded_resource -> partitioned parquet -> query_local_data`
+The stable CLI contract depends on five persistent local layers:
 
-That means the repository already has two strong foundations:
+| Layer | Purpose | Current source |
+| --- | --- | --- |
+| Raw resource cache | manifest-backed downloaded resources | `data/raw/...` |
+| Schema artifacts | reusable schema maps and historical schema comparisons | `schemas/*.json` |
+| Semantic artifacts | vocabulary crosswalks and data dictionaries | `vocabularies/*.json`, `dictionaries/*.json` |
+| Warehouse payload | durable analytical data | `data/warehouse/parquet/...` |
+| Warehouse catalog | metadata for loads, views, and periods | `data/warehouse/anac.duckdb` |
 
-- a **raw lineage foundation**, because downloaded resources are tracked with `manifest.json`
-- a **semantic foundation**, because the current CIG surface is documented with vocabulary links, inline-code analysis, and join metadata
+The warehouse catalog still centers on the original storage baseline tables:
 
-## Repository-level architecture notes
+- `loaded_resources`
+- `registered_views`
+- `dataset_period_manifest`
 
-- **The project is artifact-driven.** Important outputs are written to disk and reused:
-  - `data/raw/...` for downloaded resources
-  - `schemas/*.json` for schema maps and comparisons
-  - `vocabularies/*.json` plus `vocabularies/index.json` for normalized crosswalks
-  - `dictionaries/*.json` and `*.md` for the current field dictionary
-- **The internal contract is dataclass-based.** The pipeline uses typed dataclasses instead of Pydantic for CKAN metadata, schemas, manifests, parsed rows, and cleaned records.
-- **The current architecture is CLI-first.** The reusable Python functions exist, but the main user-facing surface is the CLI.
-- **The system is source-preserving by design.** Raw column names are kept intact, normalization is conservative, and semantic links are added without rewriting source meaning.
-- **The storage model is now view-first.** DuckDB stores metadata and generated views, while the durable analytical payload lives in Parquet.
-- **The orchestration path is now partially integrated.** One CLI command can reuse the download cache, ensure a schema artifact exists, load to Parquet, prune the extracted CSV, and register vocabulary cross-reference views for DuckDB joins.
-- **The network model is environment-aware.** Direct HTTP can fail against the ANAC WAF, so Playwright is treated as the validated transport path from this runtime.
+Phase 3 adds a higher-level discoverability layer on top of them rather than replacing them.
 
-## What is already strong
+## Practical runtime flow
 
-- **Discovery and download are real, not stubbed.**
-- **Schema mapping and cross-year comparison are already operational.**
-- **Vocabulary and dictionary artifacts already make the CIG surface more queryable by humans and LLMs.**
-- **The Phase 2 parser/cleaner path is in place and integration-tested.**
-- **The current cache tree has been brought under manifest tracking for the main resources already in use.**
-- **A first DuckDB/Parquet loader exists and keeps large scans inside DuckDB instead of Python memory.**
-- **The semantic crosswalk artifacts can now be surfaced directly inside DuckDB for joinable querying.**
+The main end-to-end flow is now:
 
-## What is still missing architecturally
+`ANAC CKAN -> access/config layer -> family registry + temporal selection -> manifest-backed raw download -> schema/dictionary/vocabulary artifacts -> DuckDB/Parquet load -> metadata discoverability views -> stable anacx command envelope`
 
-- The incremental-update and integrity strategies are now implemented only for the **monthly CIG family**; other dataset families still use the one-shot load path.
-- There is **no integrity-validation layer yet** to enforce row-count checks, expected joins, or vocabulary-linked consistency after loading.
-- There is **no broader query engine/UI layer yet** beyond the current raw SQL CLI facade.
-- The current loader scope is still intentionally narrow: monthly CIG resources and the already-wired vocabulary datasets.
+In practice that means:
 
-## Current architectural maturity
+- `download` resolves a logical family into raw resources and optional Parquet loads
+- `schema` reads local schema artifacts and semantic overlays
+- `query` bootstraps the metadata views and runs safe SQL
+- `stats` summarizes local metadata or profiles live dataset values
+- `update` wraps the existing monthly CIG sync logic behind a normalized plan/apply contract
+- `drop` maps local scope selections to exact files, deletes them safely, and reconciles metadata immediately
 
-The project is best described as:
+## Stable command surface
 
-> **Phase 1 complete, Phase 2 storage baseline complete, first incremental CIG slice built, first integrity slice built.**
+The preferred user and agent interface is:
 
-In other words, the repository is already past the exploratory stage and now has a credible ingestion foundation plus a local storage baseline, but it has not yet crossed into the final intended architecture of **incremental relational refresh + integrity guarantees + richer query and LLM support**.
+- `anacx datasets`
+- `anacx download`
+- `anacx schema`
+- `anacx query`
+- `anacx stats`
+- `anacx update`
+- `anacx config`
+- `anacx drop`
 
-## Next three steps
+The repository still ships legacy low-level commands such as `package-show`, `download-cig-sample`, `query-local-data`, and `sync-cig-periods` for backwards compatibility. They remain available through the same parser and executable, but the Phase 3 commands are the canonical surface going forward.
 
-### 1. Extend incremental delta-update handling beyond monthly CIG
+The legacy executable name `anac-explorator` is also still shipped as a compatibility alias. The canonical config path is now `~/.config/anacx/config.json`, with automatic fallback to the older `anac-explorator` config directory when present.
 
-Generalize the new period-catalog workflow to other update-oriented sources so the local store can be refreshed without reloading everything from scratch.
+## Current strengths
 
-Concretely, this should add:
+- **The Phase 3 CLI contract is fully wired.** All eight stable commands are implemented and tested.
+- **The metadata layer is queryable.** `anac query` can inspect `anac_*` views without requiring users to manage those views manually.
+- **The storage model remains efficient.** Durable payload lives in Parquet while DuckDB stores control-plane metadata and generated views.
+- **The mutation commands are guarded.** Destructive and write-enabled flows use explicit confirmation and stable error envelopes.
+- **The CIG family is production-ready by repo standards.** Download, schema inspection, querying, stats, update planning/execution, integrity validation, and drop workflows all exist for the current CIG baseline.
 
-- update checkpoints or watermarks
-- merge/upsert rules
-- duplicate/conflict handling
-- repeatable refresh commands
+## Known boundaries
 
-### 2. Extend integrity validation beyond the current CIG slice
+- The monthly **CIG family remains the most mature** dataset family.
+- `update` and `drop` are intentionally strongest for CIG; other families cleanly reject unsupported operations.
+- The broader warehouse and integrity strategy is still not generalized to every CKAN dataset family.
+- The project remains **CLI-first**. There is still no web UI and no broader Python API ergonomics layer.
 
-The first validator now checks the local monthly CIG warehouse, but the broader architecture still needs the same guarantees for other dataset families and future cross-dataset joins.
+## Publication-readiness summary
 
-Concretely, this should add:
+For publication, the important architectural statement is now:
 
-- row-count and load-completeness checks
-- join validation against controlled vocabularies
-- nullability/type drift checks on loaded tables
-- relationship checks for future cross-dataset joins
-
-### 3. Expand the query surface carefully
-
-Build on the current raw SQL facade with a slightly richer local analytical interface, but keep the system view-first and avoid duplicating Parquet-backed data unless reuse clearly justifies it.
-
-Concretely, this should add:
-
-- small dataset/view discovery commands
-- reusable example analytical queries
-- query ergonomics for bounded-memory output
-- later LLM-oriented schema/context helpers
-
-## Bottom line
-
-The architecture is currently **well prepared for ingestion**, **semantically documented**, and now **equipped with a first local storage/query baseline**. The next steps are to add the **update model**, then the **integrity guarantees**, then the broader **query and LLM surfaces** that will rely on that storage layer.
+> The repository no longer exposes only a collection of ingestion utilities. It exposes a coherent local ANAC warehouse interface with a stable top-level CLI, a documented compatibility path, and a metadata layer intended for both humans and automation.

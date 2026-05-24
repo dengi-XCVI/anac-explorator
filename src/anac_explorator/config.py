@@ -368,14 +368,29 @@ _CONFIG_COMMAND_BOOLEAN_KEYS = {
 _CONFIG_DOMAIN_PREFIXES = {"paths", "transport", "download", "query", "output"}
 
 
-def default_config_path(*, env: Mapping[str, str] | None = None) -> Path:
-    """@notice Return the default persisted config-file path."""
+def legacy_default_config_path(*, env: Mapping[str, str] | None = None) -> Path:
+    """@notice Return the legacy persisted config-file path used before the CLI rename."""
 
     active_env = os.environ if env is None else env
     xdg_config_home = active_env.get("XDG_CONFIG_HOME")
     if xdg_config_home:
         return Path(xdg_config_home) / "anac-explorator" / "config.json"
     return Path.home() / ".config" / "anac-explorator" / "config.json"
+
+
+def default_config_path(*, env: Mapping[str, str] | None = None) -> Path:
+    """@notice Return the default persisted config-file path."""
+
+    active_env = os.environ if env is None else env
+    xdg_config_home = active_env.get("XDG_CONFIG_HOME")
+    if xdg_config_home:
+        default_path = Path(xdg_config_home) / "anacx" / "config.json"
+    else:
+        default_path = Path.home() / ".config" / "anacx" / "config.json"
+    legacy_path = legacy_default_config_path(env=active_env)
+    if not default_path.exists() and legacy_path.exists():
+        return legacy_path
+    return default_path
 
 
 def load_persisted_config(config_path: str | Path) -> dict[str, object]:

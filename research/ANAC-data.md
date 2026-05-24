@@ -166,7 +166,7 @@ All downloads are ZIP archives. CSV uses `;` (semicolon) delimiter.
               │
               ▼
 ┌─────────────────────────────────────────────┐
-│           anac CLI / Python API             │
+│          anacx CLI / Python API             │
 │  • Dataset discovery & listing              │
 │  • Download & caching (incremental deltas)  │
 │  • Schema validation & documentation        │
@@ -214,12 +214,12 @@ All downloads are ZIP archives. CSV uses `;` (semicolon) delimiter.
 - [ ] Validate data integrity (row counts, referential integrity with vocabularies)
 
 ### Phase 3: CLI Tool (Week 3–4)
-- [ ] `anac datasets` — List all available datasets
-- [ ] `anac download <dataset> --year 2024` — Download specific datasets
-- [ ] `anac schema <dataset>` — Show column schema and data types
-- [ ] `anac query "SELECT ..."` — SQL query against local DuckDB
-- [ ] `anac stats` — Show data statistics and summary
-- [ ] `anac update` — Fetch and merge incremental deltas
+- [ ] `anacx datasets` — List all available datasets
+- [ ] `anacx download <dataset> --year 2024` — Download specific datasets
+- [ ] `anacx schema <dataset>` — Show column schema and data types
+- [ ] `anacx query "SELECT ..."` — SQL query against local DuckDB
+- [ ] `anacx stats` — Show data statistics and summary
+- [ ] `anacx update` — Fetch and merge incremental deltas
 
 
 ### Phase 4: Publication (Week 5–6)

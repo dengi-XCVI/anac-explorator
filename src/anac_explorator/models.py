@@ -1001,11 +1001,24 @@ class UpdatePlanItem:
     manifest_path: str | None = None
     parquet_path: str | None = None
     content_checksum: str | None = None
+    target_kind: str | None = None
+    target_path: str | None = None
+    source_dataset: str | None = None
+    derived_artifacts: list[str] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, object]:
         """@notice Convert the update plan item into a serializable dictionary."""
 
-        return asdict(self)
+        payload = asdict(self)
+        if self.target_kind is None:
+            payload.pop("target_kind", None)
+        if self.target_path is None:
+            payload.pop("target_path", None)
+        if self.source_dataset is None:
+            payload.pop("source_dataset", None)
+        if not self.derived_artifacts:
+            payload.pop("derived_artifacts", None)
+        return payload
 
 
 @dataclass(slots=True)
@@ -1033,13 +1046,66 @@ class UpdatePlan:
 
 
 @dataclass(slots=True)
+class DropPlanTarget:
+    """@notice Describe one planned local file target for a future drop operation."""
+
+    path: str
+    layer: str
+    size_bytes: int
+    dataset: str
+    dataset_id: str | None = None
+    slice: str | None = None
+    resource_id: str | None = None
+    resource_name: str | None = None
+    target_kind: str | None = None
+
+    def to_dict(self) -> dict[str, object]:
+        """@notice Convert the drop target into a serializable dictionary."""
+
+        return asdict(self)
+
+
+@dataclass(slots=True)
+class DropPlan:
+    """@notice Capture the reusable plan shared by dry-run and future drop execution."""
+
+    dataset: str
+    scope: dict[str, object]
+    layer: str
+    targets: list[DropPlanTarget] = field(default_factory=list)
+    total_size_bytes: int = 0
+    total_size_human: str = "0 B"
+
+    def __post_init__(self) -> None:
+        """@notice Compute aggregate byte totals from the targeted local files."""
+
+        self.total_size_bytes = sum(target.size_bytes for target in self.targets)
+        self.total_size_human = _format_byte_size(self.total_size_bytes)
+
+    def to_dict(self) -> dict[str, object]:
+        """@notice Convert the drop plan into a serializable dictionary."""
+
+        return {
+            "dataset": self.dataset,
+            "scope": _to_json_compatible(self.scope),
+            "layer": self.layer,
+            "targets": [item.to_dict() for item in self.targets],
+            "totals": {
+                "target_count": len(self.targets),
+                "size_bytes": self.total_size_bytes,
+                "size_human": self.total_size_human,
+            },
+        }
+
+
+@dataclass(slots=True)
 class UpdateCommandResult:
     """@notice Capture the normalized Phase 3 `update` backend result payload."""
 
     scope: dict[str, object]
     latest_local_state: dict[str, object]
     plan: list[UpdatePlanItem] = field(default_factory=list)
-    applied: list["DatasetParquetDownloadResult"] = field(default_factory=list)
+    applied: list["UpdateAppliedArtifact"] = field(default_factory=list)
     validation: "WarehouseIntegrityReport | dict[str, WarehouseIntegrityReport] | None" = None
 
     def to_dict(self) -> dict[str, object]:
@@ -1129,6 +1195,74 @@ class DatasetParquetDownloadResult:
 
 
 @dataclass(slots=True)
+class VocabularyRefreshResult:
+    """@notice Capture one vocabulary-family refresh and artifact rebuild result."""
+
+    dataset: str
+    dataset_id: str
+    resource_name: str
+    manifest_path: str
+    download_cache_status: str
+    schema_path: str
+    artifact_path: str
+    vocabulary_index_path: str
+    table_count: int
+    crosswalk_registration: WarehouseCrosswalkRegistrationResult | None = None
+
+    def to_dict(self) -> dict[str, object]:
+        """@notice Convert the vocabulary refresh result into a serializable dictionary."""
+
+        return {
+            "artifact_type": "vocabulary_refresh",
+            "dataset": self.dataset,
+            "dataset_id": self.dataset_id,
+            "resource_name": self.resource_name,
+            "manifest_path": self.manifest_path,
+            "download_cache_status": self.download_cache_status,
+            "schema_path": self.schema_path,
+            "artifact_path": self.artifact_path,
+            "vocabulary_index_path": self.vocabulary_index_path,
+            "table_count": self.table_count,
+            "crosswalk_registration": None
+            if self.crosswalk_registration is None
+            else self.crosswalk_registration.to_dict(),
+        }
+
+
+@dataclass(slots=True)
+class DictionaryRefreshResult:
+    """@notice Capture one derived dictionary rebuild triggered by an update flow."""
+
+    dataset: str
+    dataset_id: str
+    dictionary_name: str
+    json_path: str
+    markdown_path: str
+    entry_count: int
+    section_count: int
+    reason: str
+    source_dataset: str | None = None
+
+    def to_dict(self) -> dict[str, object]:
+        """@notice Convert the dictionary refresh result into a serializable dictionary."""
+
+        payload: dict[str, object] = {
+            "artifact_type": "dictionary_refresh",
+            "dataset": self.dataset,
+            "dataset_id": self.dataset_id,
+            "dictionary_name": self.dictionary_name,
+            "json_path": self.json_path,
+            "markdown_path": self.markdown_path,
+            "entry_count": self.entry_count,
+            "section_count": self.section_count,
+            "reason": self.reason,
+        }
+        if self.source_dataset is not None:
+            payload["source_dataset"] = self.source_dataset
+        return payload
+
+
+@dataclass(slots=True)
 class DatasetPeriodManifestRecord:
     """@notice Capture one warehouse-level period manifest entry for incremental updates.
 
@@ -1167,6 +1301,9 @@ class DatasetPeriodManifestRecord:
         """@notice Convert the warehouse period manifest entry into a serializable dictionary."""
 
         return asdict(self)
+
+
+UpdateAppliedArtifact = DatasetParquetDownloadResult | VocabularyRefreshResult | DictionaryRefreshResult
 
 
 @dataclass(slots=True)
@@ -1588,3 +1725,17 @@ def _to_json_compatible(value: object) -> object:
     if isinstance(value, list):
         return [_to_json_compatible(item) for item in value]
     return value
+
+
+def _format_byte_size(size_bytes: int) -> str:
+    """@notice Render one byte count into a compact human-readable string."""
+
+    units = ("B", "KB", "MB", "GB", "TB")
+    size = float(size_bytes)
+    unit_index = 0
+    while size >= 1024.0 and unit_index < len(units) - 1:
+        size /= 1024.0
+        unit_index += 1
+    if unit_index == 0:
+        return f"{int(size)} {units[unit_index]}"
+    return f"{size:.1f} {units[unit_index]}"

@@ -1,20 +1,17 @@
 """@notice Command-line entry points for the ANAC explorator project.
 
-@dev The CLI now covers the completed Phase 1 workflow plus the first Phase 2
-pipeline surface:
-1. query live CKAN package metadata
-2. download and extract one CKAN CSV resource
-3. inspect a local CSV and map its schema
-4. compare schema artifacts
-5. build normalized vocabulary cross-reference tables
-6. build a structured field dictionary for the January 2025 CIG schema
-7. download manifest-backed CKAN CSV or JSON resources
-8. parse local CSV or JSON resources into structured payloads
-9. clean parsed resources for later database loading
-10. load manifest-backed CSV resources into DuckDB/Parquet storage
-11. run SQL queries against the local DuckDB warehouse
-12. download one dataset resource directly into Parquet-backed DuckDB views
-13. validate the local DuckDB/Parquet warehouse for integrity issues
+@dev The canonical CLI surface is now the completed Phase 3 contract:
+1. datasets
+2. download
+3. schema
+4. query
+5. stats
+6. update
+7. config
+8. drop
+
+Legacy low-level commands are still exposed for backwards compatibility through
+the same parser and executable.
 """
 
 from __future__ import annotations
@@ -79,7 +76,14 @@ from anac_explorator.vocabulary import VOCABULARY_DATASET_CONFIGS, build_vocabul
 def build_parser() -> argparse.ArgumentParser:
     """@notice Construct the top-level CLI parser."""
 
-    parser = argparse.ArgumentParser(prog="anac-explorator")
+    parser = argparse.ArgumentParser(
+        prog="anacx",
+        description=(
+            "Stable Phase 3 ANAC CLI. Prefer datasets, download, schema, query, "
+            "stats, update, config, and drop. Legacy low-level commands remain "
+            "available for compatibility."
+        ),
+    )
     parser.add_argument(
         "--debug",
         action="store_true",
@@ -577,9 +581,63 @@ def build_parser() -> argparse.ArgumentParser:
     )
     update_parser.set_defaults(handler=_handle_update)
 
+    drop_parser = subparsers.add_parser(
+        "drop",
+        help="Plan or apply safe local pruning for one dataset family's raw files, Parquet slices, or both.",
+    )
+    drop_parser.add_argument("dataset", help="Logical dataset family identifier, such as cig.")
+    drop_parser.add_argument(
+        "--year",
+        help="One year or inclusive year range in YYYY or YYYY-YYYY form.",
+    )
+    drop_parser.add_argument(
+        "--month",
+        help="One month or inclusive month range in M or M-M form, used together with --year.",
+    )
+    drop_parser.add_argument(
+        "--slice",
+        dest="slice_value",
+        help="Explicit slice list in canonical YYYY-MM[,YYYY-MM,...] form.",
+    )
+    drop_parser.add_argument(
+        "--latest",
+        action="store_true",
+        help="Restrict the drop scope to the latest locally available slice when applicable.",
+    )
+    drop_parser.add_argument(
+        "--resource-id",
+        dest="resource_ids",
+        action="append",
+        help="Optional local resource id or name filter. May be repeated or given as comma-separated values.",
+    )
+    drop_parser.add_argument(
+        "--layer",
+        choices=["raw", "parquet", "all"],
+        default="all",
+        help="Local storage layer to prune.",
+    )
+    drop_parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Return the resolved drop plan without deleting any files.",
+    )
+    drop_parser.add_argument(
+        "--yes",
+        action="store_true",
+        help="Confirm destructive local file deletion when not using --dry-run.",
+    )
+    drop_parser.add_argument(
+        "--format",
+        dest="output_format",
+        choices=["json", "table"],
+        default=None,
+        help="Output format for the normalized drop result.",
+    )
+    drop_parser.set_defaults(handler=_handle_drop)
+
     package_show = subparsers.add_parser(
         "package-show",
-        help="Fetch CKAN metadata for one dataset identifier.",
+        help="Legacy: fetch CKAN metadata for one dataset identifier.",
     )
     package_show.add_argument("dataset_id", help="CKAN dataset slug or identifier.")
     package_show.add_argument(
@@ -623,7 +681,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     download_dataset_csv = subparsers.add_parser(
         "download-dataset-csv",
-        help="Resolve one dataset CSV resource, download it, and materialize the CSV locally.",
+        help="Legacy: resolve one dataset CSV resource, download it, and materialize the CSV locally.",
     )
     download_dataset_csv.add_argument("dataset_id", help="CKAN dataset slug to resolve.")
     download_dataset_csv.add_argument(
@@ -675,7 +733,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     download_dataset_resource_parser = subparsers.add_parser(
         "download-dataset-resource",
-        help="Resolve one CKAN CSV or JSON resource, download it, and persist a download manifest.",
+        help="Legacy: resolve one CKAN CSV or JSON resource, download it, and persist a download manifest.",
     )
     download_dataset_resource_parser.add_argument("dataset_id", help="CKAN dataset slug to resolve.")
     download_dataset_resource_parser.add_argument(
@@ -733,7 +791,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     download_dataset_to_parquet_parser = subparsers.add_parser(
         "download-dataset-to-parquet",
-        help="Download one CSV dataset resource, load it into Parquet, and register DuckDB views.",
+        help="Legacy: download one CSV dataset resource, load it into Parquet, and register DuckDB views.",
     )
     download_dataset_to_parquet_parser.add_argument("dataset_id", help="CKAN dataset slug to resolve.")
     download_dataset_to_parquet_parser.add_argument(
@@ -827,7 +885,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     sync_cig_periods_parser = subparsers.add_parser(
         "sync-cig-periods",
-        help="Incrementally load selected or newer monthly CIG periods into Parquet-backed DuckDB views.",
+        help="Legacy: incrementally load selected or newer monthly CIG periods into Parquet-backed DuckDB views.",
     )
     sync_cig_periods_parser.add_argument("dataset_id", help="CKAN yearly CIG dataset slug to inspect, such as cig-2025.")
     sync_cig_periods_parser.add_argument(
@@ -932,7 +990,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     download_cig_sample = subparsers.add_parser(
         "download-cig-sample",
-        help="Resolve one monthly CIG CSV resource, download it, and extract the CSV.",
+        help="Legacy: resolve one monthly CIG CSV resource, download it, and extract the CSV.",
     )
     download_cig_sample.add_argument(
         "--year",
@@ -991,7 +1049,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     compare_schema_files = subparsers.add_parser(
         "compare-schema-files",
-        help="Compare two schema JSON artifacts and report differences.",
+        help="Legacy: compare two schema JSON artifacts and report differences.",
     )
     compare_schema_files.add_argument("left_schema_path", help="Path to the left schema JSON file.")
     compare_schema_files.add_argument("right_schema_path", help="Path to the right schema JSON file.")
@@ -999,7 +1057,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     build_vocabularies = subparsers.add_parser(
         "build-vocabulary-crosswalks",
-        help="Download configured vocabulary datasets and emit normalized cross-reference tables.",
+        help="Legacy: download configured vocabulary datasets and emit normalized cross-reference tables.",
     )
     build_vocabularies.add_argument(
         "dataset_ids",
@@ -1059,7 +1117,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     build_data_dictionary = subparsers.add_parser(
         "build-data-dictionary",
-        help="Build the January 2025 CIG data dictionary from schema and vocabulary artifacts.",
+        help="Legacy: build the January 2025 CIG data dictionary from schema and vocabulary artifacts.",
     )
     build_data_dictionary.add_argument(
         "--schema-path",
@@ -1085,7 +1143,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     inspect_csv_schema = subparsers.add_parser(
         "inspect-csv-schema",
-        help="Inspect a local CSV file and emit a schema mapping as JSON.",
+        help="Legacy: inspect a local CSV file and emit a schema mapping as JSON.",
     )
     inspect_csv_schema.add_argument("csv_path", help="Path to the CSV file to inspect.")
     inspect_csv_schema.add_argument(
@@ -1108,7 +1166,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     parse_resource = subparsers.add_parser(
         "parse-resource",
-        help="Parse a local CSV or JSON resource into a structured machine-readable payload.",
+        help="Legacy: parse a local CSV or JSON resource into a structured machine-readable payload.",
     )
     parse_resource.add_argument("resource_path", help="Path to the local CSV or JSON resource.")
     parse_resource.add_argument(
@@ -1136,7 +1194,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     clean_resource = subparsers.add_parser(
         "clean-resource",
-        help="Parse and clean a local CSV or JSON resource for later database loading.",
+        help="Legacy: parse and clean a local CSV or JSON resource for later database loading.",
     )
     clean_resource.add_argument("resource_path", help="Path to the local CSV or JSON resource.")
     clean_resource.add_argument(
@@ -1168,7 +1226,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     load_downloaded_resource_parser = subparsers.add_parser(
         "load-downloaded-resource",
-        help="Load one manifest-backed CSV resource into partitioned Parquet and register a DuckDB view.",
+        help="Legacy: load one manifest-backed CSV resource into partitioned Parquet and register a DuckDB view.",
     )
     load_downloaded_resource_parser.add_argument(
         "manifest_path",
@@ -1196,7 +1254,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     query_local_data = subparsers.add_parser(
         "query-local-data",
-        help="Execute SQL against the local DuckDB warehouse and emit JSON rows.",
+        help="Legacy: execute SQL against the local DuckDB warehouse and emit JSON rows.",
     )
     query_local_data.add_argument("sql_query", help="SQL query executed against the local DuckDB warehouse.")
     query_local_data.add_argument(
@@ -1213,7 +1271,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     validate_local_data = subparsers.add_parser(
         "validate-local-data-integrity",
-        help="Run read-only integrity validation against the local DuckDB/Parquet warehouse.",
+        help="Legacy: run read-only integrity validation against the local DuckDB/Parquet warehouse.",
     )
     validate_local_data.add_argument(
         "--db-path",
@@ -1772,6 +1830,47 @@ def _handle_update(args: argparse.Namespace) -> object:
     )
 
 
+def _handle_drop(args: argparse.Namespace) -> dict[str, object]:
+    """@notice Execute the Phase 3 `drop` CLI subcommand."""
+
+    temporal_selection = parse_temporal_selection(
+        year=args.year,
+        month=args.month,
+        slice_value=args.slice_value,
+        latest=bool(args.latest),
+    )
+    resource_ids = _parse_drop_resource_ids(args.resource_ids)
+    plan = DATASET_FAMILY_REGISTRY.build_drop_plan(
+        args.dataset,
+        scope=temporal_selection,
+        layers=args.layer,
+        warehouse_dir=args.effective_paths.warehouse_dir,
+        resource_ids=resource_ids,
+    )
+    if not args.dry_run and not args.yes:
+        raise CliCommandError(
+            "VALIDATION_FAILED",
+            "Drop requires --yes unless --dry-run is used.",
+            details={
+                "dataset": args.dataset,
+                "layer": args.layer,
+                "dry_run": False,
+                "confirmation_required": True,
+            },
+        )
+    applied = []
+    if not args.dry_run:
+        applied = DATASET_FAMILY_REGISTRY.apply_drop_plan(
+            args.dataset,
+            plan=plan,
+            warehouse_dir=args.effective_paths.warehouse_dir,
+        )
+    payload = plan.to_dict()
+    payload["applied"] = [target.to_dict() for target in applied]
+    payload["dry_run"] = bool(args.dry_run)
+    return payload
+
+
 def _resolve_schema_cli_target(args: argparse.Namespace) -> str | None:
     """@notice Normalize the shared temporal flags into one schema target token."""
 
@@ -1811,6 +1910,15 @@ def _resolve_schema_cli_target(args: argparse.Namespace) -> str | None:
         f"Unsupported schema selection mode {selection.mode!r}.",
         details={"dataset": args.dataset, "selection_mode": selection.mode},
     )
+
+
+def _parse_drop_resource_ids(raw_values: list[str] | None) -> list[str] | None:
+    """@notice Normalize repeated or comma-separated `--resource-id` values."""
+
+    if not raw_values:
+        return None
+    resource_ids = sorted({part.strip() for value in raw_values for part in str(value).split(",") if part.strip()})
+    return None if not resource_ids else resource_ids
 
 
 def _schema_has_temporal_flags(args: argparse.Namespace) -> bool:

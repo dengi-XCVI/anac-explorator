@@ -21,6 +21,8 @@ from anac_explorator.models import (
     CkanPackage,
     CkanResource,
     DownloadManifest,
+    DropPlan,
+    DropPlanTarget,
     SchemaColumn,
     SchemaMapping,
     UpdateCommandResult,
@@ -30,6 +32,13 @@ from anac_explorator.paths import apply_effective_paths
 
 class CliTests(unittest.TestCase):
     """@notice Verify that the CLI emits machine-readable payloads."""
+
+    def test_build_parser_uses_anacx_prog(self) -> None:
+        """@notice Surface the renamed top-level executable in argparse help output."""
+
+        parser = main.__globals__["build_parser"]()
+
+        self.assertEqual(parser.prog, "anacx")
 
     def test_inspect_csv_schema_prints_json(self) -> None:
         """@notice Emit a schema mapping for a semicolon-delimited CSV file."""
@@ -286,6 +295,39 @@ class CliTests(unittest.TestCase):
         self.assertEqual(args.output_dir, "data/raw")
         self.assertEqual(args.schemas_dir, "schemas")
         self.assertEqual(args.warehouse_dir, "data/warehouse")
+
+    def test_drop_parser_accepts_temporal_layer_and_dry_run_flags(self) -> None:
+        """@notice Parse the Phase 3 drop command with shared temporal scope and layer filtering."""
+
+        parser = main.__globals__["build_parser"]()
+        args = parser.parse_args(
+            [
+                "drop",
+                "cig",
+                "--year",
+                "2025",
+                "--month",
+                "1",
+                "--layer",
+                "raw",
+                "--resource-id",
+                "csv-01,cig_csv_2025_01",
+                "--dry-run",
+                "--yes",
+                "--format",
+                "table",
+            ]
+        )
+
+        self.assertEqual(args.command, "drop")
+        self.assertEqual(args.dataset, "cig")
+        self.assertEqual(args.year, "2025")
+        self.assertEqual(args.month, "1")
+        self.assertEqual(args.layer, "raw")
+        self.assertEqual(args.resource_ids, ["csv-01,cig_csv_2025_01"])
+        self.assertTrue(args.dry_run)
+        self.assertTrue(args.yes)
+        self.assertEqual(args.output_format, "table")
 
     def test_config_parser_accepts_show_subcommand_and_output_format(self) -> None:
         """@notice Parse the Phase 3 config show surface with its dedicated output options."""
@@ -819,6 +861,87 @@ class CliTests(unittest.TestCase):
         self.assertEqual(payload["data"]["plan"], [])
         update_mock.assert_called_once()
         self.assertTrue(update_mock.call_args.kwargs["dry_run"])
+
+    def test_drop_dry_run_prints_shared_json_envelope(self) -> None:
+        """@notice Emit the normalized drop dry-run payload through the shared result envelope."""
+
+        plan = DropPlan(
+            dataset="cig",
+            scope={"selection_mode": "range", "selected_slices": ["2025-01"]},
+            layer="raw",
+            targets=[
+                DropPlanTarget(
+                    path="data/raw/cig-2025/cig_csv_2025_01/manifest.json",
+                    layer="raw",
+                    size_bytes=128,
+                    dataset="cig",
+                    dataset_id="cig-2025",
+                    slice="2025-01",
+                    resource_id="csv-01",
+                    resource_name="cig_csv_2025_01",
+                    target_kind="manifest",
+                )
+            ],
+        )
+
+        output = io.StringIO()
+        with patch.object(
+            main.__globals__["DATASET_FAMILY_REGISTRY"],
+            "build_drop_plan",
+            return_value=plan,
+        ) as build_drop_mock, patch.object(
+            main.__globals__["DATASET_FAMILY_REGISTRY"],
+            "apply_drop_plan",
+        ) as apply_drop_mock:
+            with redirect_stdout(output):
+                exit_code = main(["drop", "cig", "--year", "2025", "--month", "1", "--layer", "raw", "--dry-run"])
+
+        payload = json.loads(output.getvalue())
+        self.assertEqual(exit_code, 0)
+        self.assertTrue(payload["ok"])
+        self.assertEqual(payload["command"], "drop")
+        self.assertEqual(payload["data"]["dataset"], "cig")
+        self.assertEqual(payload["data"]["layer"], "raw")
+        self.assertEqual(payload["data"]["scope"]["selection_mode"], "range")
+        self.assertEqual(payload["data"]["scope"]["selected_slices"], ["2025-01"])
+        self.assertEqual(payload["data"]["totals"]["target_count"], 1)
+        self.assertEqual(payload["data"]["totals"]["size_bytes"], 128)
+        self.assertEqual(payload["data"]["applied"], [])
+        self.assertTrue(payload["data"]["dry_run"])
+        self.assertEqual(build_drop_mock.call_args.kwargs["scope"].slices, ["2025-01"])
+        self.assertEqual(build_drop_mock.call_args.kwargs["layers"], "raw")
+        apply_drop_mock.assert_not_called()
+
+    def test_drop_requires_yes_when_not_dry_run(self) -> None:
+        """@notice Abort destructive drop execution unless the command is explicitly confirmed."""
+
+        plan = DropPlan(
+            dataset="cig",
+            scope={"selection_mode": "range", "selected_slices": ["2025-01"]},
+            layer="all",
+            targets=[],
+        )
+
+        output = io.StringIO()
+        with patch.object(
+            main.__globals__["DATASET_FAMILY_REGISTRY"],
+            "build_drop_plan",
+            return_value=plan,
+        ) as build_drop_mock, patch.object(
+            main.__globals__["DATASET_FAMILY_REGISTRY"],
+            "apply_drop_plan",
+        ) as apply_drop_mock:
+            with redirect_stdout(output):
+                exit_code = main(["drop", "cig", "--year", "2025"])
+
+        payload = json.loads(output.getvalue())
+        self.assertEqual(exit_code, 42)
+        self.assertFalse(payload["ok"])
+        self.assertEqual(payload["command"], "drop")
+        self.assertEqual(payload["error"]["code"], "VALIDATION_FAILED")
+        self.assertTrue(payload["error"]["details"]["confirmation_required"])
+        build_drop_mock.assert_called_once()
+        apply_drop_mock.assert_not_called()
 
     def test_query_uses_configured_timeout_when_flag_is_absent(self) -> None:
         """@notice Fill the query timeout from config when the CLI flag is not provided."""

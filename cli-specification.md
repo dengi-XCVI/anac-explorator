@@ -20,6 +20,7 @@ This specification is normative for the new CLI surface:
 - `stats`
 - `update`
 - `config`
+- `drop`
 
 Everything else is out of the stable Phase 3 contract.
 
@@ -92,13 +93,14 @@ Phase 3 does **not** replace these tables. It adds a higher-level discoverabilit
 
 Phase 3 covers:
 
-1. a new stable command grammar under `anac`
+1. a new stable command grammar under `anacx`
 2. stable output semantics for humans and agents
 3. read-only metadata discoverability via SQL-accessible views
 4. stable JSON response schemas for all Phase 3 commands
 5. explicit temporal slice semantics
-6. safe mutation semantics for download and update
+6. safe mutation semantics for download, update, and drop
 7. local configuration management
+8. local storage-pruning workflows
 
 ### 3.2 Out of scope
 
@@ -122,7 +124,7 @@ Legacy commands may remain as compatibility shims during migration, but they are
 The canonical Phase 3 executable name is:
 
 ```bash
-anac
+anacx
 ```
 
 ### 4.2 Compatibility alias
@@ -133,7 +135,7 @@ During migration, the project may continue to ship:
 anac-explorator
 ```
 
-as a compatibility alias. That alias may expose legacy subcommands temporarily, but **agent-oriented automation should target `anac`**.
+as a compatibility alias. That alias may expose legacy subcommands temporarily, but **agent-oriented automation should target `anacx`**.
 
 ### 4.3 Stdout / stderr contract
 
@@ -162,6 +164,7 @@ Commands that mutate local state are explicit:
 - `config set`
 - `config unset`
 - `config reset`
+- `drop`
 
 `query` is read-only unless the user explicitly opts into writes.
 
@@ -200,11 +203,12 @@ A **dataset family** is the stable user-facing dataset identifier used by the Ph
 
 This is the identifier accepted by:
 
-- `anac datasets`
-- `anac download`
-- `anac schema`
-- `anac stats`
-- `anac update`
+- `anacx datasets`
+- `anacx download`
+- `anacx schema`
+- `anacx stats`
+- `anacx update`
+- `anacx drop`
 
 It is intentionally higher-level than the raw CKAN package slug.
 
@@ -262,7 +266,7 @@ Temporal flags are invalid for snapshot families.
 ### 7.1 Invocation shape
 
 ```bash
-anac [GLOBAL_OPTIONS] COMMAND [ARGS] [COMMAND_OPTIONS]
+anacx [GLOBAL_OPTIONS] COMMAND [ARGS] [COMMAND_OPTIONS]
 ```
 
 ### 7.2 Global options
@@ -356,6 +360,7 @@ The following rules are mandatory:
 2. `query` must reject write SQL unless `--allow-write` is provided.
 3. `query --allow-write` must require `--yes` for non-interactive execution.
 4. `config reset` must require `--yes`.
+5. `drop` must require `--yes` and keep local metadata aligned with physical deletions.
 
 ---
 
@@ -367,6 +372,7 @@ Temporal selection must mean the same thing across:
 - `schema`
 - `stats`
 - `update`
+- `drop`
 
 ### 8.1 Shared flags
 
@@ -451,7 +457,7 @@ This distinction is important because ANAC source format and local storage forma
 
 ## 10. Phase 3 command contracts
 
-### 10.1 `anac datasets`
+### 10.1 `anacx datasets`
 
 #### Purpose
 
@@ -465,7 +471,7 @@ This distinction is important because ANAC source format and local storage forma
 #### Syntax
 
 ```bash
-anac datasets [DATASET] [OPTIONS]
+anacx datasets [DATASET] [OPTIONS]
 ```
 
 #### Arguments
@@ -515,15 +521,15 @@ The dataset detail payload must include:
 #### Examples
 
 ```bash
-anac datasets
-anac datasets cig --format json
-anac datasets --search pnrr
-anac datasets --downloaded
+anacx datasets
+anacx datasets cig --format json
+anacx datasets --search pnrr
+anacx datasets --downloaded
 ```
 
 ---
 
-### 10.2 `anac download`
+### 10.2 `anacx download`
 
 #### Purpose
 
@@ -539,7 +545,7 @@ anac datasets --downloaded
 #### Syntax
 
 ```bash
-anac download <DATASET> [OPTIONS]
+anacx download <DATASET> [OPTIONS]
 ```
 
 #### Options
@@ -585,15 +591,15 @@ Other families may initially support only a subset of the contract if the datase
 #### Examples
 
 ```bash
-anac download cig --year 2025 --month 1
-anac download cig --slice 2025-01,2025-03 --dry-run --format json
-anac download stazioni-appaltanti --output-format raw
-anac download cig --latest --output-format both --validate
+anacx download cig --year 2025 --month 1
+anacx download cig --slice 2025-01,2025-03 --dry-run --format json
+anacx download stazioni-appaltanti --output-format raw
+anacx download cig --latest --output-format both --validate
 ```
 
 ---
 
-### 10.3 `anac schema`
+### 10.3 `anacx schema`
 
 #### Purpose
 
@@ -608,7 +614,7 @@ anac download cig --latest --output-format both --validate
 #### Syntax
 
 ```bash
-anac schema <DATASET> [OPTIONS]
+anacx schema <DATASET> [OPTIONS]
 ```
 
 #### Options
@@ -648,16 +654,16 @@ Each diff operand must be one of:
 Examples:
 
 ```bash
-anac schema cig
-anac schema cig --year 2025
-anac schema cig --slice 2025-01 --describe
-anac schema cig --diff 2007-01 2025-01 --format json
-anac schema cig --ddl
+anacx schema cig
+anacx schema cig --year 2025
+anacx schema cig --slice 2025-01 --describe
+anacx schema cig --diff 2007-01 2025-01 --format json
+anacx schema cig --ddl
 ```
 
 ---
 
-### 10.4 `anac query`
+### 10.4 `anacx query`
 
 #### Purpose
 
@@ -670,7 +676,7 @@ anac schema cig --ddl
 #### Syntax
 
 ```bash
-anac query "<SQL>" [OPTIONS]
+anacx query "<SQL>" [OPTIONS]
 ```
 
 #### Options
@@ -718,15 +724,15 @@ At minimum, `query` must expose:
 #### Examples
 
 ```bash
-anac query "SELECT COUNT(*) AS n FROM cig"
-anac query "SELECT * FROM anac_datasets ORDER BY dataset" --format json
-anac query "SELECT * FROM cig LIMIT 1000" --format csv --output out.csv
-anac query "EXPLAIN SELECT * FROM cig" --explain --format json
+anacx query "SELECT COUNT(*) AS n FROM cig"
+anacx query "SELECT * FROM anac_datasets ORDER BY dataset" --format json
+anacx query "SELECT * FROM cig LIMIT 1000" --format csv --output out.csv
+anacx query "EXPLAIN SELECT * FROM cig" --explain --format json
 ```
 
 ---
 
-### 10.5 `anac stats`
+### 10.5 `anacx stats`
 
 #### Purpose
 
@@ -740,7 +746,7 @@ anac query "EXPLAIN SELECT * FROM cig" --explain --format json
 #### Syntax
 
 ```bash
-anac stats [DATASET] [OPTIONS]
+anacx stats [DATASET] [OPTIONS]
 ```
 
 #### Options
@@ -756,9 +762,9 @@ anac stats [DATASET] [OPTIONS]
 
 | Invocation | Scope |
 | --- | --- |
-| `anac stats` | global local-storage summary |
-| `anac stats <dataset>` | family-level summary |
-| `anac stats <dataset> --year ...` | subset summary |
+| `anacx stats` | global local-storage summary |
+| `anacx stats <dataset>` | family-level summary |
+| `anacx stats <dataset> --year ...` | subset summary |
 
 #### Behavior
 
@@ -770,15 +776,15 @@ anac stats [DATASET] [OPTIONS]
 #### Examples
 
 ```bash
-anac stats
-anac stats cig
-anac stats cig --year 2025 --partitions --format json
-anac stats cig --profile
+anacx stats
+anacx stats cig
+anacx stats cig --year 2025 --partitions --format json
+anacx stats cig --profile
 ```
 
 ---
 
-### 10.6 `anac update`
+### 10.6 `anacx update`
 
 #### Purpose
 
@@ -795,7 +801,7 @@ anac stats cig --profile
 #### Syntax
 
 ```bash
-anac update [DATASET] [OPTIONS]
+anacx update [DATASET] [OPTIONS]
 ```
 
 #### Options
@@ -812,8 +818,8 @@ anac update [DATASET] [OPTIONS]
 
 #### Scope rules
 
-1. `anac update` without `DATASET` targets all **locally present and update-capable** dataset families.
-2. `anac update <DATASET>` targets one dataset family.
+1. `anacx update` without `DATASET` targets all **locally present and update-capable** dataset families.
+2. `anacx update <DATASET>` targets one dataset family.
 3. Periodized families obey the shared temporal grammar.
 
 #### Behavior
@@ -831,15 +837,15 @@ The initial implementation must support `update cig` end to end. Other families 
 #### Examples
 
 ```bash
-anac update cig
-anac update cig --refresh-changed --dry-run --format json
-anac update cig --year 2025 --validate
-anac update --dry-run
+anacx update cig
+anacx update cig --refresh-changed --dry-run --format json
+anacx update cig --year 2025 --validate
+anacx update --dry-run
 ```
 
 ---
 
-### 10.7 `anac config`
+### 10.7 `anacx config`
 
 #### Purpose
 
@@ -848,7 +854,7 @@ anac update --dry-run
 #### Syntax
 
 ```bash
-anac config <SUBCOMMAND> [ARGS] [OPTIONS]
+anacx config <SUBCOMMAND> [ARGS] [OPTIONS]
 ```
 
 #### Subcommands
@@ -893,11 +899,72 @@ The configuration model must cover:
 #### Examples
 
 ```bash
-anac config show
-anac config show --format yaml
-anac config get transport.default --format json
-anac config set transport.default playwright
-anac config validate --format json
+anacx config show
+anacx config show --format yaml
+anacx config get transport.default --format json
+anacx config set transport.default playwright
+anacx config validate --format json
+```
+
+---
+
+### 10.8 `anacx drop`
+
+#### Purpose
+
+`drop` is the safe local-pruning surface. It removes local raw files, Parquet slices, or both for a selected dataset scope while keeping metadata and manifest state synchronized.
+
+#### Syntax
+
+```bash
+anacx drop <DATASET> [OPTIONS]
+```
+
+#### Options
+
+| Option | Meaning |
+| --- | --- |
+| temporal flags | restrict drop scope for periodized families |
+| `--resource-id ID[,ID,...]` | target one or more specific local resource identifiers |
+| `--layer raw|parquet|all` | choose which local storage layer to remove |
+| `--dry-run` | emit the resolved deletion plan only |
+| `--yes` | confirm destructive execution |
+| `--format table|json` | result format |
+
+#### Scope rules
+
+1. `<DATASET>` is always a logical dataset family.
+2. Periodized families must resolve temporal selectors through the shared grammar from Section 8.
+3. Snapshot families reject temporal selectors.
+4. `--resource-id` may narrow the drop scope further inside the selected dataset family.
+
+#### Required behavior
+
+1. `drop` must be planner-driven: it resolves local targets before deleting anything.
+2. `--dry-run` returns the exact targeted paths plus aggregate size to be freed.
+3. `--layer raw` may delete manifests, archives, and materialized raw files while leaving Parquet intact.
+4. `--layer parquet` may delete warehouse-side Parquet slices while preserving raw artifacts.
+5. `--layer all` removes both local layers for the selected scope.
+6. Successful execution must immediately prune or refresh the local metadata state so discoverability views such as `anac_loaded_resources` stop advertising deleted data.
+7. Non-dry-run execution must require `--yes`.
+
+#### Phase 3 initial support
+
+The initial implementation must support `drop cig` end to end for:
+
+- full-family local deletion
+- year- and slice-scoped deletion
+- layer-filtered raw-only pruning
+
+Other families may return `DATASET_NOT_SUPPORTED` until their adapters expose a drop planner.
+
+#### Examples
+
+```bash
+anacx drop cig --dry-run --format json
+anacx drop cig --year 2023 --layer all --yes
+anacx drop cig --slice 2025-01 --layer raw --yes
+anacx drop cig --resource-id cig_csv_2025_01 --dry-run
 ```
 
 ---
@@ -915,7 +982,7 @@ This section defines the stable machine-readable contract for `--format json`.
   "properties": {
     "ok": { "const": true },
     "command": {
-      "enum": ["datasets", "download", "schema", "query", "stats", "update", "config"]
+      "enum": ["datasets", "download", "schema", "query", "stats", "update", "config", "drop"]
     },
     "contract_version": { "const": "phase3/v1" },
     "data": { "type": "object" },
@@ -937,7 +1004,7 @@ This section defines the stable machine-readable contract for `--format json`.
   "properties": {
     "ok": { "const": false },
     "command": {
-      "enum": ["datasets", "download", "schema", "query", "stats", "update", "config"]
+      "enum": ["datasets", "download", "schema", "query", "stats", "update", "config", "drop"]
     },
     "contract_version": { "const": "phase3/v1" },
     "error": { "$ref": "#/definitions/error" },
@@ -1173,6 +1240,31 @@ Each update plan item must include:
 }
 ```
 
+### 11.11 `drop` data schema
+
+```json
+{
+  "type": "object",
+  "required": ["scope", "layer", "targets", "totals", "applied"],
+  "properties": {
+    "scope": { "type": "object" },
+    "layer": { "enum": ["raw", "parquet", "all"] },
+    "targets": { "type": "array" },
+    "totals": { "type": "object" },
+    "applied": { "type": "array" }
+  }
+}
+```
+
+Each drop target item should include:
+
+- `path`
+- `layer`
+- `size_bytes`
+- `dataset`
+- `slice`
+- `resource_id`
+
 ---
 
 ## 12. Error contract
@@ -1188,7 +1280,7 @@ Each update plan item must include:
 | `40-49` | schema or validation |
 | `50-59` | query execution or SQL policy |
 | `60-69` | config |
-| `70-79` | update or integrity |
+| `70-79` | update, drop, or integrity |
 
 ### 12.2 Required error codes
 
@@ -1249,7 +1341,7 @@ The discoverability layer is defined as a set of **stable logical metadata views
 
 1. Metadata views are read-only.
 2. They may be derived from catalog tables and artifact files.
-3. They must be queryable through `anac query`.
+3. They must be queryable through `anacx query`.
 4. They must exist even when empty.
 5. Their schemas must be stable across runs.
 
@@ -1453,6 +1545,12 @@ Commands must not force users or agents to reason directly in raw CKAN package i
 ### 14.5 Update is not generic re-download
 
 `update` is planner-driven synchronization over local state plus remote drift detection.
+
+### 14.6 Drop must reconcile metadata immediately
+
+`drop` is not a thin wrapper around file deletion.
+
+After removing local files, it must also prune or refresh the corresponding local metadata so discoverability views and local inventory commands reflect the new state without requiring manual repair.
 
 ---
 
