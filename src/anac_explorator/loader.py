@@ -38,6 +38,8 @@ from anac_explorator.models import (
     DatasetUpdatePlanItem,
     DownloadManifest,
     SchemaMapping,
+    UpdatePlan,
+    UpdatePlanItem,
     WarehouseCrosswalkRegistrationResult,
     WarehouseCrosswalkView,
     WarehouseLoadResult,
@@ -48,6 +50,7 @@ from anac_explorator.metadata_views import ensure_metadata_views
 from anac_explorator.sample import download_dataset_resource
 from anac_explorator.schema import map_csv_schema
 from anac_explorator.selection import (
+    TemporalSelection,
     parse_legacy_period_selection,
     period_to_slice_identifier,
     select_available_slices,
@@ -316,6 +319,7 @@ def sync_cig_periods_to_parquet(
     keep_materialized: bool = False,
     register_crosswalks: bool = True,
     refresh_changed: bool = False,
+    force_full: bool = False,
 ) -> DatasetIncrementalUpdateResult:
     """@notice Incrementally sync selected or newer monthly CIG periods into the warehouse."""
 
@@ -345,16 +349,19 @@ def sync_cig_periods_to_parquet(
         period_start=period_start,
         period_end=period_end,
         latest_local_period=latest_local_period,
+        force_full=force_full,
     )
 
     missing_reason = "newer_than_latest_local" if selection_mode == "forward" else "not_loaded"
-    refresh_selected_periods = selection_mode in {"explicit", "range"}
+    force_refresh_selected_periods = bool(force_full)
+    refresh_selected_periods = selection_mode in {"explicit", "range"} and not force_full
     plan_by_period: dict[str, DatasetUpdatePlanItem] = {}
     for remote_resource in selected_resources:
         local_record = local_by_period.get(remote_resource.period)
         plan_by_period[remote_resource.period] = _build_period_plan_item(
             remote_resource,
             local_record,
+            force_refresh=force_refresh_selected_periods,
             refresh_if_changed=refresh_selected_periods,
             missing_reason=missing_reason,
         )
@@ -369,6 +376,7 @@ def sync_cig_periods_to_parquet(
             plan_by_period[remote_resource.period] = _build_period_plan_item(
                 remote_resource,
                 local_record,
+                force_refresh=False,
                 refresh_if_changed=True,
                 missing_reason="not_loaded",
             )
@@ -422,6 +430,119 @@ def sync_cig_periods_to_parquet(
         period_manifest=current_manifest,
         duckdb_path=str(duckdb_path),
         crosswalk_registration=crosswalk_result,
+    )
+
+
+def _load_period_manifest_state(
+    duckdb_path: Path,
+    *,
+    dataset_type: str,
+) -> list[DatasetPeriodManifestRecord]:
+    """@notice Read the current warehouse period manifest for one update-capable dataset family."""
+
+    connection = duckdb.connect(str(duckdb_path))
+    try:
+        _ensure_warehouse_catalog(connection)
+        if dataset_type == "cig":
+            _backfill_cig_period_manifest(connection)
+        return _load_dataset_period_manifest(connection, dataset_type=dataset_type)
+    finally:
+        connection.close()
+
+
+def plan_cig_period_updates(
+    client: CkanClient,
+    *,
+    selection: TemporalSelection | None = None,
+    warehouse_dir: str | Path = "data/warehouse",
+    refresh_changed: bool = False,
+    force_full: bool = False,
+    dataset_prefix: str = "cig",
+    remote_first_year: int = 2007,
+    remote_last_year: int = 2025,
+    selected_dataset_ids: list[str] | None = None,
+) -> UpdatePlan:
+    """@notice Build the dry-run Phase 3 update plan for the logical CIG family."""
+
+    normalized_selection = TemporalSelection(mode="all") if selection is None else selection
+    warehouse_root = Path(warehouse_dir)
+    duckdb_path = warehouse_root / "anac.duckdb"
+
+    local_manifest = _load_period_manifest_state(duckdb_path, dataset_type="cig")
+    latest_local_period = max((record.period for record in local_manifest), default=None)
+    local_by_period = {record.period: record for record in local_manifest}
+
+    remote_dataset_ids = _resolve_cig_update_dataset_ids(
+        selection=normalized_selection,
+        latest_local_period=latest_local_period,
+        dataset_prefix=dataset_prefix,
+        remote_first_year=remote_first_year,
+        remote_last_year=remote_last_year,
+        refresh_changed=refresh_changed,
+        force_full=force_full,
+        selected_dataset_ids=selected_dataset_ids,
+    )
+    remote_resources = _load_remote_cig_period_resources(client, remote_dataset_ids)
+    if not remote_resources:
+        raise ValueError("No monthly CIG CSV resources were found in the selected remote CKAN datasets.")
+
+    selection_mode, requested_periods, selected_resources = _select_cig_update_resources(
+        remote_resources,
+        selection=normalized_selection,
+        latest_local_period=latest_local_period,
+        force_full=force_full,
+    )
+
+    missing_reason = "newer_than_latest_local" if selection_mode == "forward" else "not_loaded"
+    force_refresh_selected_periods = bool(force_full)
+    refresh_selected_periods = normalized_selection.mode in {"slice", "range", "latest"} and not force_full
+    plan_by_period: dict[str, DatasetUpdatePlanItem] = {}
+    for remote_resource in selected_resources:
+        plan_by_period[remote_resource.period] = _build_period_plan_item(
+            remote_resource,
+            local_by_period.get(remote_resource.period),
+            force_refresh=force_refresh_selected_periods,
+            refresh_if_changed=refresh_selected_periods,
+            missing_reason=missing_reason,
+        )
+
+    if refresh_changed and selection_mode in {"bootstrap", "forward"}:
+        for remote_resource in remote_resources:
+            if remote_resource.period in plan_by_period:
+                continue
+            local_record = local_by_period.get(remote_resource.period)
+            if local_record is None or not _remote_period_changed(local_record, remote_resource.resource):
+                continue
+            plan_by_period[remote_resource.period] = _build_period_plan_item(
+                remote_resource,
+                local_record,
+                force_refresh=False,
+                refresh_if_changed=True,
+                missing_reason="not_loaded",
+            )
+
+    plan_items = [plan_by_period[period] for period in sorted(plan_by_period)]
+    return UpdatePlan(
+        dataset="cig",
+        scope={
+            "selection_mode": selection_mode,
+            "requested_slices": list(normalized_selection.slices),
+            "requested_years": list(normalized_selection.years),
+            "requested_months": list(normalized_selection.months),
+            "start_slice": normalized_selection.start_slice,
+            "end_slice": normalized_selection.end_slice,
+            "refresh_changed": bool(refresh_changed),
+            "force_full": bool(force_full),
+        },
+        latest_local_state={
+            "latest_period": latest_local_period,
+            "latest_slice": None if latest_local_period is None else period_to_slice_identifier(latest_local_period),
+            "local_period_count": len(local_manifest),
+            "local_periods": [record.period for record in local_manifest],
+        },
+        resolved_dataset_ids=remote_dataset_ids,
+        requested_periods=requested_periods,
+        plan=[_to_update_plan_item(item) for item in plan_items],
     )
 
 
@@ -707,6 +828,7 @@ def _select_period_resources(
     period_start: str | None,
     period_end: str | None,
     latest_local_period: str | None,
+    force_full: bool = False,
 ) -> tuple[str, list[str], list[_RemotePeriodResource]]:
     """@notice Pick the remote periods that should be considered by the incremental planner."""
 
@@ -735,6 +857,10 @@ def _select_period_resources(
         selection_mode = "explicit" if explicit_selection.mode == "slice" else "range"
         return selection_mode, requested_periods, [remote_by_period[period] for period in requested_periods]
 
+    if force_full:
+        requested_periods = [resource.period for resource in remote_resources]
+        return "all", requested_periods, remote_resources
+
     if latest_local_period is None:
         requested_periods = [resource.period for resource in remote_resources]
         return "bootstrap", requested_periods, remote_resources
@@ -744,10 +870,94 @@ def _select_period_resources(
     return "forward", requested_periods, selected_resources
 
 
+def _select_cig_update_resources(
+    remote_resources: list[_RemotePeriodResource],
+    *,
+    selection: TemporalSelection,
+    latest_local_period: str | None,
+    force_full: bool = False,
+) -> tuple[str, list[str], list[_RemotePeriodResource]]:
+    """@notice Pick the remote CIG periods considered by the Phase 3 family-level update planner."""
+
+    if selection.mode == "all":
+        if force_full:
+            requested_periods = [resource.period for resource in remote_resources]
+            return "all", requested_periods, remote_resources
+        if latest_local_period is None:
+            requested_periods = [resource.period for resource in remote_resources]
+            return "bootstrap", requested_periods, remote_resources
+        selected_resources = [resource for resource in remote_resources if resource.period > latest_local_period]
+        requested_periods = [resource.period for resource in selected_resources]
+        return "forward", requested_periods, selected_resources
+
+    remote_by_period = {resource.period: resource for resource in remote_resources}
+    available_slices = [period_to_slice_identifier(resource.period) for resource in remote_resources]
+    try:
+        selected_slices = select_available_slices(selection, available_slices)
+    except ValueError as exc:
+        if selection.mode == "range" and "No available slices matched" in str(exc):
+            raise ValueError("No remote CIG periods matched the requested period range.") from exc
+        if selection.mode in {"slice", "latest"} and "requested slices were not found" in str(exc):
+            missing_periods = [
+                slice_to_period_identifier(slice_value)
+                for slice_value in selection.slices
+                if slice_value not in set(available_slices)
+            ]
+            if not missing_periods and selection.mode == "latest":
+                missing_periods = ["latest"]
+            raise ValueError(
+                "The requested CIG periods were not found in the remote CKAN dataset: "
+                + ", ".join(sorted(missing_periods))
+            ) from exc
+        raise
+
+    requested_periods = [slice_to_period_identifier(slice_value) for slice_value in selected_slices]
+    selected_resources = [remote_by_period[period] for period in requested_periods]
+    return selection.mode, requested_periods, selected_resources
+
+
+def _resolve_cig_update_dataset_ids(
+    *,
+    selection: TemporalSelection,
+    latest_local_period: str | None,
+    dataset_prefix: str,
+    remote_first_year: int,
+    remote_last_year: int,
+    refresh_changed: bool,
+    force_full: bool,
+    selected_dataset_ids: list[str] | None,
+) -> list[str]:
+    """@notice Determine which yearly CKAN datasets the CIG update planner must inspect."""
+
+    if selection.mode != "all":
+        return [] if selected_dataset_ids is None else list(selected_dataset_ids)
+
+    if latest_local_period is None:
+        start_year = remote_first_year
+    else:
+        latest_year = int(latest_local_period.split("_", 1)[0])
+        start_year = remote_first_year if refresh_changed or force_full else latest_year
+    return [f"{dataset_prefix}-{year_value:04d}" for year_value in range(start_year, remote_last_year + 1)]
+
+
+def _load_remote_cig_period_resources(
+    client: CkanClient,
+    dataset_ids: list[str],
+) -> list[_RemotePeriodResource]:
+    """@notice Load and merge remote CIG monthly resources across one or more yearly CKAN datasets."""
+
+    remote_resources: list[_RemotePeriodResource] = []
+    for dataset_id in dataset_ids:
+        package = client.package_show(dataset_id)
+        remote_resources.extend(_list_cig_period_resources(dataset_id=dataset_id, resources=package.resources))
+    return sorted(remote_resources, key=lambda resource: resource.period)
+
+
 def _build_period_plan_item(
     remote_resource: _RemotePeriodResource,
     local_record: DatasetPeriodManifestRecord | None,
     *,
+    force_refresh: bool,
     refresh_if_changed: bool,
     missing_reason: str,
 ) -> DatasetUpdatePlanItem:
@@ -764,6 +974,20 @@ def _build_period_plan_item(
             reason=missing_reason,
             remote_modified=resource.last_modified,
             remote_size=resource.size,
+        )
+    if force_refresh:
+        return DatasetUpdatePlanItem(
+            dataset_type=remote_resource.dataset_type,
+            period=remote_resource.period,
+            dataset_id=remote_resource.dataset_id,
+            resource_name=resource.name,
+            action="refresh",
+            reason="force_full",
+            remote_modified=resource.last_modified,
+            remote_size=resource.size,
+            manifest_path=local_record.manifest_path,
+            parquet_path=local_record.parquet_path,
+            content_checksum=local_record.content_checksum,
         )
     if refresh_if_changed and _remote_period_changed(local_record, resource):
         return DatasetUpdatePlanItem(
@@ -791,6 +1015,24 @@ def _build_period_plan_item(
         manifest_path=local_record.manifest_path,
         parquet_path=local_record.parquet_path,
         content_checksum=local_record.content_checksum,
+    )
+
+
+def _to_update_plan_item(item: DatasetUpdatePlanItem) -> UpdatePlanItem:
+    """@notice Convert the legacy incremental-plan item into the Phase 3 update-plan item shape."""
+
+    return UpdatePlanItem(
+        dataset=item.dataset_type,
+        slice=period_to_slice_identifier(item.period),
+        dataset_id=item.dataset_id,
+        resource_name=item.resource_name,
+        action=item.action,
+        reason=item.reason,
+        remote_modified=item.remote_modified,
+        remote_size=item.remote_size,
+        manifest_path=item.manifest_path,
+        parquet_path=item.parquet_path,
+        content_checksum=item.content_checksum,
     )
 
 

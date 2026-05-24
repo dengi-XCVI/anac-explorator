@@ -987,6 +987,83 @@ class DownloadPlan:
 
 
 @dataclass(slots=True)
+class UpdatePlanItem:
+    """@notice Describe one planned Phase 3 update action for a dataset slice."""
+
+    dataset: str
+    slice: str | None
+    dataset_id: str
+    resource_name: str
+    action: str
+    reason: str
+    remote_modified: str | None = None
+    remote_size: int | None = None
+    manifest_path: str | None = None
+    parquet_path: str | None = None
+    content_checksum: str | None = None
+
+    def to_dict(self) -> dict[str, object]:
+        """@notice Convert the update plan item into a serializable dictionary."""
+
+        return asdict(self)
+
+
+@dataclass(slots=True)
+class UpdatePlan:
+    """@notice Capture the reusable plan shared by dry-run and future update execution."""
+
+    dataset: str
+    scope: dict[str, object]
+    latest_local_state: dict[str, object]
+    resolved_dataset_ids: list[str] = field(default_factory=list)
+    requested_periods: list[str] = field(default_factory=list)
+    plan: list[UpdatePlanItem] = field(default_factory=list)
+
+    def to_dict(self) -> dict[str, object]:
+        """@notice Convert the update plan into a serializable dictionary."""
+
+        return {
+            "dataset": self.dataset,
+            "scope": _to_json_compatible(self.scope),
+            "latest_local_state": _to_json_compatible(self.latest_local_state),
+            "resolved_dataset_ids": self.resolved_dataset_ids,
+            "requested_periods": self.requested_periods,
+            "plan": [item.to_dict() for item in self.plan],
+        }
+
+
+@dataclass(slots=True)
+class UpdateCommandResult:
+    """@notice Capture the normalized Phase 3 `update` backend result payload."""
+
+    scope: dict[str, object]
+    latest_local_state: dict[str, object]
+    plan: list[UpdatePlanItem] = field(default_factory=list)
+    applied: list["DatasetParquetDownloadResult"] = field(default_factory=list)
+    validation: "WarehouseIntegrityReport | dict[str, WarehouseIntegrityReport] | None" = None
+
+    def to_dict(self) -> dict[str, object]:
+        """@notice Convert the normalized `update` payload into a serializable mapping."""
+
+        if self.validation is None:
+            validation_payload = None
+        elif isinstance(self.validation, dict):
+            validation_payload = {
+                str(key): value.to_dict() if hasattr(value, "to_dict") else _to_json_compatible(value)
+                for key, value in self.validation.items()
+            }
+        else:
+            validation_payload = self.validation.to_dict()
+        return {
+            "scope": _to_json_compatible(self.scope),
+            "latest_local_state": _to_json_compatible(self.latest_local_state),
+            "plan": [item.to_dict() for item in self.plan],
+            "applied": [item.to_dict() for item in self.applied],
+            "validation": validation_payload,
+        }
+
+
+@dataclass(slots=True)
 class DownloadCommandResult:
     """@notice Capture the normalized Phase 3 `download` command result payload."""
 

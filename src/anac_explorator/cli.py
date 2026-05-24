@@ -39,19 +39,17 @@ from anac_explorator.ckan import (
     DEFAULT_USER_AGENT,
 )
 from anac_explorator.catalog import DATASET_FAMILY_REGISTRY, execute_download_plan
-from anac_explorator.catalog import get_dataset_family, list_dataset_families
+from anac_explorator.catalog import get_dataset_family, list_dataset_families, run_dataset_update, run_global_update
 from anac_explorator.cleaner import clean_csv_resource, clean_json_resource
 from anac_explorator.comparison import compare_schema_mappings, load_schema_mapping
 from anac_explorator.config import (
     apply_effective_config,
-    delete_persisted_config,
-    render_config_get_payload,
-    render_config_reset_payload,
-    render_config_set_payload,
-    render_config_unset_payload,
-    render_config_validate_payload,
-    set_config_value,
-    unset_config_value,
+    get_config,
+    reset_config,
+    set_config,
+    show_config,
+    unset_config,
+    validate_config,
 )
 from anac_explorator.dictionary import build_cig_data_dictionary
 from anac_explorator.errors import CliCommandError, detect_mutating_query, resolve_command_error
@@ -469,6 +467,115 @@ def build_parser() -> argparse.ArgumentParser:
         help="Path to the local DuckDB database used for stats and profiling.",
     )
     stats_parser.set_defaults(handler=_handle_stats)
+
+    update_parser = subparsers.add_parser(
+        "update",
+        help="Plan or apply incremental updates for one dataset family or all locally present update-capable families.",
+    )
+    update_parser.add_argument(
+        "dataset",
+        nargs="?",
+        help="Optional logical dataset family identifier. Omit to target all locally present update-capable families.",
+    )
+    update_parser.add_argument(
+        "--year",
+        help="One year or inclusive year range in YYYY or YYYY-YYYY form.",
+    )
+    update_parser.add_argument(
+        "--month",
+        help="One month or inclusive month range in M or M-M form, used together with --year.",
+    )
+    update_parser.add_argument(
+        "--slice",
+        dest="slice_value",
+        help="Explicit slice list in canonical YYYY-MM[,YYYY-MM,...] form.",
+    )
+    update_parser.add_argument(
+        "--latest",
+        action="store_true",
+        help="Restrict the update to the latest available remote slice within the selected scope.",
+    )
+    update_parser.add_argument(
+        "--refresh-changed",
+        action="store_true",
+        help="Also refresh already-loaded slices when remote metadata changed upstream.",
+    )
+    update_parser.add_argument(
+        "--force-full",
+        action="store_true",
+        help="Rebuild every slice in the selected update scope regardless of current local state.",
+    )
+    update_parser.add_argument(
+        "--validate",
+        action="store_true",
+        help="Run local integrity validation after successful updates.",
+    )
+    update_parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Return the resolved update plan without applying downloads or loads.",
+    )
+    update_parser.add_argument(
+        "--format",
+        dest="output_format",
+        choices=["json", "table"],
+        default=None,
+        help="Output format for the normalized update result.",
+    )
+    update_parser.add_argument(
+        "--output-dir",
+        help="Base directory used for raw manifests, archives, and materialized files.",
+    )
+    update_parser.add_argument(
+        "--schemas-dir",
+        help="Directory used for generated or reused schema artifacts during updates.",
+    )
+    update_parser.add_argument(
+        "--schema-path",
+        help="Optional schema artifact override for post-update validation.",
+    )
+    update_parser.add_argument(
+        "--warehouse-dir",
+        help="Base directory for the local DuckDB database and Parquet files.",
+    )
+    update_parser.add_argument(
+        "--base-url",
+        default=DEFAULT_CKAN_BASE_URL,
+        help="CKAN action API base URL.",
+    )
+    update_parser.add_argument(
+        "--timeout",
+        type=int,
+        default=30,
+        help="Request timeout in seconds.",
+    )
+    update_parser.add_argument(
+        "--user-agent",
+        default=os.getenv("ANAC_EXPLORATOR_USER_AGENT", DEFAULT_USER_AGENT),
+        help="User-Agent header for CKAN metadata and download requests.",
+    )
+    update_parser.add_argument(
+        "--accept-language",
+        default=os.getenv("ANAC_EXPLORATOR_ACCEPT_LANGUAGE", DEFAULT_ACCEPT_LANGUAGE),
+        help="Accept-Language header for CKAN metadata and download requests.",
+    )
+    update_parser.add_argument(
+        "--referer",
+        default=os.getenv("ANAC_EXPLORATOR_REFERER", DEFAULT_REFERER),
+        help="Referer header for CKAN metadata and download requests.",
+    )
+    update_parser.add_argument(
+        "--proxy-url",
+        default=os.getenv("ANAC_EXPLORATOR_PROXY_URL"),
+        help="Optional HTTP(S) proxy URL used for CKAN metadata and download requests.",
+    )
+    update_parser.add_argument(
+        "--transport",
+        choices=["auto", "http", "playwright"],
+        default=os.getenv("ANAC_EXPLORATOR_TRANSPORT", DEFAULT_TRANSPORT),
+        help="Transport used for CKAN metadata and download requests.",
+    )
+    update_parser.set_defaults(handler=_handle_update)
 
     package_show = subparsers.add_parser(
         "package-show",
@@ -1296,27 +1403,25 @@ def _current_meta_paths(args: argparse.Namespace) -> dict[str, object]:
 def _handle_config_show(args: argparse.Namespace) -> dict[str, object]:
     """@notice Execute the `config show` CLI subcommand."""
 
-    return args.resolved_config.to_show_payload()
+    return show_config(config_path=args.config_path, no_config=args.no_config)
 
 
 def _handle_config_get(args: argparse.Namespace) -> dict[str, object]:
     """@notice Execute the `config get` CLI subcommand."""
 
-    return render_config_get_payload(args.resolved_config, args.key)
+    return get_config(args.key, config_path=args.config_path, no_config=args.no_config)
 
 
 def _handle_config_set(args: argparse.Namespace) -> dict[str, object]:
     """@notice Execute the `config set` CLI subcommand."""
 
-    value = set_config_value(args.config_path, args.key, args.value)
-    return render_config_set_payload(args.config_path, args.key, value)
+    return set_config(args.config_path, args.key, args.value)
 
 
 def _handle_config_unset(args: argparse.Namespace) -> dict[str, object]:
     """@notice Execute the `config unset` CLI subcommand."""
 
-    removed = unset_config_value(args.config_path, args.key)
-    return render_config_unset_payload(args.config_path, args.key, removed)
+    return unset_config(args.config_path, args.key)
 
 
 def _handle_config_reset(args: argparse.Namespace) -> dict[str, object]:
@@ -1328,14 +1433,13 @@ def _handle_config_reset(args: argparse.Namespace) -> dict[str, object]:
             "Config reset requires --yes.",
             details={"subcommand": "reset"},
         )
-    delete_persisted_config(args.config_path)
-    return render_config_reset_payload(args.config_path)
+    return reset_config(args.config_path)
 
 
 def _handle_config_validate(args: argparse.Namespace) -> dict[str, object]:
     """@notice Execute the `config validate` CLI subcommand."""
 
-    return render_config_validate_payload(args.resolved_config)
+    return validate_config(config_path=args.config_path, no_config=args.no_config)
 
 
 def _handle_package_show(args: argparse.Namespace) -> dict[str, object]:
@@ -1616,6 +1720,56 @@ def _handle_stats(args: argparse.Namespace) -> dict[str, object]:
     if args.partitions and args.profile:
         payload["profile"] = profile_dataset(args.dataset, selection=temporal_selection, **common_kwargs).profile
     return payload
+
+
+def _handle_update(args: argparse.Namespace) -> object:
+    """@notice Execute the Phase 3 `update` CLI subcommand."""
+
+    temporal_selection = parse_temporal_selection(
+        year=args.year,
+        month=args.month,
+        slice_value=args.slice_value,
+        latest=bool(args.latest),
+    )
+    client = CkanClient(
+        base_url=args.base_url,
+        timeout=args.timeout,
+        user_agent=args.user_agent,
+        accept_language=args.accept_language,
+        referer=args.referer,
+        proxy_url=args.proxy_url,
+        transport=args.transport,
+    )
+    common_kwargs = {
+        "selection": temporal_selection,
+        "refresh_changed": bool(args.refresh_changed),
+        "force_full": bool(args.force_full),
+        "validate": bool(args.validate),
+        "validation_schema_path": None if args.schema_path is None else Path(args.schema_path),
+        "dry_run": bool(args.dry_run),
+        "registry": DATASET_FAMILY_REGISTRY,
+    }
+    if args.dataset is None:
+        return run_global_update(
+            client,
+            db_path=args.effective_paths.warehouse_db_path,
+            raw_dir=args.effective_paths.raw_dir,
+            schemas_dir=args.effective_paths.schemas_dir,
+            dictionaries_dir=args.effective_paths.dictionaries_dir,
+            output_dir=args.effective_paths.raw_dir,
+            warehouse_dir=args.effective_paths.warehouse_dir,
+            vocabulary_index_path=args.effective_paths.vocabulary_index_path,
+            **common_kwargs,
+        )
+    return run_dataset_update(
+        args.dataset,
+        client,
+        output_dir=args.effective_paths.raw_dir,
+        schemas_dir=args.effective_paths.schemas_dir,
+        warehouse_dir=args.effective_paths.warehouse_dir,
+        vocabulary_index_path=args.effective_paths.vocabulary_index_path,
+        **common_kwargs,
+    )
 
 
 def _resolve_schema_cli_target(args: argparse.Namespace) -> str | None:

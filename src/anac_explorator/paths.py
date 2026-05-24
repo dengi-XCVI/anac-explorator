@@ -140,6 +140,7 @@ def apply_effective_paths(
     command = str(getattr(args, "command", ""))
     if hasattr(args, "output_dir") and command in {
         "download",
+        "update",
         "download-dataset-csv",
         "download-dataset-resource",
         "download-dataset-to-parquet",
@@ -191,6 +192,7 @@ def resolve_effective_paths_for_args(
 
     if command in {
         "download",
+        "update",
         "download-dataset-csv",
         "download-dataset-resource",
         "download-dataset-to-parquet",

@@ -621,6 +621,64 @@ def validate_current_config(*, config_path: str | Path | None, no_config: bool, 
     return resolve_effective_config(config_path=config_path, no_config=no_config, env=env)
 
 
+def show_config(
+    *,
+    config_path: str | Path | None = None,
+    no_config: bool = False,
+    env: Mapping[str, str] | None = None,
+) -> dict[str, object]:
+    """@notice Resolve the current config and return the backend payload for `show`."""
+
+    resolved = resolve_effective_config(config_path=config_path, no_config=no_config, env=env)
+    return resolved.to_show_payload()
+
+
+def get_config(
+    key: str,
+    *,
+    config_path: str | Path | None = None,
+    no_config: bool = False,
+    env: Mapping[str, str] | None = None,
+) -> dict[str, object]:
+    """@notice Resolve one current config key and return the backend payload for `get`."""
+
+    resolved = resolve_effective_config(config_path=config_path, no_config=no_config, env=env)
+    return render_config_get_payload(resolved, key)
+
+
+def set_config(config_path: str | Path, key: str, raw_value: str) -> dict[str, object]:
+    """@notice Persist one config key and return the backend payload for `set`."""
+
+    value = set_config_value(config_path, key, raw_value)
+    return render_config_set_payload(str(config_path), key, value)
+
+
+def unset_config(config_path: str | Path, key: str) -> dict[str, object]:
+    """@notice Remove one persisted config key and return the backend payload for `unset`."""
+
+    removed = unset_config_value(config_path, key)
+    return render_config_unset_payload(str(config_path), key, removed)
+
+
+def reset_config(config_path: str | Path) -> dict[str, object]:
+    """@notice Clear the persisted config file and return the backend payload for `reset`."""
+
+    delete_persisted_config(config_path)
+    return render_config_reset_payload(str(config_path))
+
+
+def validate_config(
+    *,
+    config_path: str | Path | None = None,
+    no_config: bool = False,
+    env: Mapping[str, str] | None = None,
+) -> dict[str, object]:
+    """@notice Resolve and validate the current config, preserving all issues for `validate`."""
+
+    resolved = validate_current_config(config_path=config_path, no_config=no_config, env=env)
+    return render_config_validate_payload(resolved)
+
+
 def _split_config_key(key: str) -> tuple[str, str]:
     """@notice Split a `domain.field` config key into its two components."""
 

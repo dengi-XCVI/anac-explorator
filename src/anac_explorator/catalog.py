@@ -12,7 +12,13 @@ import duckdb
 
 from anac_explorator.ckan import CkanClientError
 from anac_explorator.errors import CliCommandError
-from anac_explorator.loader import download_dataset_to_parquet, load_downloaded_resource, sync_cig_periods_to_parquet
+from anac_explorator.integrity import validate_local_data_integrity
+from anac_explorator.loader import (
+    download_dataset_to_parquet,
+    load_downloaded_resource,
+    plan_cig_period_updates,
+    sync_cig_periods_to_parquet,
+)
 from anac_explorator.metadata_views import ensure_metadata_views
 from anac_explorator.models import (
     CommandWarning,
@@ -23,8 +29,11 @@ from anac_explorator.models import (
     DownloadPlan,
     DownloadPlanItem,
     DownloadedResourceArtifact,
+    UpdateCommandResult,
+    UpdatePlan,
     WarehouseLoadResult,
 )
+from anac_explorator.paths import DEFAULT_CIG_SCHEMA_PATH
 from anac_explorator.sample import SampleDownloadError, download_dataset_resource, select_resource
 from anac_explorator.selection import TemporalSelection, select_available_slices
 from anac_explorator.vocabulary import VOCABULARY_DATASET_CONFIGS
@@ -265,6 +274,48 @@ class DatasetFamilyAdapter:
             "DATASET_UPDATE_NOT_SUPPORTED",
             f"Dataset family {self.family!r} does not support incremental updates yet.",
             details={"dataset": self.family},
+        )
+
+    def plan_update(
+        self,
+        client: "CkanClient",
+        *,
+        selection: TemporalSelection | None = None,
+        warehouse_dir: "Path" = Path("data/warehouse"),
+        refresh_changed: bool = False,
+        force_full: bool = False,
+    ) -> UpdatePlan:
+        """@notice Build the reusable incremental-update plan when the family supports it."""
+
+        raise CliCommandError(
+            "DATASET_UPDATE_NOT_SUPPORTED",
+            f"Dataset family {self.family!r} does not support incremental updates yet.",
+            details={"dataset": self.family},
+        )
+
+    def apply_update_plan(
+        self,
+        client: "CkanClient",
+        *,
+        plan: UpdatePlan,
+        output_dir: "Path",
+        schemas_dir: "Path",
+        warehouse_dir: "Path",
+        vocabulary_index_path: "Path",
+        delimiter: str,
+        encoding: str,
+        schema_sample_limit: int,
+        keep_materialized: bool,
+        register_crosswalks: bool,
+        refresh_changed: bool,
+        force_full: bool,
+    ) -> list[DatasetIncrementalUpdateResult]:
+        """@notice Execute one reusable incremental-update plan when the family supports it."""
+
+        raise CliCommandError(
+        "DATASET_UPDATE_NOT_SUPPORTED",
+        f"Dataset family {self.family!r} does not support incremental updates yet.",
+        details={"dataset": self.family},
         )
 
     def _resolve_requested_source_format(self, source_format: str) -> str:
@@ -620,6 +671,84 @@ class CigDatasetFamilyAdapter(PeriodizedDatasetFamilyAdapter):
             refresh_changed=refresh_changed,
         )
 
+    def plan_update(
+        self,
+        client: "CkanClient",
+        *,
+        selection: TemporalSelection | None = None,
+        warehouse_dir: "Path" = Path("data/warehouse"),
+        refresh_changed: bool = False,
+        force_full: bool = False,
+    ) -> UpdatePlan:
+        """@notice Build the family-level dry-run plan for incremental CIG updates."""
+
+        normalized_selection = TemporalSelection(mode="all") if selection is None else selection
+        selected_dataset_ids = (
+            None
+            if normalized_selection.mode == "all"
+            else self.resolve_remote_dataset_ids(normalized_selection)
+        )
+        return plan_cig_period_updates(
+            client,
+            selection=normalized_selection,
+            warehouse_dir=warehouse_dir,
+            refresh_changed=refresh_changed,
+            dataset_prefix=self.dataset_prefix,
+            remote_first_year=self.remote_first_year if self.remote_first_year is not None else 2007,
+            remote_last_year=self.remote_last_year if self.remote_last_year is not None else 2025,
+            force_full=force_full,
+            selected_dataset_ids=selected_dataset_ids,
+        )
+
+    def apply_update_plan(
+        self,
+        client: "CkanClient",
+        *,
+        plan: UpdatePlan,
+        output_dir: "Path",
+        schemas_dir: "Path",
+        warehouse_dir: "Path",
+        vocabulary_index_path: "Path",
+        delimiter: str,
+        encoding: str,
+        schema_sample_limit: int,
+        keep_materialized: bool,
+        register_crosswalks: bool,
+        refresh_changed: bool,
+        force_full: bool,
+    ) -> list[DatasetIncrementalUpdateResult]:
+        """@notice Execute the normalized plan by delegating each targeted year to the existing sync helper."""
+
+        applicable_items = [item for item in plan.plan if item.action != "skip"]
+        if not applicable_items:
+            return []
+
+        periods_by_dataset: dict[str, list[str]] = {}
+        for item in applicable_items:
+            periods_by_dataset.setdefault(item.dataset_id, []).append(item.slice.replace("-", "_"))
+
+        results: list[DatasetIncrementalUpdateResult] = []
+        for dataset_id, periods in periods_by_dataset.items():
+            results.append(
+                sync_cig_periods_to_parquet(
+                    client,
+                    dataset_id=dataset_id,
+                    output_dir=output_dir,
+                    schemas_dir=schemas_dir,
+                    warehouse_dir=warehouse_dir,
+                    periods=periods,
+                    vocabulary_index_path=vocabulary_index_path,
+                    delimiter=delimiter,
+                    encoding=encoding,
+                    schema_sample_limit=schema_sample_limit,
+                    keep_materialized=keep_materialized,
+                    register_crosswalks=register_crosswalks,
+                    refresh_changed=refresh_changed,
+                    force_full=force_full,
+                )
+            )
+        return results
+
 
 FamilyAdapter = DatasetFamilyAdapter
 PeriodizedAdapter = PeriodizedDatasetFamilyAdapter
@@ -701,6 +830,21 @@ class DatasetFamilyRegistry:
         """@notice Dispatch an incremental update through the family's adapter."""
 
         return self.get_family(dataset).adapter.update(client, **kwargs)
+
+    def plan_update(self, dataset: str, client: "CkanClient", **kwargs: object) -> UpdatePlan:
+        """@notice Build the reusable incremental-update plan through the family's adapter."""
+
+        return self.get_family(dataset).adapter.plan_update(client, **kwargs)
+
+    def apply_update_plan(
+        self,
+        dataset: str,
+        client: "CkanClient",
+        **kwargs: object,
+    ) -> list[DatasetIncrementalUpdateResult]:
+        """@notice Execute the reusable incremental-update plan through the family's adapter."""
+
+        return self.get_family(dataset).adapter.apply_update_plan(client, **kwargs)
 
 
 def _reuse_cached_parquet_result(
@@ -828,6 +972,166 @@ def execute_download_plan(
             )
         )
     return applied
+
+
+def _resolve_update_validation_schema_path(
+    *,
+    dataset: str,
+    schemas_dir: Path,
+    validation_schema_path: str | Path | None,
+) -> Path:
+    """@notice Resolve the default validation schema path for one update-capable family."""
+
+    if validation_schema_path is not None:
+        return Path(validation_schema_path)
+    if dataset == "cig":
+        return schemas_dir / DEFAULT_CIG_SCHEMA_PATH.name
+    raise CliCommandError(
+        "DATASET_NOT_SUPPORTED",
+        f"Dataset family {dataset!r} does not support post-update validation yet.",
+        details={"dataset": dataset},
+    )
+
+
+def execute_update_plan(
+    plan: UpdatePlan,
+    client: "CkanClient",
+    *,
+    output_dir: str | Path = "data/raw",
+    schemas_dir: str | Path = "schemas",
+    warehouse_dir: str | Path = "data/warehouse",
+    vocabulary_index_path: str | Path = "vocabularies/index.json",
+    delimiter: str = ";",
+    encoding: str = "utf-8-sig",
+    schema_sample_limit: int = 2_000,
+    keep_materialized: bool = False,
+    register_crosswalks: bool = True,
+    refresh_changed: bool = False,
+    force_full: bool = False,
+    validate: bool = False,
+    validation_schema_path: str | Path | None = None,
+    registry: DatasetFamilyRegistry | None = None,
+) -> UpdateCommandResult:
+    """@notice Execute one reusable update plan through the family adapter contract."""
+
+    registry = DATASET_FAMILY_REGISTRY if registry is None else registry
+    output_root = Path(output_dir)
+    schemas_root = Path(schemas_dir)
+    warehouse_root = Path(warehouse_dir)
+    vocabulary_index = Path(vocabulary_index_path)
+
+    execution_results = registry.apply_update_plan(
+        plan.dataset,
+        client,
+        plan=plan,
+        output_dir=output_root,
+        schemas_dir=schemas_root,
+        warehouse_dir=warehouse_root,
+        vocabulary_index_path=vocabulary_index,
+        delimiter=delimiter,
+        encoding=encoding,
+        schema_sample_limit=schema_sample_limit,
+        keep_materialized=keep_materialized,
+        register_crosswalks=register_crosswalks,
+        refresh_changed=refresh_changed,
+        force_full=force_full,
+    )
+
+    applied: list[DatasetParquetDownloadResult] = []
+    for result in execution_results:
+        applied.extend(result.applied_loads)
+
+    validation = None
+    if validate:
+        validation = validate_local_data_integrity(
+            warehouse_root / "anac.duckdb",
+            dataset_type=plan.dataset,
+            schema_path=_resolve_update_validation_schema_path(
+                dataset=plan.dataset,
+                schemas_dir=schemas_root,
+                validation_schema_path=validation_schema_path,
+            ),
+            vocabulary_index_path=vocabulary_index,
+        )
+
+    return UpdateCommandResult(
+        scope={
+            **plan.scope,
+            "dataset": plan.dataset,
+            "refresh_changed": refresh_changed,
+            "force_full": force_full,
+            "validate": validate,
+        },
+        latest_local_state=plan.latest_local_state,
+        plan=plan.plan,
+        applied=applied,
+        validation=validation,
+    )
+
+
+def run_dataset_update(
+    dataset: str,
+    client: "CkanClient",
+    *,
+    selection: TemporalSelection | None = None,
+    output_dir: str | Path = "data/raw",
+    schemas_dir: str | Path = "schemas",
+    warehouse_dir: str | Path = "data/warehouse",
+    vocabulary_index_path: str | Path = "vocabularies/index.json",
+    delimiter: str = ";",
+    encoding: str = "utf-8-sig",
+    schema_sample_limit: int = 2_000,
+    keep_materialized: bool = False,
+    register_crosswalks: bool = True,
+    refresh_changed: bool = False,
+    force_full: bool = False,
+    validate: bool = False,
+    validation_schema_path: str | Path | None = None,
+    dry_run: bool = False,
+    registry: DatasetFamilyRegistry | None = None,
+) -> UpdateCommandResult:
+    """@notice Plan one family update and optionally execute it through the shared contract."""
+
+    registry = DATASET_FAMILY_REGISTRY if registry is None else registry
+    warehouse_root = Path(warehouse_dir)
+    plan = registry.plan_update(
+        dataset,
+        client,
+        selection=selection,
+        warehouse_dir=warehouse_root,
+        refresh_changed=refresh_changed,
+        force_full=force_full,
+    )
+    if dry_run:
+        return UpdateCommandResult(
+            scope={
+                **plan.scope,
+                "dataset": plan.dataset,
+                "refresh_changed": refresh_changed,
+                "force_full": force_full,
+                "validate": validate,
+            },
+            latest_local_state=plan.latest_local_state,
+            plan=plan.plan,
+        )
+    return execute_update_plan(
+        plan,
+        client,
+        output_dir=output_dir,
+        schemas_dir=schemas_dir,
+        warehouse_dir=warehouse_root,
+        vocabulary_index_path=vocabulary_index_path,
+        delimiter=delimiter,
+        encoding=encoding,
+        schema_sample_limit=schema_sample_limit,
+        keep_materialized=keep_materialized,
+        register_crosswalks=register_crosswalks,
+        refresh_changed=refresh_changed,
+        force_full=force_full,
+        validate=validate,
+        validation_schema_path=validation_schema_path,
+        registry=registry,
+    )
 
 
 @dataclass(slots=True)
@@ -969,6 +1273,90 @@ def list_dataset_families(
         if _matches_dataset_filters(entry, normalized_filters)
     ]
     return DatasetCatalogListResult(items=items, filters=normalized_filters)
+
+
+def run_global_update(
+    client: "CkanClient",
+    *,
+    selection: TemporalSelection | None = None,
+    db_path: str | Path = "data/warehouse/anac.duckdb",
+    raw_dir: str | Path = "data/raw",
+    schemas_dir: str | Path = "schemas",
+    dictionaries_dir: str | Path = "dictionaries",
+    vocabulary_index_path: str | Path = "vocabularies/index.json",
+    output_dir: str | Path = "data/raw",
+    warehouse_dir: str | Path = "data/warehouse",
+    delimiter: str = ";",
+    encoding: str = "utf-8-sig",
+    schema_sample_limit: int = 2_000,
+    keep_materialized: bool = False,
+    register_crosswalks: bool = True,
+    refresh_changed: bool = False,
+    force_full: bool = False,
+    validate: bool = False,
+    validation_schema_path: str | Path | None = None,
+    dry_run: bool = False,
+    registry: DatasetFamilyRegistry | None = None,
+) -> UpdateCommandResult:
+    """@notice Update only locally present, update-capable families without scanning the full remote catalog."""
+
+    registry = DATASET_FAMILY_REGISTRY if registry is None else registry
+    catalog_result = list_dataset_families(
+        db_path=db_path,
+        raw_dir=raw_dir,
+        schemas_dir=schemas_dir,
+        dictionaries_dir=dictionaries_dir,
+        vocabulary_index_path=vocabulary_index_path,
+        registry=registry,
+        downloaded=True,
+    )
+    targeted_datasets = [item.dataset for item in catalog_result.items if item.update_supported]
+
+    latest_local_state: dict[str, object] = {}
+    aggregated_plan = []
+    aggregated_applied: list[DatasetParquetDownloadResult] = []
+    validation_reports: dict[str, object] = {}
+    for dataset in targeted_datasets:
+        result = run_dataset_update(
+            dataset,
+            client,
+            selection=selection,
+            output_dir=output_dir,
+            schemas_dir=schemas_dir,
+            warehouse_dir=warehouse_dir,
+            vocabulary_index_path=vocabulary_index_path,
+            delimiter=delimiter,
+            encoding=encoding,
+            schema_sample_limit=schema_sample_limit,
+            keep_materialized=keep_materialized,
+            register_crosswalks=register_crosswalks,
+            refresh_changed=refresh_changed,
+            force_full=force_full,
+            validate=validate,
+            validation_schema_path=validation_schema_path,
+            dry_run=dry_run,
+            registry=registry,
+        )
+        latest_local_state[dataset] = result.latest_local_state
+        aggregated_plan.extend(result.plan)
+        aggregated_applied.extend(result.applied)
+        if result.validation is not None:
+            validation_reports[dataset] = result.validation
+
+    return UpdateCommandResult(
+        scope={
+            "mode": "global",
+            "datasets": targeted_datasets,
+            "refresh_changed": refresh_changed,
+            "force_full": force_full,
+            "validate": validate,
+            "dry_run": dry_run,
+        },
+        latest_local_state=latest_local_state,
+        plan=aggregated_plan,
+        applied=aggregated_applied,
+        validation=None if not validation_reports else validation_reports,
+    )
 
 
 def get_dataset_family(

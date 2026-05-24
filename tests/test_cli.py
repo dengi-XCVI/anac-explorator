@@ -17,7 +17,14 @@ import duckdb
 
 from anac_explorator.ckan import CkanClientError
 from anac_explorator.cli import main
-from anac_explorator.models import CkanPackage, CkanResource, DownloadManifest, SchemaColumn, SchemaMapping
+from anac_explorator.models import (
+    CkanPackage,
+    CkanResource,
+    DownloadManifest,
+    SchemaColumn,
+    SchemaMapping,
+    UpdateCommandResult,
+)
 from anac_explorator.paths import apply_effective_paths
 
 
@@ -230,6 +237,65 @@ class CliTests(unittest.TestCase):
         self.assertTrue(args.partitions)
         self.assertEqual(args.output_format, "table")
         self.assertEqual(args.db_path, "data/warehouse/anac.duckdb")
+
+    def test_update_parser_accepts_optional_dataset_flags_and_uses_shared_paths(self) -> None:
+        """@notice Parse the Phase 3 update command with dataset scope and execution flags."""
+
+        parser = main.__globals__["build_parser"]()
+        args = apply_effective_paths(
+            parser.parse_args(
+                [
+                    "update",
+                    "cig",
+                    "--year",
+                    "2025",
+                    "--month",
+                    "1",
+                    "--dry-run",
+                    "--refresh-changed",
+                    "--force-full",
+                    "--validate",
+                    "--format",
+                    "table",
+                ]
+            )
+        )
+
+        self.assertEqual(args.dataset, "cig")
+        self.assertEqual(args.year, "2025")
+        self.assertEqual(args.month, "1")
+        self.assertTrue(args.dry_run)
+        self.assertTrue(args.refresh_changed)
+        self.assertTrue(args.force_full)
+        self.assertTrue(args.validate)
+        self.assertEqual(args.output_format, "table")
+        self.assertEqual(args.output_dir, "data/raw")
+        self.assertEqual(args.schemas_dir, "schemas")
+        self.assertEqual(args.warehouse_dir, "data/warehouse")
+
+    def test_update_parser_accepts_global_mode_without_dataset(self) -> None:
+        """@notice Parse the Phase 3 update command in global mode when no dataset is provided."""
+
+        parser = main.__globals__["build_parser"]()
+        args = apply_effective_paths(parser.parse_args(["update", "--dry-run"]))
+
+        self.assertIsNone(args.dataset)
+        self.assertTrue(args.dry_run)
+        self.assertFalse(args.refresh_changed)
+        self.assertFalse(args.validate)
+        self.assertEqual(args.output_dir, "data/raw")
+        self.assertEqual(args.schemas_dir, "schemas")
+        self.assertEqual(args.warehouse_dir, "data/warehouse")
+
+    def test_config_parser_accepts_show_subcommand_and_output_format(self) -> None:
+        """@notice Parse the Phase 3 config show surface with its dedicated output options."""
+
+        parser = main.__globals__["build_parser"]()
+        args = parser.parse_args(["config", "show", "--format", "yaml"])
+
+        self.assertEqual(args.command, "config")
+        self.assertEqual(args.config_subcommand, "show")
+        self.assertEqual(args.output_format, "yaml")
 
     def test_build_data_dictionary_parser_uses_default_artifacts(self) -> None:
         """@notice Parse the data-dictionary subcommand with its default artifact paths."""
@@ -642,6 +708,118 @@ class CliTests(unittest.TestCase):
         self.assertFalse(payload["data"]["rows"][0]["update_supported"])
         self.assertEqual(payload["meta"]["paths"]["warehouse_db_path"], str(db_path))
 
+    def test_update_dry_run_prints_shared_json_envelope(self) -> None:
+        """@notice Emit the normalized update dry-run payload through the shared result envelope."""
+
+        output = io.StringIO()
+        with patch("anac_explorator.cli.CkanClient", return_value=Mock()):
+            with patch(
+                "anac_explorator.cli.run_dataset_update",
+                return_value=UpdateCommandResult(
+                    scope={
+                        "dataset": "cig",
+                        "selection_mode": "forward",
+                        "refresh_changed": False,
+                        "validate": False,
+                    },
+                    latest_local_state={"latest_slice": "2025-01"},
+                    plan=[],
+                ),
+            ) as update_mock:
+                with redirect_stdout(output):
+                    exit_code = main(["update", "cig", "--dry-run"])
+
+        payload = json.loads(output.getvalue())
+        self.assertEqual(exit_code, 0)
+        self.assertTrue(payload["ok"])
+        self.assertEqual(payload["command"], "update")
+        self.assertEqual(payload["data"]["scope"]["dataset"], "cig")
+        self.assertEqual(payload["data"]["scope"]["selection_mode"], "forward")
+        self.assertEqual(payload["data"]["latest_local_state"]["latest_slice"], "2025-01")
+        self.assertEqual(payload["data"]["plan"], [])
+        self.assertEqual(payload["data"]["applied"], [])
+        self.assertIsNone(payload["data"]["validation"])
+        self.assertEqual(payload["warnings"], [])
+        self.assertEqual(payload["meta"]["paths"]["raw_dir"], "data/raw")
+        update_mock.assert_called_once()
+        self.assertEqual(update_mock.call_args.args[0], "cig")
+        self.assertTrue(update_mock.call_args.kwargs["dry_run"])
+
+    def test_update_temporal_force_full_routes_selection_to_dataset_runner(self) -> None:
+        """@notice Normalize shared temporal flags for update and forward force-full to the dataset runner."""
+
+        output = io.StringIO()
+        with patch("anac_explorator.cli.CkanClient", return_value=Mock()):
+            with patch(
+                "anac_explorator.cli.run_dataset_update",
+                return_value=UpdateCommandResult(
+                    scope={"dataset": "cig", "selection_mode": "range", "force_full": True},
+                    latest_local_state={"latest_slice": "2025-01"},
+                    plan=[],
+                ),
+            ) as update_mock:
+                with redirect_stdout(output):
+                    exit_code = main(["update", "cig", "--year", "2025", "--month", "1", "--force-full", "--dry-run"])
+
+        payload = json.loads(output.getvalue())
+        self.assertEqual(exit_code, 0)
+        self.assertTrue(payload["ok"])
+        self.assertEqual(payload["command"], "update")
+        self.assertTrue(update_mock.call_args.kwargs["force_full"])
+        self.assertTrue(update_mock.call_args.kwargs["dry_run"])
+        self.assertEqual(update_mock.call_args.kwargs["selection"].mode, "range")
+        self.assertEqual(update_mock.call_args.kwargs["selection"].slices, ["2025-01"])
+
+    def test_update_global_temporal_scope_routes_selection_to_orchestrator(self) -> None:
+        """@notice Forward shared temporal selection to the global update orchestrator."""
+
+        output = io.StringIO()
+        with patch("anac_explorator.cli.CkanClient", return_value=Mock()):
+            with patch(
+                "anac_explorator.cli.run_global_update",
+                return_value=UpdateCommandResult(
+                    scope={"mode": "global", "datasets": ["cig"], "selection_mode": "latest"},
+                    latest_local_state={"cig": {"latest_slice": "2025-02"}},
+                    plan=[],
+                ),
+            ) as update_mock:
+                with redirect_stdout(output):
+                    exit_code = main(["update", "--latest", "--dry-run"])
+
+        payload = json.loads(output.getvalue())
+        self.assertEqual(exit_code, 0)
+        self.assertTrue(payload["ok"])
+        self.assertEqual(payload["command"], "update")
+        self.assertEqual(update_mock.call_args.kwargs["selection"].mode, "latest")
+        self.assertTrue(update_mock.call_args.kwargs["dry_run"])
+
+    def test_update_without_dataset_routes_to_global_orchestrator(self) -> None:
+        """@notice Dispatch the update CLI to global orchestration when no dataset family is provided."""
+
+        output = io.StringIO()
+        with patch("anac_explorator.cli.CkanClient", return_value=Mock()):
+            with patch(
+                "anac_explorator.cli.run_global_update",
+                return_value=UpdateCommandResult(
+                    scope={"mode": "global", "datasets": ["cig"], "dry_run": True},
+                    latest_local_state={"cig": {"latest_slice": "2025-01"}},
+                    plan=[],
+                ),
+            ) as update_mock:
+                with redirect_stdout(output):
+                    exit_code = main(["update", "--dry-run"])
+
+        payload = json.loads(output.getvalue())
+        self.assertEqual(exit_code, 0)
+        self.assertTrue(payload["ok"])
+        self.assertEqual(payload["command"], "update")
+        self.assertEqual(payload["data"]["scope"]["mode"], "global")
+        self.assertEqual(payload["data"]["scope"]["datasets"], ["cig"])
+        self.assertEqual(payload["data"]["latest_local_state"]["cig"]["latest_slice"], "2025-01")
+        self.assertEqual(payload["data"]["plan"], [])
+        update_mock.assert_called_once()
+        self.assertTrue(update_mock.call_args.kwargs["dry_run"])
+
     def test_query_uses_configured_timeout_when_flag_is_absent(self) -> None:
         """@notice Fill the query timeout from config when the CLI flag is not provided."""
 
@@ -1048,6 +1226,8 @@ class CliTests(unittest.TestCase):
         effective = payload["data"]["config"]["effective"]
         sources = payload["data"]["config"]["sources"]
         self.assertEqual(exit_code, 0)
+        self.assertTrue(payload["ok"])
+        self.assertEqual(payload["command"], "config")
         self.assertEqual(payload["data"]["subcommand"], "show")
         self.assertEqual(effective["transport"]["default"], "playwright")
         self.assertEqual(sources["transport"]["default"], "env:ANAC_TRANSPORT")
@@ -1110,10 +1290,13 @@ class CliTests(unittest.TestCase):
             with redirect_stdout(output):
                 exit_code = main(["--config", str(config_path), "config", "reset"])
 
+            exists_after_attempt = config_path.exists()
+
         payload = json.loads(output.getvalue())
         self.assertEqual(exit_code, 60)
         self.assertFalse(payload["ok"])
         self.assertEqual(payload["error"]["code"], "CONFIG_ERROR")
+        self.assertTrue(exists_after_attempt)
 
     def test_config_reset_with_yes_removes_file(self) -> None:
         """@notice Remove the persisted config file when reset is confirmed."""

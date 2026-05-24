@@ -9,13 +9,18 @@ from pathlib import Path
 
 from anac_explorator.config import (
     default_config_path,
+    get_config,
     load_persisted_config,
     resolve_effective_config,
     save_persisted_config,
+    set_config,
     set_config_value,
+    show_config,
     unset_config_value,
+    validate_config,
     validate_persisted_config,
 )
+from anac_explorator.errors import CliCommandError
 
 
 class ConfigTests(unittest.TestCase):
@@ -76,6 +81,47 @@ class ConfigTests(unittest.TestCase):
         self.assertTrue(removed)
         self.assertEqual(persisted_after_unset, {})
 
+    def test_show_config_returns_effective_values_and_sources(self) -> None:
+        """@notice Resolve the current config into the backend show payload with source metadata."""
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            config_path = Path(temp_dir) / "config.json"
+            save_persisted_config(config_path, {"query": {"timeout": 18}})
+
+            payload = show_config(
+                config_path=config_path,
+                env={"ANAC_OUTPUT_FORMAT": "table"},
+            )
+
+        self.assertEqual(payload["subcommand"], "show")
+        self.assertEqual(payload["config"]["effective"]["query"]["timeout"], 18)
+        self.assertEqual(payload["config"]["sources"]["query"]["timeout"], "config_file")
+        self.assertEqual(payload["config"]["effective"]["output"]["format"], "table")
+        self.assertEqual(payload["config"]["sources"]["output"]["format"], "env:ANAC_OUTPUT_FORMAT")
+
+    def test_get_config_raises_for_missing_key(self) -> None:
+        """@notice Reject unknown config keys through the backend get helper."""
+
+        with self.assertRaises(CliCommandError) as context:
+            get_config("query.unknown")
+
+        self.assertEqual(context.exception.code, "CONFIG_KEY_NOT_FOUND")
+
+    def test_set_config_persists_value_through_backend_helper(self) -> None:
+        """@notice Persist one config value through the backend set helper and write it to disk."""
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            config_path = Path(temp_dir) / "config.json"
+
+            payload = set_config(config_path, "query.row_limit", "250")
+            persisted = load_persisted_config(config_path)
+
+        self.assertEqual(payload["subcommand"], "set")
+        self.assertEqual(payload["key"], "query.row_limit")
+        self.assertEqual(payload["value"], 250)
+        self.assertEqual(payload["source"], "config_file")
+        self.assertEqual(persisted["query"]["row_limit"], 250)
+
     def test_validate_persisted_config_reports_all_detected_errors(self) -> None:
         """@notice Return all invalid keys and values instead of stopping at the first issue."""
 
@@ -88,6 +134,30 @@ class ConfigTests(unittest.TestCase):
         )
 
         error_keys = {error.key for error in errors}
+        self.assertIn("transport.default", error_keys)
+        self.assertIn("transport.timeout", error_keys)
+        self.assertIn("paths.unknown", error_keys)
+        self.assertIn("mystery", error_keys)
+
+    def test_validate_config_returns_multiple_errors(self) -> None:
+        """@notice Return all current config validation issues through the backend validate helper."""
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            config_path = Path(temp_dir) / "config.json"
+            save_persisted_config(
+                config_path,
+                {
+                    "transport": {"default": "invalid", "timeout": 0},
+                    "paths": {"unknown": "value"},
+                    "mystery": {"enabled": True},
+                },
+            )
+
+            payload = validate_config(config_path=config_path)
+
+        self.assertEqual(payload["subcommand"], "validate")
+        self.assertFalse(payload["value"])
+        error_keys = {error["key"] for error in payload["validation_errors"]}
         self.assertIn("transport.default", error_keys)
         self.assertIn("transport.timeout", error_keys)
         self.assertIn("paths.unknown", error_keys)

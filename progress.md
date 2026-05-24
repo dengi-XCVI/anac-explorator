@@ -256,6 +256,31 @@
   - the `stats` CLI now accepts the shared temporal flags (`--year`, `--month`, `--slice`, `--latest`) and promotes scoped dataset requests to the `slice` result scope instead of treating all stats calls as full-family summaries
   - scoped dataset summaries and partition listings now filter to the selected local slices, while scoped profile mode constrains its live DuckDB aggregate scan to the selected year/month partitions through the registered query view
   - snapshot families now reject temporal stats requests through the shared family-adapter validation path, and new parser/backend/runtime coverage verifies scoped summary filtering, scoped profile filtering, and the snapshot temporal guard
+- Phase 7 command implementation step 7.6 tasks 1-2 completed:
+  - the family-adapter layer now exposes an explicit update-planning API, with unsupported families raising the stable `DATASET_UPDATE_NOT_SUPPORTED` error before any mutation logic is attempted
+  - new Phase 3 `UpdatePlan` / `UpdatePlanItem` models now capture the normalized update scope, latest local state summary, resolved yearly CKAN datasets, requested periods, and per-slice `download` / `refresh` / `skip` reasoning for dry-run output
+  - the CIG adapter now compares local `dataset_period_manifest` state against remote monthly CKAN resources to build a dry-run incremental plan without executing downloads, and focused coverage now verifies both successful CIG planning and unsupported-family failure behavior
+- Phase 7 command implementation step 7.6 tasks 3-5 completed:
+  - the update backend now executes normalized `UpdatePlan` objects through the shared family-adapter contract, reusing `sync_cig_periods_to_parquet(...)` under the hood while returning a stable Phase 3 `UpdateCommandResult`
+  - dataset-level update runs now support dry-run or apply flows from the same backend entrypoint, and post-update validation can invoke the existing warehouse integrity validator for supported families
+  - global update mode now discovers only locally present dataset families, filters to update-capable adapters, and runs those updates in sequence instead of scanning every possible remote CKAN family
+  - focused unit coverage now verifies forward-only default execution, `--refresh-changed` planning/execution behavior, and global update targeting based on local manifests
+- Phase 7 command implementation step 7.6 CLI wiring completed:
+  - `cli.py` now exposes the Phase 3 `update` command with an optional dataset argument; dataset-targeted calls route to the family-level update runner, while omitting the dataset dispatches to the global local-family orchestrator
+  - the new parser now supports `--dry-run`, `--refresh-changed`, and `--validate`, and update results including dry-run plans now flow through the centralized shared result envelope
+  - parser/runtime coverage now verifies dataset and global parser acceptance plus shared-envelope routing for dataset dry-run and global update dispatch
+- Phase 7 command implementation step 7.6 spec-gap follow-up completed:
+  - the `update` CLI now accepts the shared temporal flags (`--year`, `--month`, `--slice`, `--latest`) and forwards them through the shared temporal-selection model to both dataset-scoped and global update orchestration
+  - update planning and execution now support `--force-full`, so the selected scope can be rebuilt deterministically even when slices are already loaded; forced rebuilds emit explicit `refresh` actions with `force_full` reasoning in the dry-run plan
+  - focused coverage now verifies forced-refresh planning for selected slices, force-full execution forwarding, and temporal/force-full routing through the `update` CLI surface
+- Phase 7 command implementation step 7.7 backend config helpers completed:
+  - `src/anac_explorator/config.py` now exposes explicit backend entrypoints for `show`, `get`, `set`, `unset`, `reset`, and `validate` on top of the existing persisted-config and env-resolution layer, without wiring new CLI parser changes yet
+  - the new helpers return stable payloads with effective values, value sources, persistence metadata, and aggregated validation errors so the later CLI wiring can call one backend surface per subcommand
+  - focused coverage now verifies backend `show` source reporting, stable missing-key failures for `get`, persisted writes for `set`, and multi-error collection for `validate`
+- Phase 7 command implementation step 7.7 frontend wiring completed:
+  - the Phase 3 `config` CLI surface remains organized around the six subcommands (`show`, `get`, `set`, `unset`, `reset`, `validate`), and `cli.py` now routes each one through the shared backend helper layer instead of duplicating config logic in the frontend
+  - `config reset` stays guarded behind `--yes`, while all config responses continue to flow through the shared result envelope and `config show --format yaml` still renders the clean effective-config view
+  - CLI coverage now verifies parser acceptance for `config show`, safe reset failure without `--yes`, and envelope-backed effective-config output for `show`
 
 ## Planned milestones
 1. Expand the local query surface carefully without over-materializing data
