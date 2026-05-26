@@ -85,7 +85,7 @@ The main layers are:
 6. SQL-queryable metadata discoverability views such as `anac_datasets`, `anac_loaded_resources`, and `anac_partitions`
 7. a stable command envelope, error model, config layer, and path-resolution layer for the top-level CLI
 
-For a broader overview, see `architecture-summary.md` and `cli-specification.md`.
+For a broader overview, see `architecture-summary.md`, `architecture-reference.html`, and `cli-specification.md`.
 
 ## Local state and artifacts
 

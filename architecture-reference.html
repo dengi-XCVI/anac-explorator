@@ -1,0 +1,1292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ANAC Explorator Architecture Reference</title>
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --panel: #ffffff;
+      --panel-alt: #eef3ff;
+      --text: #182230;
+      --muted: #4d6178;
+      --border: #d7dfeb;
+      --border-strong: #aac0e8;
+      --accent: #2358c5;
+      --accent-soft: #dfe9ff;
+      --success: #dff3e8;
+      --warning: #fff4d6;
+      --shadow: 0 14px 32px rgba(35, 54, 86, 0.08);
+      --radius: 18px;
+      --mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+      --sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      font-family: var(--sans);
+      color: var(--text);
+      background: linear-gradient(180deg, #f8faff 0%, var(--bg) 280px);
+      line-height: 1.6;
+    }
+
+    a {
+      color: var(--accent);
+    }
+
+    code,
+    pre,
+    .path,
+    .pill,
+    .tag {
+      font-family: var(--mono);
+    }
+
+    .hero {
+      background:
+        radial-gradient(circle at top right, rgba(35, 88, 197, 0.18), transparent 30%),
+        linear-gradient(135deg, #142743 0%, #1c3f75 48%, #2257c7 100%);
+      color: #ffffff;
+      padding: 3.5rem 1.5rem 3rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+    }
+
+    .wrap {
+      width: min(1380px, 100%);
+      margin: 0 auto;
+    }
+
+    .eyebrow {
+      margin: 0 0 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      font-size: 0.76rem;
+      opacity: 0.8;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(2.2rem, 4vw, 3.6rem);
+      line-height: 1.05;
+    }
+
+    .lede {
+      max-width: 78ch;
+      margin: 1rem 0 1.4rem;
+      font-size: 1.08rem;
+      color: rgba(255, 255, 255, 0.92);
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 2.1fr) minmax(280px, 1fr);
+      gap: 1.2rem;
+      align-items: start;
+    }
+
+    .hero-card {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: var(--radius);
+      padding: 1rem 1.1rem;
+      backdrop-filter: blur(4px);
+    }
+
+    .hero-card h2,
+    .hero-card h3 {
+      margin: 0 0 0.65rem;
+      font-size: 1rem;
+    }
+
+    .pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.55rem;
+      margin-top: 1rem;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.4rem 0.7rem;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.14);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      color: #ffffff;
+      font-size: 0.84rem;
+    }
+
+    .page {
+      width: min(1380px, 100%);
+      margin: 0 auto;
+      padding: 1.6rem 1.5rem 3rem;
+      display: grid;
+      grid-template-columns: 290px minmax(0, 1fr);
+      gap: 1.5rem;
+      align-items: start;
+    }
+
+    .toc {
+      position: sticky;
+      top: 1rem;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 1rem;
+    }
+
+    .toc h2 {
+      margin: 0 0 0.8rem;
+      font-size: 1rem;
+    }
+
+    .toc ol,
+    .toc ul {
+      margin: 0;
+      padding-left: 1.15rem;
+    }
+
+    .toc li + li {
+      margin-top: 0.45rem;
+    }
+
+    main section,
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 1.3rem;
+      margin-bottom: 1.25rem;
+    }
+
+    h2 {
+      margin: 0 0 0.8rem;
+      font-size: 1.5rem;
+      line-height: 1.2;
+    }
+
+    h3 {
+      margin: 0 0 0.6rem;
+      font-size: 1.08rem;
+      line-height: 1.25;
+    }
+
+    h4 {
+      margin: 0 0 0.5rem;
+      font-size: 0.97rem;
+    }
+
+    p,
+    ul,
+    ol {
+      margin: 0 0 1rem;
+    }
+
+    ul,
+    ol {
+      padding-left: 1.2rem;
+    }
+
+    li + li {
+      margin-top: 0.28rem;
+    }
+
+    .grid-2,
+    .grid-3,
+    .grid-4 {
+      display: grid;
+      gap: 1rem;
+    }
+
+    .grid-2 {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .grid-3 {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .grid-4 {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .card,
+    .callout,
+    details {
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      background: #fbfcff;
+    }
+
+    .card,
+    .callout {
+      padding: 1rem;
+    }
+
+    .callout.info {
+      background: var(--panel-alt);
+      border-color: var(--border-strong);
+    }
+
+    .callout.success {
+      background: var(--success);
+    }
+
+    .callout.warning {
+      background: var(--warning);
+    }
+
+    .micro {
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .tag {
+      display: inline-block;
+      padding: 0.18rem 0.45rem;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-size: 0.77rem;
+      border: 1px solid #bfd1ff;
+      margin-right: 0.35rem;
+      margin-bottom: 0.35rem;
+    }
+
+    .diagram {
+      display: grid;
+      gap: 0.9rem;
+      margin-top: 1rem;
+    }
+
+    .flow-row {
+      display: flex;
+      align-items: stretch;
+      gap: 0.65rem;
+      flex-wrap: wrap;
+    }
+
+    .node {
+      flex: 1 1 160px;
+      min-width: 160px;
+      background: #f8faff;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 0.85rem 0.9rem;
+    }
+
+    .node strong {
+      display: block;
+      margin-bottom: 0.28rem;
+    }
+
+    .node.external {
+      background: #eff7ff;
+    }
+
+    .node.storage {
+      background: #f5f9f2;
+    }
+
+    .node.control {
+      background: #fff8ef;
+    }
+
+    .arrow {
+      align-self: center;
+      padding: 0 0.2rem;
+      color: var(--accent);
+      font-weight: 700;
+      font-size: 1.2rem;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 760px;
+      background: #ffffff;
+    }
+
+    th,
+    td {
+      text-align: left;
+      vertical-align: top;
+      padding: 0.8rem 0.9rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    th {
+      background: #f7faff;
+      font-size: 0.87rem;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    details {
+      padding: 0.2rem 0.9rem 0.9rem;
+      margin-bottom: 0.85rem;
+    }
+
+    details[open] {
+      background: #ffffff;
+    }
+
+    summary {
+      cursor: pointer;
+      font-weight: 700;
+      padding: 0.85rem 0;
+      list-style: none;
+    }
+
+    summary::-webkit-details-marker {
+      display: none;
+    }
+
+    summary::before {
+      content: "+ ";
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    details[open] summary::before {
+      content: "- ";
+    }
+
+    .path {
+      display: inline-block;
+      padding: 0.12rem 0.4rem;
+      background: #eef3fb;
+      border: 1px solid #dbe4f2;
+      border-radius: 8px;
+      font-size: 0.9rem;
+    }
+
+    .checklist {
+      margin: 0;
+      padding-left: 0;
+      list-style: none;
+    }
+
+    .checklist li {
+      margin: 0;
+      padding-left: 1.4rem;
+      position: relative;
+    }
+
+    .checklist li + li {
+      margin-top: 0.45rem;
+    }
+
+    .checklist li::before {
+      content: "->";
+      position: absolute;
+      left: 0;
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    .footer-note {
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    @media (max-width: 1120px) {
+      .page,
+      .hero-grid,
+      .grid-4,
+      .grid-3 {
+        grid-template-columns: 1fr;
+      }
+
+      .page {
+        grid-template-columns: 1fr;
+      }
+
+      .toc {
+        position: static;
+      }
+
+      .grid-2 {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .hero,
+      .page {
+        padding-left: 1rem;
+        padding-right: 1rem;
+      }
+
+      main section,
+      .panel {
+        padding: 1rem;
+      }
+
+      .flow-row {
+        flex-direction: column;
+      }
+
+      .arrow {
+        transform: rotate(90deg);
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="hero">
+    <div class="wrap">
+      <p class="eyebrow">Architecture reference</p>
+      <div class="hero-grid">
+        <div>
+          <h1>ANAC Explorator</h1>
+          <p class="lede">
+            A CLI-first, artifact-driven local warehouse for ANAC open procurement data.
+            The system resolves remote CKAN datasets, downloads and caches raw resources,
+            builds schema and semantic artifacts, materializes analytical data into
+            Parquet plus DuckDB metadata, and exposes the result through a stable
+            <code>anacx</code> command surface.
+          </p>
+          <div class="pill-row">
+            <span class="pill">Executable: <strong>anacx</strong></span>
+            <span class="pill">Primary storage: <strong>Parquet + DuckDB</strong></span>
+            <span class="pill">Shape: <strong>CLI / automation first</strong></span>
+            <span class="pill">Maturest family: <strong>monthly CIG</strong></span>
+          </div>
+        </div>
+        <div class="hero-card">
+          <h2>What this file is for</h2>
+          <ul class="checklist">
+            <li>Understand the full system from remote source to local query.</li>
+            <li>See how the major modules depend on one another.</li>
+            <li>Jump from high-level architecture to implementation-focused details.</li>
+            <li>Use the command map and file map as a starting point for deeper reading.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="page">
+    <aside class="toc" aria-label="Table of contents">
+      <h2>Navigate</h2>
+      <ol>
+        <li><a href="#overview">System overview</a></li>
+        <li><a href="#mental-model">Mental model</a></li>
+        <li><a href="#end-to-end-flow">End-to-end flow</a></li>
+        <li><a href="#state-surfaces">Persistent state surfaces</a></li>
+        <li><a href="#command-surface">Stable command surface</a></li>
+        <li><a href="#component-map">Component map</a></li>
+        <li><a href="#data-flows">Detailed data flows</a></li>
+        <li><a href="#deep-dive-map">Deep dive map</a></li>
+        <li><a href="#boundaries">Strengths and boundaries</a></li>
+      </ol>
+      <div class="callout info" style="margin-top: 1rem;">
+        <h3>Primary files</h3>
+        <ul class="checklist">
+          <li><span class="path">src/anac_explorator/cli.py</span></li>
+          <li><span class="path">src/anac_explorator/catalog.py</span></li>
+          <li><span class="path">src/anac_explorator/loader.py</span></li>
+          <li><span class="path">src/anac_explorator/metadata_views.py</span></li>
+          <li><span class="path">src/anac_explorator/config.py</span></li>
+        </ul>
+      </div>
+    </aside>
+
+    <main>
+      <section id="overview">
+        <h2>1. System overview</h2>
+        <p>
+          The repository is best understood as a local data-product pipeline wrapped in a
+          stable CLI. It is not a web application and it is not just a loose set of
+          scripts. The core idea is to turn ANAC open-data resources into a repeatable,
+          queryable local warehouse while preserving enough artifact lineage that both
+          people and automation can inspect what happened.
+        </p>
+
+        <div class="grid-4">
+          <div class="card">
+            <h3>Source side</h3>
+            <p class="micro">
+              Remote data starts as CKAN package metadata plus downloadable CSV or JSON
+              resources exposed by the ANAC portal.
+            </p>
+          </div>
+          <div class="card">
+            <h3>Artifact side</h3>
+            <p class="micro">
+              Raw downloads, schema mappings, vocabulary crosswalks, dictionaries, and
+              comparisons are stored as explicit files on disk.
+            </p>
+          </div>
+          <div class="card">
+            <h3>Warehouse side</h3>
+            <p class="micro">
+              Analytical payload lands in Parquet while DuckDB stores control-plane
+              metadata and registered views.
+            </p>
+          </div>
+          <div class="card">
+            <h3>CLI side</h3>
+            <p class="micro">
+              Users interact through a stable command set: <code>datasets</code>,
+              <code>download</code>, <code>schema</code>, <code>query</code>,
+              <code>stats</code>, <code>update</code>, <code>config</code>, and
+              <code>drop</code>.
+            </p>
+          </div>
+        </div>
+
+        <div class="callout info">
+          <h3>Short architectural statement</h3>
+          <p>
+            ANAC Explorator is a CLI-first local warehouse interface that resolves
+            ANAC datasets into logical families, downloads them into a manifest-backed
+            raw cache, enriches them with schema and semantic artifacts, materializes
+            analytical data into Parquet, and rebuilds a DuckDB metadata layer that the
+            CLI can query safely and consistently.
+          </p>
+        </div>
+      </section>
+
+      <section id="mental-model">
+        <h2>2. Mental model</h2>
+        <div class="grid-2">
+          <div class="card">
+            <h3>Control plane</h3>
+            <p class="micro">The parts that decide <em>what should happen</em>.</p>
+            <ul>
+              <li>CLI parsing and handler dispatch in <span class="path">cli.py</span></li>
+              <li>Config merging and path resolution in <span class="path">config.py</span> and <span class="path">paths.py</span></li>
+              <li>Stable error and output contract in <span class="path">errors.py</span>, <span class="path">models.py</span>, and <span class="path">output.py</span></li>
+              <li>Dataset-family registry and selection logic in <span class="path">catalog.py</span> and <span class="path">selection.py</span></li>
+              <li>Metadata view rebuilding in <span class="path">metadata_views.py</span></li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>Data plane</h3>
+            <p class="micro">The parts that move or persist actual dataset content.</p>
+            <ul>
+              <li>Remote CKAN fetches via <span class="path">ckan.py</span> and <span class="path">browser.py</span></li>
+              <li>Manifest-backed downloads via <span class="path">sample.py</span></li>
+              <li>Schema mapping and comparisons via <span class="path">schema.py</span> and <span class="path">comparison.py</span></li>
+              <li>Vocabulary and dictionary artifacts via <span class="path">vocabulary.py</span> and <span class="path">dictionary.py</span></li>
+              <li>Parquet loading and local queries via <span class="path">loader.py</span></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="callout success">
+          <h3>Why this split matters</h3>
+          <p>
+            The repository deliberately separates <strong>describing local state</strong>
+            from <strong>storing analytical payload</strong>. DuckDB is used both as a
+            query engine and as the metadata control plane, while Parquet remains the
+            durable data payload layer.
+          </p>
+        </div>
+      </section>
+
+      <section id="end-to-end-flow">
+        <h2>3. End-to-end flow</h2>
+        <p>
+          The main runtime path is consistent across the stable commands, even though
+          each command enters at a different point.
+        </p>
+
+        <div class="diagram" aria-label="End-to-end architecture flow">
+          <div class="flow-row">
+            <div class="node external">
+              <strong>ANAC CKAN + resource endpoints</strong>
+              Remote dataset metadata and downloadable CSV/JSON files.
+            </div>
+            <div class="arrow">&rarr;</div>
+            <div class="node">
+              <strong>Access layer</strong>
+              <span class="path">ckan.py</span> resolves package metadata.
+              <span class="path">browser.py</span> provides Playwright transport when the WAF blocks direct HTTP.
+            </div>
+            <div class="arrow">&rarr;</div>
+            <div class="node control">
+              <strong>Registry + selection</strong>
+              <span class="path">catalog.py</span> maps logical families to real CKAN datasets.
+              <span class="path">selection.py</span> normalizes year, month, slice, and latest selectors.
+            </div>
+          </div>
+          <div class="flow-row">
+            <div class="node">
+              <strong>Download layer</strong>
+              <span class="path">sample.py</span> selects resources, downloads them, extracts archives when needed, and writes a manifest.
+            </div>
+            <div class="arrow">&rarr;</div>
+            <div class="node storage">
+              <strong>Raw cache</strong>
+              Files land under <span class="path">data/raw/...</span> with <span class="path">manifest.json</span> lineage.
+            </div>
+            <div class="arrow">&rarr;</div>
+            <div class="node">
+              <strong>Artifact builders</strong>
+              Schema, comparison, vocabulary, and dictionary modules generate reusable interpretation artifacts.
+            </div>
+          </div>
+          <div class="flow-row">
+            <div class="node">
+              <strong>Warehouse loader</strong>
+              <span class="path">loader.py</span> pushes CSV-heavy work into DuckDB, emits partitioned Parquet, and updates catalog tables.
+            </div>
+            <div class="arrow">&rarr;</div>
+            <div class="node storage">
+              <strong>Warehouse state</strong>
+              Durable Parquet under <span class="path">data/warehouse/parquet/...</span> plus DuckDB metadata in <span class="path">data/warehouse/anac.duckdb</span>.
+            </div>
+            <div class="arrow">&rarr;</div>
+            <div class="node control">
+              <strong>Metadata discoverability</strong>
+              <span class="path">metadata_views.py</span> rebuilds <code>anac_*</code> views from manifests, dictionaries, schemas, loaded resources, and registered views.
+            </div>
+          </div>
+          <div class="flow-row">
+            <div class="node control">
+              <strong>Stable CLI surface</strong>
+              <span class="path">cli.py</span> exposes datasets, download, schema, query, stats, update, config, and drop.
+            </div>
+            <div class="arrow">&rarr;</div>
+            <div class="node">
+              <strong>Output contract</strong>
+              <span class="path">models.py</span>, <span class="path">output.py</span>, and <span class="path">errors.py</span> normalize JSON/table/YAML output and stable error codes.
+            </div>
+          </div>
+        </div>
+
+        <div class="callout warning" style="margin-top: 1rem;">
+          <h3>Important runtime fact</h3>
+          <p>
+            In this environment, direct HTTP access to ANAC can be blocked by the WAF.
+            The architecture therefore keeps Playwright as a first-class transport path,
+            not as an optional extra.
+          </p>
+        </div>
+      </section>
+
+      <section id="state-surfaces">
+        <h2>4. Persistent state surfaces</h2>
+        <p>
+          The local system state is intentionally explicit. Instead of hiding everything
+          inside a single database, the project keeps several durable surfaces with
+          different responsibilities.
+        </p>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Surface</th>
+                <th>Location</th>
+                <th>What lives there</th>
+                <th>Why it exists</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Raw resource cache</td>
+                <td><span class="path">data/raw/...</span></td>
+                <td>Downloaded archives, extracted materialized files, manifest metadata</td>
+                <td>Preserves source lineage and enables cache reuse or restart-safe downloads</td>
+              </tr>
+              <tr>
+                <td>Schema artifacts</td>
+                <td><span class="path">schemas/*.json</span></td>
+                <td>Schema mappings and cross-target comparisons</td>
+                <td>Makes schema inspection independent from live re-parsing</td>
+              </tr>
+              <tr>
+                <td>Vocabulary artifacts</td>
+                <td><span class="path">vocabularies/*.json</span>, <span class="path">vocabularies/index.json</span></td>
+                <td>Crosswalk tables and code-to-label link metadata</td>
+                <td>Supports semantic enrichment and documented joins</td>
+              </tr>
+              <tr>
+                <td>Dictionary artifacts</td>
+                <td><span class="path">dictionaries/*.json</span>, <span class="path">dictionaries/*.md</span></td>
+                <td>Human-readable field descriptions and semantic references</td>
+                <td>Bridges raw schemas to meaning-oriented documentation</td>
+              </tr>
+              <tr>
+                <td>Warehouse payload</td>
+                <td><span class="path">data/warehouse/parquet/...</span></td>
+                <td>Partitioned analytical data</td>
+                <td>Keeps large data in a durable, query-friendly format</td>
+              </tr>
+              <tr>
+                <td>Warehouse catalog</td>
+                <td><span class="path">data/warehouse/anac.duckdb</span></td>
+                <td>Loaded resource records, registered views, period manifest, discoverability inputs</td>
+                <td>Acts as the warehouse control plane and query engine</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="grid-3" style="margin-top: 1rem;">
+          <div class="card">
+            <h3>Core catalog tables</h3>
+            <ul>
+              <li><code>loaded_resources</code></li>
+              <li><code>registered_views</code></li>
+              <li><code>dataset_period_manifest</code></li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>Metadata discoverability views</h3>
+            <ul>
+              <li><code>anac_datasets</code></li>
+              <li><code>anac_dataset_resources</code></li>
+              <li><code>anac_partitions</code></li>
+              <li><code>anac_registered_views</code></li>
+              <li><code>anac_loaded_resources</code></li>
+              <li><code>anac_schema_columns</code></li>
+              <li><code>anac_dictionary_fields</code></li>
+              <li><code>anac_crosswalks</code></li>
+              <li><code>anac_update_status</code></li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>Config surface</h3>
+            <p>
+              Persisted config lives at
+              <span class="path">~/.config/anacx/config.json</span>,
+              with compatibility support for the older
+              <span class="path">anac-explorator</span> location.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section id="command-surface">
+        <h2>5. Stable command surface</h2>
+        <p>
+          The canonical interface is the <code>anacx</code> executable. The stable Phase 3
+          commands are thin entry points over the architectural layers described above.
+        </p>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Command</th>
+                <th>Primary role</th>
+                <th>Main implementation path</th>
+                <th>Main artifacts or views touched</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>datasets</code></td>
+                <td>List or inspect logical dataset families and local / remote coverage</td>
+                <td><span class="path">cli.py</span> &rarr; <span class="path">catalog.py</span></td>
+                <td><code>anac_datasets</code>, local manifests, registry metadata</td>
+              </tr>
+              <tr>
+                <td><code>download</code></td>
+                <td>Plan or execute downloads and optional Parquet loads</td>
+                <td><span class="path">cli.py</span> &rarr; <span class="path">selection.py</span> &rarr; <span class="path">catalog.py</span> &rarr; <span class="path">sample.py</span> / <span class="path">loader.py</span></td>
+                <td>Raw cache, schemas, Parquet, DuckDB catalog, optional validation</td>
+              </tr>
+              <tr>
+                <td><code>schema</code></td>
+                <td>Inspect schema artifacts, diffs, or warehouse DDL</td>
+                <td><span class="path">cli.py</span> &rarr; <span class="path">schema_service.py</span></td>
+                <td>Schema JSON, dictionary JSON, <code>anac_registered_views</code></td>
+              </tr>
+              <tr>
+                <td><code>query</code></td>
+                <td>Run safe SQL against local relations and metadata views</td>
+                <td><span class="path">cli.py</span> &rarr; <span class="path">errors.py</span> &rarr; <span class="path">loader.py</span></td>
+                <td>DuckDB relations, <code>anac_*</code> views, read-only policy</td>
+              </tr>
+              <tr>
+                <td><code>stats</code></td>
+                <td>Summarize local state, partitions, and optional live profiling</td>
+                <td><span class="path">cli.py</span> &rarr; <span class="path">stats.py</span></td>
+                <td><code>anac_*</code> views and optionally live target relations</td>
+              </tr>
+              <tr>
+                <td><code>update</code></td>
+                <td>Plan or apply incremental refreshes</td>
+                <td><span class="path">cli.py</span> &rarr; <span class="path">catalog.py</span></td>
+                <td>Raw cache, Parquet, DuckDB catalog, vocabulary refresh, dictionary regeneration</td>
+              </tr>
+              <tr>
+                <td><code>config</code></td>
+                <td>Show, set, unset, reset, and validate effective config</td>
+                <td><span class="path">cli.py</span> &rarr; <span class="path">config.py</span></td>
+                <td>Config file, env overrides, effective runtime settings</td>
+              </tr>
+              <tr>
+                <td><code>drop</code></td>
+                <td>Plan or apply safe local pruning</td>
+                <td><span class="path">cli.py</span> &rarr; <span class="path">catalog.py</span> &rarr; <span class="path">drop.py</span></td>
+                <td>Selected raw files, selected Parquet files, reconciled metadata</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="callout info" style="margin-top: 1rem;">
+          <h3>Compatibility note</h3>
+          <p>
+            The repository still exposes the legacy executable alias
+            <code>anac-explorator</code> and earlier low-level commands, but the stable
+            architecture is organized around <code>anacx</code> and the eight commands above.
+          </p>
+        </div>
+      </section>
+
+      <section id="component-map">
+        <h2>6. Component map</h2>
+        <p>
+          The sections below move from the outside of the system inward. Each block
+          explains what the component owns, what it depends on, and what artifacts or
+          interfaces it produces.
+        </p>
+
+        <details open>
+          <summary>CLI entry point and shared command contract</summary>
+          <div class="grid-2">
+            <div>
+              <h3>Key files</h3>
+              <p>
+                <span class="path">src/anac_explorator/cli.py</span>,
+                <span class="path">src/anac_explorator/__main__.py</span>,
+                <span class="path">src/anac_explorator/models.py</span>,
+                <span class="path">src/anac_explorator/output.py</span>,
+                <span class="path">src/anac_explorator/errors.py</span>
+              </p>
+              <h3>Responsibility</h3>
+              <p>
+                Parse user intent, bind effective paths and configuration, dispatch to
+                a handler, and return a stable success or error envelope.
+              </p>
+            </div>
+            <div>
+              <h3>Why it matters architecturally</h3>
+              <ul>
+                <li>Keeps the top-level CLI consistent across all commands.</li>
+                <li>Encodes confirmation rules for destructive or mutating actions.</li>
+                <li>Normalizes JSON, table, and YAML rendering behavior.</li>
+                <li>Turns internal exceptions into stable error codes and exit codes.</li>
+              </ul>
+            </div>
+          </div>
+        </details>
+
+        <details>
+          <summary>Remote access and transport layer</summary>
+          <div class="grid-2">
+            <div>
+              <h3>Key files</h3>
+              <p>
+                <span class="path">src/anac_explorator/ckan.py</span>,
+                <span class="path">src/anac_explorator/browser.py</span>
+              </p>
+              <h3>Responsibility</h3>
+              <p>
+                Resolve CKAN package metadata and fetch raw content through either
+                standard HTTP or Playwright-backed browser transport.
+              </p>
+            </div>
+            <div>
+              <h3>Important behavior</h3>
+              <ul>
+                <li><span class="path">ckan.py</span> owns package_show resolution and request headers.</li>
+                <li><span class="path">browser.py</span> is a first-class solution for WAF-protected access.</li>
+                <li>The transport choice is configurable and flows through the CLI.</li>
+              </ul>
+            </div>
+          </div>
+        </details>
+
+        <details>
+          <summary>Config and path resolution</summary>
+          <div class="grid-2">
+            <div>
+              <h3>Key files</h3>
+              <p>
+                <span class="path">src/anac_explorator/config.py</span>,
+                <span class="path">src/anac_explorator/paths.py</span>
+              </p>
+              <h3>Responsibility</h3>
+              <p>
+                Merge defaults, persisted config, environment variables, and CLI flags
+                into one effective runtime config and one consistent set of paths.
+              </p>
+            </div>
+            <div>
+              <h3>Architectural value</h3>
+              <ul>
+                <li>Avoids path and transport logic being reimplemented by each command.</li>
+                <li>Lets commands publish their active filesystem paths in metadata output.</li>
+                <li>Supports both canonical <code>ANAC_*</code> env vars and compatibility names.</li>
+              </ul>
+            </div>
+          </div>
+        </details>
+
+        <details>
+          <summary>Dataset-family registry and temporal selection</summary>
+          <div class="grid-2">
+            <div>
+              <h3>Key files</h3>
+              <p>
+                <span class="path">src/anac_explorator/catalog.py</span>,
+                <span class="path">src/anac_explorator/selection.py</span>
+              </p>
+              <h3>Responsibility</h3>
+              <p>
+                Translate user-facing logical families such as <code>cig</code> into
+                concrete CKAN package IDs, resources, capabilities, and update / drop behavior.
+              </p>
+            </div>
+            <div>
+              <h3>Architectural value</h3>
+              <ul>
+                <li>Separates the public CLI vocabulary from raw CKAN dataset naming.</li>
+                <li>Centralizes capability differences between temporal and snapshot families.</li>
+                <li>Provides the reusable planning contract for download, update, and drop.</li>
+              </ul>
+            </div>
+          </div>
+        </details>
+
+        <details>
+          <summary>Download and raw-cache layer</summary>
+          <div class="grid-2">
+            <div>
+              <h3>Key files</h3>
+              <p>
+                <span class="path">src/anac_explorator/sample.py</span>
+              </p>
+              <h3>Responsibility</h3>
+              <p>
+                Select the right resource, download it, materialize extracted content when
+                needed, and write <span class="path">manifest.json</span> so later stages can
+                reason about the resource without guessing.
+              </p>
+            </div>
+            <div>
+              <h3>Architectural value</h3>
+              <ul>
+                <li>Provides cache reuse instead of blind re-downloads.</li>
+                <li>Supports restart-safe behavior and resumable HTTP where possible.</li>
+                <li>Creates a durable bridge between remote resources and local warehouse state.</li>
+              </ul>
+            </div>
+          </div>
+        </details>
+
+        <details>
+          <summary>Schema, comparison, vocabulary, and dictionary services</summary>
+          <div class="grid-2">
+            <div>
+              <h3>Key files</h3>
+              <p>
+                <span class="path">src/anac_explorator/schema.py</span>,
+                <span class="path">src/anac_explorator/comparison.py</span>,
+                <span class="path">src/anac_explorator/schema_service.py</span>,
+                <span class="path">src/anac_explorator/vocabulary.py</span>,
+                <span class="path">src/anac_explorator/dictionary.py</span>
+              </p>
+            </div>
+            <div>
+              <h3>Responsibility</h3>
+              <ul>
+                <li>Capture raw column structure and inferred types.</li>
+                <li>Compare schema targets over time.</li>
+                <li>Build code-to-label crosswalks from vocabulary datasets.</li>
+                <li>Generate field dictionaries that combine schema and semantic knowledge.</li>
+              </ul>
+            </div>
+          </div>
+          <div class="callout info">
+            <h4>Conceptually, this is the interpretation layer</h4>
+            <p>
+              The raw cache tells you <em>what was downloaded</em>. The interpretation layer
+              tells you <em>what the columns and codes mean</em>. This is why the schema and
+              dictionary artifacts sit beside the warehouse instead of being hidden inside it.
+            </p>
+          </div>
+        </details>
+
+        <details>
+          <summary>Warehouse loading and local query execution</summary>
+          <div class="grid-2">
+            <div>
+              <h3>Key files</h3>
+              <p>
+                <span class="path">src/anac_explorator/loader.py</span>
+              </p>
+              <h3>Responsibility</h3>
+              <p>
+                Keep heavy CSV scanning inside DuckDB, generate Parquet output, register views,
+                and expose local query execution with read-only policy by default.
+              </p>
+            </div>
+            <div>
+              <h3>Architectural value</h3>
+              <ul>
+                <li>Scales better than Python row-by-row loading for large resources.</li>
+                <li>Maintains a clear distinction between Parquet payload and DuckDB control metadata.</li>
+                <li>Provides a single backend for both loading and querying.</li>
+              </ul>
+            </div>
+          </div>
+        </details>
+
+        <details>
+          <summary>Metadata discoverability layer</summary>
+          <div class="grid-2">
+            <div>
+              <h3>Key file</h3>
+              <p><span class="path">src/anac_explorator/metadata_views.py</span></p>
+              <h3>Responsibility</h3>
+              <p>
+                Rebuild the full <code>anac_*</code> view layer from local artifacts,
+                warehouse catalog rows, manifests, and dictionaries each time it is needed.
+              </p>
+            </div>
+            <div>
+              <h3>Architectural value</h3>
+              <ul>
+                <li>Makes the warehouse self-describing.</li>
+                <li>Lets <code>datasets</code>, <code>query</code>, and <code>stats</code> work from a common metadata model.</li>
+                <li>Avoids maintaining a separate permanent metadata warehouse.</li>
+              </ul>
+            </div>
+          </div>
+        </details>
+
+        <details>
+          <summary>Stats, update, integrity, and drop orchestration</summary>
+          <div class="grid-2">
+            <div>
+              <h3>Key files</h3>
+              <p>
+                <span class="path">src/anac_explorator/stats.py</span>,
+                <span class="path">src/anac_explorator/catalog.py</span>,
+                <span class="path">src/anac_explorator/integrity.py</span>,
+                <span class="path">src/anac_explorator/drop.py</span>
+              </p>
+            </div>
+            <div>
+              <h3>Responsibility</h3>
+              <ul>
+                <li>Summarize local state from metadata views.</li>
+                <li>Plan and apply incremental refreshes.</li>
+                <li>Validate local coherence for supported families.</li>
+                <li>Delete selected local artifacts and reconcile catalog state.</li>
+              </ul>
+            </div>
+          </div>
+        </details>
+      </section>
+
+      <section id="data-flows">
+        <h2>7. Detailed data flows</h2>
+
+        <details open>
+          <summary>Flow A: dataset discovery</summary>
+          <ol>
+            <li><code>anacx datasets</code> enters through <span class="path">cli.py</span>.</li>
+            <li>The handler binds effective paths and optional network transport settings.</li>
+            <li><span class="path">catalog.py</span> enumerates logical families from the dataset-family registry.</li>
+            <li>For detailed inspection, the CLI may instantiate <span class="path">ckan.py</span> to enrich remote metadata.</li>
+            <li>Local coverage is merged from manifests, dictionaries, and warehouse metadata.</li>
+            <li>The result is returned in the stable command envelope.</li>
+          </ol>
+        </details>
+
+        <details>
+          <summary>Flow B: download to local warehouse</summary>
+          <ol>
+            <li><code>anacx download</code> parses temporal flags into a normalized <code>TemporalSelection</code>.</li>
+            <li>The dataset-family registry resolves the logical family into a reusable download plan.</li>
+            <li><span class="path">sample.py</span> downloads or reuses the raw resource and writes a manifest.</li>
+            <li><span class="path">loader.py</span> maps the source into projected DuckDB types and writes Parquet output.</li>
+            <li>DuckDB catalog rows are updated for loaded resources and registered views.</li>
+            <li>Optional integrity validation can run after the load for supported families.</li>
+          </ol>
+        </details>
+
+        <details>
+          <summary>Flow C: schema and semantic interpretation</summary>
+          <ol>
+            <li>Schema artifacts describe the raw field structure and inferred types.</li>
+            <li>Comparison artifacts explain cross-target drift over time.</li>
+            <li>Vocabulary artifacts encode code-to-label mappings and join contracts.</li>
+            <li>Dictionary artifacts combine schema, comparison, and vocabulary knowledge into field-level documentation.</li>
+            <li><code>anacx schema</code> reads these artifacts directly through <span class="path">schema_service.py</span>.</li>
+          </ol>
+        </details>
+
+        <details>
+          <summary>Flow D: querying and stats</summary>
+          <ol>
+            <li><code>anacx query</code> or <code>anacx stats</code> opens the local DuckDB database.</li>
+            <li><span class="path">metadata_views.py</span> rebuilds the <code>anac_*</code> views in that session.</li>
+            <li><code>query</code> enforces read-only behavior unless the CLI explicitly opts into mutation.</li>
+            <li><code>stats</code> either reads metadata summaries or profiles live dataset relations through DuckDB aggregates.</li>
+            <li>The response is formatted through the shared output contract.</li>
+          </ol>
+        </details>
+
+        <details>
+          <summary>Flow E: update and drop lifecycle</summary>
+          <ol>
+            <li><code>anacx update</code> uses the registry to decide whether a family supports incremental refresh.</li>
+            <li>For supported families, update planning compares requested scope with the latest local state.</li>
+            <li>Execution reuses the existing download and load building blocks rather than inventing a separate pipeline.</li>
+            <li>Vocabulary-aware updates can regenerate the current CIG dictionary when semantic inputs changed.</li>
+            <li><code>anacx drop</code> creates a precise deletion plan and removes only the selected raw and/or Parquet files.</li>
+            <li>After deletion, metadata is reconciled so the local warehouse does not lie about what still exists.</li>
+          </ol>
+        </details>
+      </section>
+
+      <section id="deep-dive-map">
+        <h2>8. Deep dive map</h2>
+        <p>
+          If you want to understand a specific concept quickly, start in the file that
+          owns the architectural decision rather than reading the whole repository in order.
+        </p>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>If you want to understand...</th>
+                <th>Start here</th>
+                <th>Then read</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>The public CLI contract</td>
+                <td><span class="path">src/anac_explorator/cli.py</span></td>
+                <td><span class="path">src/anac_explorator/models.py</span>, <span class="path">src/anac_explorator/output.py</span>, <span class="path">src/anac_explorator/errors.py</span></td>
+              </tr>
+              <tr>
+                <td>Why remote access uses Playwright</td>
+                <td><span class="path">src/anac_explorator/ckan.py</span></td>
+                <td><span class="path">src/anac_explorator/browser.py</span>, <span class="path">README.md</span></td>
+              </tr>
+              <tr>
+                <td>How logical families map to raw CKAN datasets</td>
+                <td><span class="path">src/anac_explorator/catalog.py</span></td>
+                <td><span class="path">src/anac_explorator/selection.py</span></td>
+              </tr>
+              <tr>
+                <td>How a download becomes a warehouse table</td>
+                <td><span class="path">src/anac_explorator/sample.py</span></td>
+                <td><span class="path">src/anac_explorator/loader.py</span>, <span class="path">src/anac_explorator/metadata_views.py</span></td>
+              </tr>
+              <tr>
+                <td>How schema and meaning are documented</td>
+                <td><span class="path">src/anac_explorator/schema_service.py</span></td>
+                <td><span class="path">src/anac_explorator/schema.py</span>, <span class="path">src/anac_explorator/vocabulary.py</span>, <span class="path">src/anac_explorator/dictionary.py</span></td>
+              </tr>
+              <tr>
+                <td>How local metadata is exposed to users</td>
+                <td><span class="path">src/anac_explorator/metadata_views.py</span></td>
+                <td><span class="path">src/anac_explorator/stats.py</span>, <span class="path">src/anac_explorator/cli.py</span></td>
+              </tr>
+              <tr>
+                <td>How update and drop are orchestrated</td>
+                <td><span class="path">src/anac_explorator/catalog.py</span></td>
+                <td><span class="path">src/anac_explorator/drop.py</span>, <span class="path">src/anac_explorator/integrity.py</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="grid-3" style="margin-top: 1rem;">
+          <div class="card">
+            <h3>Best entry point for newcomers</h3>
+            <p>
+              Read <span class="path">README.md</span> first, then this document, then
+              <span class="path">src/anac_explorator/cli.py</span>.
+            </p>
+          </div>
+          <div class="card">
+            <h3>Best entry point for data-flow debugging</h3>
+            <p>
+              Start at <span class="path">sample.py</span> and follow into
+              <span class="path">loader.py</span> and <span class="path">metadata_views.py</span>.
+            </p>
+          </div>
+          <div class="card">
+            <h3>Best entry point for semantics</h3>
+            <p>
+              Start at <span class="path">schema_service.py</span> and read outward into
+              vocabulary and dictionary generation.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section id="boundaries">
+        <h2>9. Strengths and boundaries</h2>
+
+        <div class="grid-2">
+          <div class="callout success">
+            <h3>Current strengths</h3>
+            <ul>
+              <li>The stable top-level CLI contract is fully defined.</li>
+              <li>The local metadata layer is queryable and rebuilt on demand.</li>
+              <li>The storage model is efficient: Parquet payload, DuckDB control plane.</li>
+              <li>Mutation-oriented commands require explicit intent and confirmation.</li>
+              <li>The monthly CIG family is the most complete end-to-end workflow.</li>
+              <li>Vocabulary refresh is wired into the stable update surface.</li>
+            </ul>
+          </div>
+          <div class="callout warning">
+            <h3>Known boundaries</h3>
+            <ul>
+              <li>The project remains CLI-first; there is no web UI.</li>
+              <li>Not every dataset family exposes the same lifecycle depth.</li>
+              <li>Drop support is intentionally strongest for CIG.</li>
+              <li>Update support is broader than before, but still not universal.</li>
+              <li>The architecture is strongest around artifact-driven local analysis rather than a polished Python library API.</li>
+            </ul>
+          </div>
+        </div>
+
+        <p class="footer-note">
+          This reference reflects the current repository state: a coherent local warehouse
+          interface with explicit artifacts, a stable CLI envelope, and a stronger
+          production-like path for CIG than for every other family.
+        </p>
+      </section>
+    </main>
+  </div>
+</body>
+</html>
