@@ -354,6 +354,7 @@ def build_vocabulary_crosswalks(
     schemas_dir: str | Path = "schemas",
     output_dir: str | Path = "vocabularies",
     current_schema_path: str | Path | None = DEFAULT_CURRENT_CIG_SCHEMA_PATH,
+    force_download: bool = False,
 ) -> dict[str, object]:
     """@notice Build normalized vocabulary artifacts for the configured datasets."""
 
@@ -374,6 +375,7 @@ def build_vocabulary_crosswalks(
                 dataset_id=config.dataset_id,
                 preferred_resource_name=config.preferred_resource_name,
                 output_dir=Path(data_dir),
+                force_download=force_download,
             )
         schema = map_csv_schema(downloaded.csv_path, sample_limit=0)
         schema_path = schemas_path / f"{dataset_id}.schema.json"

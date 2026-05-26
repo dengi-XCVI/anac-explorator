@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import tempfile
 import unittest
 from pathlib import Path
@@ -11,7 +12,7 @@ import duckdb
 
 from anac_explorator.catalog import DATASET_FAMILY_REGISTRY
 from anac_explorator.errors import CliCommandError
-from anac_explorator.models import CkanPackage, CkanResource
+from anac_explorator.models import CkanPackage, CkanResource, DownloadManifest
 from anac_explorator.selection import parse_temporal_selection
 
 
@@ -162,6 +163,96 @@ class UpdatePlanningTests(unittest.TestCase):
             ],
         )
         client.package_show.assert_called_once_with("cig-2025")
+
+    def test_vocabulary_update_planning_refreshes_changed_snapshot_and_plans_dictionary_rebuild(self) -> None:
+        """@notice Snapshot vocabulary updates should detect remote drift and report derived dictionary refreshes."""
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            project_root = Path(temp_dir)
+            raw_dir = project_root / "data" / "raw"
+            schemas_dir = project_root / "schemas"
+            dictionaries_dir = project_root / "dictionaries"
+            vocabulary_dir = project_root / "vocabularies"
+            vocabulary_index_path = vocabulary_dir / "index.json"
+            dataset_id = "bandi-cig-tipo-scelta-contraente"
+            resource_name = "bandi-cig-tipo-scelta-contraente_csv"
+
+            manifest_path = raw_dir / dataset_id / resource_name / "manifest.json"
+            manifest_path.parent.mkdir(parents=True, exist_ok=True)
+            manifest_path.write_text(
+                json.dumps(
+                    DownloadManifest(
+                        dataset_id=dataset_id,
+                        resource_id="csv-old",
+                        resource_name=resource_name,
+                        resource_format="csv",
+                        resource_url="https://example.invalid/old.csv",
+                        transport="playwright",
+                        archive_path=None,
+                        materialized_path="data/raw/bandi-cig-tipo-scelta-contraente/bandi-cig-tipo-scelta-contraente_csv/source.csv",
+                        materialized_kind="csv",
+                        cache_status="fresh",
+                        resume_supported=False,
+                        downloaded_at="2026-05-10T10:00:00",
+                        source_last_modified="2026-05-10T09:00:00",
+                        source_size=128,
+                    ).to_dict()
+                ),
+                encoding="utf-8",
+            )
+            vocabulary_dir.mkdir(parents=True, exist_ok=True)
+            (vocabulary_dir / f"{dataset_id}.json").write_text("{}", encoding="utf-8")
+            vocabulary_index_path.write_text('{"datasets":[]}', encoding="utf-8")
+            schemas_dir.mkdir(parents=True, exist_ok=True)
+            (schemas_dir / "cig_2025_01.schema.json").write_text("{}", encoding="utf-8")
+            (schemas_dir / "cig_2007_01_vs_cig_2025_01.comparison.json").write_text("{}", encoding="utf-8")
+
+            client = Mock()
+            client.package_show.return_value = CkanPackage(
+                id="pkg-vocabulary",
+                name=dataset_id,
+                title="Vocabulary dataset",
+                notes="Vocabulary snapshot",
+                resources=[
+                    CkanResource(
+                        id="csv-new",
+                        name=resource_name,
+                        format="CSV",
+                        url="https://example.invalid/new.csv",
+                        size=256,
+                        last_modified="2026-06-01T08:00:00",
+                    )
+                ],
+            )
+
+            plan = DATASET_FAMILY_REGISTRY.plan_update(
+                dataset_id,
+                client,
+                output_dir=raw_dir,
+                schemas_dir=schemas_dir,
+                dictionaries_dir=dictionaries_dir,
+                vocabulary_index_path=vocabulary_index_path,
+            )
+
+        self.assertEqual(plan.dataset, dataset_id)
+        self.assertEqual(plan.resolved_dataset_ids, [dataset_id])
+        self.assertEqual(plan.scope["resource_name"], resource_name)
+        self.assertTrue(plan.latest_local_state["artifact_present"])
+        self.assertTrue(plan.latest_local_state["dictionary_refresh_available"])
+        self.assertEqual(plan.plan[0].action, "refresh")
+        self.assertEqual(plan.plan[0].reason, "remote_changed")
+        self.assertEqual(plan.plan[0].target_kind, "vocabulary_artifact")
+        self.assertEqual(
+            plan.plan[0].derived_artifacts,
+            [
+                str(dictionaries_dir / "cig_2025_01.dictionary.json"),
+                str(dictionaries_dir / "cig_2025_01.dictionary.md"),
+            ],
+        )
+        self.assertEqual(plan.plan[1].dataset, "cig")
+        self.assertEqual(plan.plan[1].target_kind, "dictionary_artifact")
+        self.assertEqual(plan.plan[1].source_dataset, dataset_id)
+        client.package_show.assert_called_once_with(dataset_id)
 
     @staticmethod
     def _write_local_cig_period_record(warehouse_dir: Path) -> None:

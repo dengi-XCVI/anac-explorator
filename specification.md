@@ -27,7 +27,7 @@ The implemented repository now covers:
 5. vocabulary crosswalk generation and field-dictionary enrichment
 6. manifest-backed CSV loading into partitioned Parquet through DuckDB
 7. registered local DuckDB views over Parquet-backed datasets
-8. monthly CIG incremental update planning and execution
+8. incremental update planning and execution for monthly CIG plus the wired vocabulary snapshot families
 9. read-only integrity validation for the local warehouse
 10. SQL-queryable metadata discoverability views
 11. the stable Phase 3 CLI commands:
@@ -100,7 +100,7 @@ The Phase 3 metadata discoverability layer builds on top of those tables and loc
 | `anacx schema` | inspect artifact-driven schema, semantic overlays, DDL, and diffs |
 | `anacx query` | execute safe SQL against the local warehouse and metadata views |
 | `anacx stats` | summarize local storage and optionally profile live values |
-| `anacx update` | plan or apply incremental updates for supported families |
+| `anacx update` | plan or apply incremental updates for CIG and supported vocabulary families |
 | `anacx config` | show, get, set, unset, reset, and validate effective config |
 | `anacx drop` | plan or apply safe local pruning while keeping metadata coherent |
 
@@ -111,10 +111,11 @@ The project is currently strongest on the **monthly CIG family**.
 That means:
 
 - the stable `download`, `schema`, `query`, `stats`, `update`, and `drop` workflows are all implemented for CIG
+- `update` also covers the wired vocabulary snapshot families and can explicitly regenerate the current CIG dictionary when their semantic inputs changed
 - metadata views describe both the warehouse and the local artifacts around CIG
 - update and drop operations for unsupported families fail with explicit stable errors instead of pretending to work
 
-Snapshot-style and vocabulary families are still useful through discovery, schema, querying, and one-shot materialization paths, but they do not all expose the same lifecycle behaviors yet.
+Snapshot-style and vocabulary families are still useful through discovery, schema, querying, and one-shot materialization paths, but they do not all expose the same lifecycle behaviors yet. Update support is now broader for the wired vocabulary families, while drop and the broader warehouse lifecycle remain more limited outside CIG.
 
 ## Config and environment model
 

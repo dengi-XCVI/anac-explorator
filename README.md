@@ -19,7 +19,7 @@ The stable Phase 3 commands are:
 | `anacx schema` | inspect local schema artifacts, semantic overlays, diffs, and DDL |
 | `anacx query` | execute safe SQL against DuckDB plus `anac_*` metadata views |
 | `anacx stats` | summarize local storage and optionally profile live dataset values |
-| `anacx update` | plan or apply incremental updates for supported families |
+| `anacx update` | plan or apply incremental updates for CIG and locally materialized vocabulary families |
 | `anacx config` | inspect, persist, reset, and validate CLI configuration |
 | `anacx drop` | safely prune local raw files, Parquet slices, or both |
 
@@ -57,7 +57,7 @@ Inspect schema, metadata, and local stats:
 
 ```bash
 anacx schema cig --describe --format json
-anacx query "SELECT dataset, family_category FROM anac_datasets ORDER BY dataset LIMIT 5" --format json
+anacx query "SELECT dataset, category FROM anac_datasets ORDER BY dataset LIMIT 5" --format json
 anacx stats cig --partitions --format json
 ```
 
@@ -65,6 +65,7 @@ Plan safe maintenance operations:
 
 ```bash
 anacx update cig --dry-run --format json
+anacx update bandi-cig-tipo-scelta-contraente --dry-run --format json
 anacx drop cig --dry-run --format json
 ```
 

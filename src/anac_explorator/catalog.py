@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING, Iterable, Sequence
 import duckdb
 
 from anac_explorator.ckan import CkanClientError
+from anac_explorator.dictionary import build_cig_data_dictionary
 from anac_explorator.drop import execute_drop_plan, plan_cig_drop
 from anac_explorator.errors import CliCommandError
 from anac_explorator.integrity import validate_local_data_integrity
@@ -18,6 +19,7 @@ from anac_explorator.loader import (
     download_dataset_to_parquet,
     load_downloaded_resource,
     plan_cig_period_updates,
+    register_vocabulary_crosswalks,
     sync_cig_periods_to_parquet,
 )
 from anac_explorator.metadata_views import ensure_metadata_views
@@ -26,20 +28,24 @@ from anac_explorator.models import (
     CkanResource,
     DatasetIncrementalUpdateResult,
     DatasetParquetDownloadResult,
+    DictionaryRefreshResult,
     DropPlan,
     DropPlanTarget,
     DownloadManifest,
     DownloadPlan,
     DownloadPlanItem,
     DownloadedResourceArtifact,
+    UpdateAppliedArtifact,
     UpdateCommandResult,
     UpdatePlan,
+    UpdatePlanItem,
+    VocabularyRefreshResult,
     WarehouseLoadResult,
 )
-from anac_explorator.paths import DEFAULT_CIG_SCHEMA_PATH
+from anac_explorator.paths import DEFAULT_CIG_COMPARISON_PATH, DEFAULT_CIG_SCHEMA_PATH
 from anac_explorator.sample import SampleDownloadError, download_dataset_resource, select_resource
 from anac_explorator.selection import TemporalSelection, select_available_slices
-from anac_explorator.vocabulary import VOCABULARY_DATASET_CONFIGS
+from anac_explorator.vocabulary import VOCABULARY_DATASET_CONFIGS, build_vocabulary_crosswalks
 
 if TYPE_CHECKING:
     from anac_explorator.ckan import CkanClient
@@ -284,6 +290,10 @@ class DatasetFamilyAdapter:
         client: "CkanClient",
         *,
         selection: TemporalSelection | None = None,
+        output_dir: "Path" = Path("data/raw"),
+        schemas_dir: "Path" = Path("schemas"),
+        dictionaries_dir: "Path" = Path("dictionaries"),
+        vocabulary_index_path: "Path" = Path("vocabularies/index.json"),
         warehouse_dir: "Path" = Path("data/warehouse"),
         refresh_changed: bool = False,
         force_full: bool = False,
@@ -303,6 +313,7 @@ class DatasetFamilyAdapter:
         plan: UpdatePlan,
         output_dir: "Path",
         schemas_dir: "Path",
+        dictionaries_dir: "Path",
         warehouse_dir: "Path",
         vocabulary_index_path: "Path",
         delimiter: str,
@@ -312,13 +323,13 @@ class DatasetFamilyAdapter:
         register_crosswalks: bool,
         refresh_changed: bool,
         force_full: bool,
-    ) -> list[DatasetIncrementalUpdateResult]:
+    ) -> list["UpdateExecutionArtifact"]:
         """@notice Execute one reusable incremental-update plan when the family supports it."""
 
         raise CliCommandError(
-        "DATASET_UPDATE_NOT_SUPPORTED",
-        f"Dataset family {self.family!r} does not support incremental updates yet.",
-        details={"dataset": self.family},
+            "DATASET_UPDATE_NOT_SUPPORTED",
+            f"Dataset family {self.family!r} does not support incremental updates yet.",
+            details={"dataset": self.family},
         )
 
     def build_drop_plan(
@@ -739,6 +750,10 @@ class CigDatasetFamilyAdapter(PeriodizedDatasetFamilyAdapter):
         client: "CkanClient",
         *,
         selection: TemporalSelection | None = None,
+        output_dir: "Path" = Path("data/raw"),
+        schemas_dir: "Path" = Path("schemas"),
+        dictionaries_dir: "Path" = Path("dictionaries"),
+        vocabulary_index_path: "Path" = Path("vocabularies/index.json"),
         warehouse_dir: "Path" = Path("data/warehouse"),
         refresh_changed: bool = False,
         force_full: bool = False,
@@ -770,6 +785,7 @@ class CigDatasetFamilyAdapter(PeriodizedDatasetFamilyAdapter):
         plan: UpdatePlan,
         output_dir: "Path",
         schemas_dir: "Path",
+        dictionaries_dir: "Path",
         warehouse_dir: "Path",
         vocabulary_index_path: "Path",
         delimiter: str,
@@ -779,7 +795,7 @@ class CigDatasetFamilyAdapter(PeriodizedDatasetFamilyAdapter):
         register_crosswalks: bool,
         refresh_changed: bool,
         force_full: bool,
-    ) -> list[DatasetIncrementalUpdateResult]:
+    ) -> list["UpdateExecutionArtifact"]:
         """@notice Execute the normalized plan by delegating each targeted year to the existing sync helper."""
 
         applicable_items = [item for item in plan.plan if item.action != "skip"]
@@ -819,6 +835,288 @@ SnapshotAdapter = SnapshotDatasetFamilyAdapter
 
 
 DownloadExecutionArtifact = DownloadedResourceArtifact | DatasetParquetDownloadResult
+UpdateExecutionArtifact = DatasetIncrementalUpdateResult | UpdateAppliedArtifact
+
+
+def _load_download_manifest(path: Path) -> DownloadManifest | None:
+    """@notice Load one local raw manifest when it exists."""
+
+    if not path.exists():
+        return None
+    return DownloadManifest.from_dict(json.loads(path.read_text(encoding="utf-8")))
+
+
+def _resolve_current_cig_schema_path(schemas_dir: Path) -> Path | None:
+    """@notice Resolve the current CIG schema artifact when it is available locally."""
+
+    schema_path = schemas_dir / DEFAULT_CIG_SCHEMA_PATH.name
+    return schema_path if schema_path.exists() else None
+
+
+def _resolve_dictionary_refresh_context(
+    *,
+    schemas_dir: Path,
+    dictionaries_dir: Path,
+) -> dict[str, Path] | None:
+    """@notice Return the current dictionary paths only when local prerequisites are available."""
+
+    schema_path = _resolve_current_cig_schema_path(schemas_dir)
+    comparison_path = schemas_dir / DEFAULT_CIG_COMPARISON_PATH.name
+    if schema_path is None or not comparison_path.exists():
+        return None
+    dictionary_name = "cig_2025_01"
+    return {
+        "schema_path": schema_path,
+        "comparison_path": comparison_path,
+        "json_path": dictionaries_dir / f"{dictionary_name}.dictionary.json",
+        "markdown_path": dictionaries_dir / f"{dictionary_name}.dictionary.md",
+    }
+
+
+class VocabularyDatasetFamilyAdapter(SnapshotDatasetFamilyAdapter):
+    """@notice Refresh snapshot vocabulary families and their derived semantic artifacts."""
+
+    def __init__(self, *, family: str, dataset_id: str) -> None:
+        """@notice Bind one registered vocabulary family to its shared builder config."""
+
+        super().__init__(
+            family=family,
+            dataset_id=dataset_id,
+            supported_source_formats=("csv",),
+            default_source_format="csv",
+            update_supported=True,
+        )
+        self.config = VOCABULARY_DATASET_CONFIGS[dataset_id]
+
+    def plan_update(
+        self,
+        client: "CkanClient",
+        *,
+        selection: TemporalSelection | None = None,
+        output_dir: "Path" = Path("data/raw"),
+        schemas_dir: "Path" = Path("schemas"),
+        dictionaries_dir: "Path" = Path("dictionaries"),
+        vocabulary_index_path: "Path" = Path("vocabularies/index.json"),
+        warehouse_dir: "Path" = Path("data/warehouse"),
+        refresh_changed: bool = False,
+        force_full: bool = False,
+    ) -> UpdatePlan:
+        """@notice Compare local snapshot state to the remote vocabulary resource."""
+
+        self.resolve_remote_dataset_ids(selection)
+        package = client.package_show(self.dataset_id)
+        try:
+            resource = select_resource(
+                package.resources,
+                preferred_name=self.config.preferred_resource_name,
+                preferred_format="CSV",
+            )
+        except SampleDownloadError as exc:
+            raise CliCommandError(
+                "DATASET_NOT_SUPPORTED",
+                str(exc),
+                details={"dataset": self.family, "source_format": "csv"},
+                cause=exc,
+            ) from exc
+
+        manifest_path = output_dir / self.dataset_id / self.config.preferred_resource_name / "manifest.json"
+        artifact_path = vocabulary_index_path.parent / f"{self.dataset_id}.json"
+        dictionary_context = _resolve_dictionary_refresh_context(
+            schemas_dir=schemas_dir,
+            dictionaries_dir=dictionaries_dir,
+        )
+        local_manifest = _load_download_manifest(manifest_path)
+        artifact_present = artifact_path.exists()
+        index_present = vocabulary_index_path.exists()
+
+        action = "skip"
+        reason = "up_to_date"
+        if local_manifest is None:
+            action = "download"
+            reason = "not_downloaded"
+        elif force_full:
+            action = "refresh"
+            reason = "force_full"
+        elif not artifact_present or not index_present:
+            action = "refresh"
+            reason = "missing_local_artifact"
+        elif (
+            local_manifest.resource_id != resource.id
+            or local_manifest.resource_url != resource.url
+            or local_manifest.source_last_modified != resource.last_modified
+            or local_manifest.source_size != resource.size
+        ):
+            action = "refresh"
+            reason = "remote_changed"
+
+        derived_artifacts: list[str] = []
+        plan_items = [
+            UpdatePlanItem(
+                dataset=self.family,
+                slice=None,
+                dataset_id=self.dataset_id,
+                resource_name=resource.name,
+                action=action,
+                reason=reason,
+                remote_modified=resource.last_modified,
+                remote_size=resource.size,
+                manifest_path=None if local_manifest is None else str(manifest_path),
+                target_kind="vocabulary_artifact",
+                target_path=str(artifact_path),
+            )
+        ]
+        if dictionary_context is not None and action != "skip":
+            derived_artifacts = [
+                str(dictionary_context["json_path"]),
+                str(dictionary_context["markdown_path"]),
+            ]
+            plan_items[0] = replace(plan_items[0], derived_artifacts=derived_artifacts)
+            plan_items.append(
+                UpdatePlanItem(
+                    dataset="cig",
+                    slice=None,
+                    dataset_id="cig-2025",
+                    resource_name="cig_2025_01",
+                    action="refresh",
+                    reason="source_vocabulary_changed",
+                    target_kind="dictionary_artifact",
+                    target_path=str(dictionary_context["json_path"]),
+                    source_dataset=self.family,
+                )
+            )
+
+        latest_local_state = {
+            "resource_name": self.config.preferred_resource_name,
+            "manifest_path": None if local_manifest is None else str(manifest_path),
+            "artifact_path": str(artifact_path),
+            "artifact_present": artifact_present,
+            "vocabulary_index_path": str(vocabulary_index_path),
+            "vocabulary_index_present": index_present,
+            "local_resource_id": None if local_manifest is None else local_manifest.resource_id,
+            "local_resource_url": None if local_manifest is None else local_manifest.resource_url,
+            "local_remote_modified": None if local_manifest is None else local_manifest.source_last_modified,
+            "local_remote_size": None if local_manifest is None else local_manifest.source_size,
+            "dictionary_refresh_available": dictionary_context is not None,
+            "dictionary_paths": None
+            if dictionary_context is None
+            else {
+                "json_path": str(dictionary_context["json_path"]),
+                "markdown_path": str(dictionary_context["markdown_path"]),
+            },
+        }
+        return UpdatePlan(
+            dataset=self.family,
+            scope={
+                "selection_mode": "all" if selection is None else selection.mode,
+                "requested_slices": [] if selection is None else list(selection.slices),
+                "requested_years": [] if selection is None else list(selection.years),
+                "requested_months": [] if selection is None else list(selection.months),
+                "resource_name": self.config.preferred_resource_name,
+                "refresh_changed": refresh_changed,
+                "force_full": force_full,
+            },
+            latest_local_state=latest_local_state,
+            resolved_dataset_ids=[self.dataset_id],
+            plan=plan_items,
+        )
+
+    def apply_update_plan(
+        self,
+        client: "CkanClient",
+        *,
+        plan: UpdatePlan,
+        output_dir: "Path",
+        schemas_dir: "Path",
+        dictionaries_dir: "Path",
+        warehouse_dir: "Path",
+        vocabulary_index_path: "Path",
+        delimiter: str,
+        encoding: str,
+        schema_sample_limit: int,
+        keep_materialized: bool,
+        register_crosswalks: bool,
+        refresh_changed: bool,
+        force_full: bool,
+    ) -> list["UpdateExecutionArtifact"]:
+        """@notice Rebuild the targeted vocabulary artifact and downstream dictionary when requested."""
+
+        applicable_items = [item for item in plan.plan if item.action != "skip"]
+        vocabulary_items = [item for item in applicable_items if item.dataset == self.family]
+        if not vocabulary_items:
+            return []
+
+        summary = build_vocabulary_crosswalks(
+            client,
+            dataset_ids=[self.dataset_id],
+            data_dir=output_dir,
+            schemas_dir=schemas_dir,
+            output_dir=vocabulary_index_path.parent,
+            current_schema_path=_resolve_current_cig_schema_path(schemas_dir),
+            force_download=True,
+        )
+        dataset_summary = next(
+            (
+                item
+                for item in summary.get("datasets", [])
+                if isinstance(item, dict) and item.get("dataset_id") == self.dataset_id
+            ),
+            None,
+        )
+        if dataset_summary is None:
+            raise RuntimeError(f"Vocabulary build did not produce a dataset summary for {self.dataset_id!r}.")
+
+        manifest_path = output_dir / self.dataset_id / self.config.preferred_resource_name / "manifest.json"
+        manifest = _load_download_manifest(manifest_path)
+        if manifest is None:
+            raise FileNotFoundError(f"Vocabulary manifest not found after refresh: {manifest_path}")
+
+        crosswalk_registration = None
+        duckdb_path = warehouse_dir / "anac.duckdb"
+        if register_crosswalks and duckdb_path.exists():
+            crosswalk_registration = register_vocabulary_crosswalks(
+                duckdb_path,
+                vocabulary_index_path=vocabulary_index_path,
+            )
+
+        applied: list[UpdateExecutionArtifact] = [
+            VocabularyRefreshResult(
+                dataset=self.family,
+                dataset_id=self.dataset_id,
+                resource_name=manifest.resource_name,
+                manifest_path=str(manifest_path),
+                download_cache_status=manifest.cache_status,
+                schema_path=str(dataset_summary["schema_path"]),
+                artifact_path=str(dataset_summary["artifact_path"]),
+                vocabulary_index_path=str(vocabulary_index_path),
+                table_count=int(dataset_summary["table_count"]),
+                crosswalk_registration=crosswalk_registration,
+            )
+        ]
+
+        for item in applicable_items:
+            if item.target_kind != "dictionary_artifact":
+                continue
+            dictionary_payload = build_cig_data_dictionary(
+                schema_path=schemas_dir / DEFAULT_CIG_SCHEMA_PATH.name,
+                comparison_path=schemas_dir / DEFAULT_CIG_COMPARISON_PATH.name,
+                vocabulary_index_path=vocabulary_index_path,
+                vocabulary_dir=vocabulary_index_path.parent,
+                output_dir=dictionaries_dir,
+            )
+            applied.append(
+                DictionaryRefreshResult(
+                    dataset="cig",
+                    dataset_id=str(dictionary_payload["dataset_id"]),
+                    dictionary_name=str(dictionary_payload["dictionary_name"]),
+                    json_path=str(dictionary_payload["json_path"]),
+                    markdown_path=str(dictionary_payload["markdown_path"]),
+                    entry_count=int(dictionary_payload["entry_count"]),
+                    section_count=int(dictionary_payload["section_count"]),
+                    reason=item.reason,
+                    source_dataset=self.family,
+                )
+            )
+        return applied
 
 
 class DatasetFamilyRegistry:
@@ -904,7 +1202,7 @@ class DatasetFamilyRegistry:
         dataset: str,
         client: "CkanClient",
         **kwargs: object,
-    ) -> list[DatasetIncrementalUpdateResult]:
+    ) -> list[UpdateExecutionArtifact]:
         """@notice Execute the reusable incremental-update plan through the family's adapter."""
 
         return self.get_family(dataset).adapter.apply_update_plan(client, **kwargs)
@@ -1072,6 +1370,7 @@ def execute_update_plan(
     *,
     output_dir: str | Path = "data/raw",
     schemas_dir: str | Path = "schemas",
+    dictionaries_dir: str | Path = "dictionaries",
     warehouse_dir: str | Path = "data/warehouse",
     vocabulary_index_path: str | Path = "vocabularies/index.json",
     delimiter: str = ";",
@@ -1090,6 +1389,7 @@ def execute_update_plan(
     registry = DATASET_FAMILY_REGISTRY if registry is None else registry
     output_root = Path(output_dir)
     schemas_root = Path(schemas_dir)
+    dictionaries_root = Path(dictionaries_dir)
     warehouse_root = Path(warehouse_dir)
     vocabulary_index = Path(vocabulary_index_path)
 
@@ -1099,6 +1399,7 @@ def execute_update_plan(
         plan=plan,
         output_dir=output_root,
         schemas_dir=schemas_root,
+        dictionaries_dir=dictionaries_root,
         warehouse_dir=warehouse_root,
         vocabulary_index_path=vocabulary_index,
         delimiter=delimiter,
@@ -1110,9 +1411,12 @@ def execute_update_plan(
         force_full=force_full,
     )
 
-    applied: list[DatasetParquetDownloadResult] = []
+    applied: list[UpdateAppliedArtifact] = []
     for result in execution_results:
-        applied.extend(result.applied_loads)
+        if isinstance(result, DatasetIncrementalUpdateResult):
+            applied.extend(result.applied_loads)
+            continue
+        applied.append(result)
 
     validation = None
     if validate:
@@ -1149,6 +1453,7 @@ def run_dataset_update(
     selection: TemporalSelection | None = None,
     output_dir: str | Path = "data/raw",
     schemas_dir: str | Path = "schemas",
+    dictionaries_dir: str | Path = "dictionaries",
     warehouse_dir: str | Path = "data/warehouse",
     vocabulary_index_path: str | Path = "vocabularies/index.json",
     delimiter: str = ";",
@@ -1171,6 +1476,10 @@ def run_dataset_update(
         dataset,
         client,
         selection=selection,
+        output_dir=Path(output_dir),
+        schemas_dir=Path(schemas_dir),
+        dictionaries_dir=Path(dictionaries_dir),
+        vocabulary_index_path=Path(vocabulary_index_path),
         warehouse_dir=warehouse_root,
         refresh_changed=refresh_changed,
         force_full=force_full,
@@ -1192,6 +1501,7 @@ def run_dataset_update(
         client,
         output_dir=output_dir,
         schemas_dir=schemas_dir,
+        dictionaries_dir=dictionaries_dir,
         warehouse_dir=warehouse_root,
         vocabulary_index_path=vocabulary_index_path,
         delimiter=delimiter,
@@ -1387,7 +1697,7 @@ def run_global_update(
 
     latest_local_state: dict[str, object] = {}
     aggregated_plan = []
-    aggregated_applied: list[DatasetParquetDownloadResult] = []
+    aggregated_applied: list[UpdateAppliedArtifact] = []
     validation_reports: dict[str, object] = {}
     for dataset in targeted_datasets:
         result = run_dataset_update(
@@ -1396,6 +1706,7 @@ def run_global_update(
             selection=selection,
             output_dir=output_dir,
             schemas_dir=schemas_dir,
+            dictionaries_dir=dictionaries_dir,
             warehouse_dir=warehouse_dir,
             vocabulary_index_path=vocabulary_index_path,
             delimiter=delimiter,
@@ -1876,13 +2187,11 @@ def _build_dataset_family_registry() -> DatasetFamilyRegistry:
                 coverage_kind="snapshot",
                 available_source_formats=("csv",),
                 query_view_name=config.tables[0].name if config.tables else None,
-                update_supported=False,
+                update_supported=True,
                 dictionary_available=False,
-                adapter=SnapshotDatasetFamilyAdapter(
+                adapter=VocabularyDatasetFamilyAdapter(
                     family=dataset_id,
                     dataset_id=dataset_id,
-                    supported_source_formats=("csv",),
-                    default_source_format="csv",
                 ),
             )
         )

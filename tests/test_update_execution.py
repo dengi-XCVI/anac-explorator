@@ -17,7 +17,9 @@ from anac_explorator.models import (
     DatasetIncrementalUpdateResult,
     DatasetParquetDownloadResult,
     DownloadManifest,
+    DictionaryRefreshResult,
     UpdateCommandResult,
+    VocabularyRefreshResult,
     WarehouseLoadResult,
 )
 from anac_explorator.selection import parse_temporal_selection
@@ -194,6 +196,153 @@ class UpdateExecutionTests(unittest.TestCase):
         self.assertEqual(mock_sync.call_args.kwargs["dataset_id"], "cig-2025")
         self.assertEqual(mock_sync.call_args.kwargs["periods"], ["2025_01"])
         self.assertTrue(mock_sync.call_args.kwargs["force_full"])
+
+    def test_run_dataset_update_refreshes_vocabulary_family_and_regenerates_dictionary(self) -> None:
+        """@notice Snapshot vocabulary updates should report both the rebuilt crosswalk and derived dictionary."""
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            project_root = Path(temp_dir)
+            raw_dir = project_root / "data" / "raw"
+            schemas_dir = project_root / "schemas"
+            dictionaries_dir = project_root / "dictionaries"
+            vocabulary_dir = project_root / "vocabularies"
+            vocabulary_index_path = vocabulary_dir / "index.json"
+            dataset_id = "bandi-cig-tipo-scelta-contraente"
+            resource_name = "bandi-cig-tipo-scelta-contraente_csv"
+
+            self._write_manifest(
+                project_root,
+                DownloadManifest(
+                    dataset_id=dataset_id,
+                    resource_id="csv-old",
+                    resource_name=resource_name,
+                    resource_format="csv",
+                    resource_url="https://example.invalid/old.csv",
+                    transport="playwright",
+                    archive_path=None,
+                    materialized_path=f"data/raw/{dataset_id}/{resource_name}/source.csv",
+                    materialized_kind="csv",
+                    cache_status="fresh",
+                    resume_supported=False,
+                    downloaded_at="2026-05-19T12:00:00",
+                    source_last_modified="2026-05-01T08:00:00",
+                    source_size=128,
+                ),
+            )
+            schemas_dir.mkdir(parents=True, exist_ok=True)
+            (schemas_dir / "cig_2025_01.schema.json").write_text("{}", encoding="utf-8")
+            (schemas_dir / "cig_2007_01_vs_cig_2025_01.comparison.json").write_text("{}", encoding="utf-8")
+            vocabulary_dir.mkdir(parents=True, exist_ok=True)
+            (vocabulary_dir / f"{dataset_id}.json").write_text("{}", encoding="utf-8")
+            vocabulary_index_path.write_text('{"datasets":[]}', encoding="utf-8")
+
+            client = Mock()
+            client.package_show.return_value = CkanPackage(
+                id="pkg-vocabulary",
+                name=dataset_id,
+                title="Vocabulary dataset",
+                notes="Vocabulary snapshot",
+                resources=[
+                    CkanResource(
+                        id="csv-new",
+                        name=resource_name,
+                        format="CSV",
+                        url="https://example.invalid/new.csv",
+                        size=256,
+                        last_modified="2026-06-01T08:00:00",
+                    )
+                ],
+            )
+
+            with patch("anac_explorator.catalog.build_vocabulary_crosswalks") as build_vocabulary_mock, patch(
+                "anac_explorator.catalog.build_cig_data_dictionary"
+            ) as build_dictionary_mock:
+                build_vocabulary_mock.return_value = {
+                    "datasets": [
+                        {
+                            "dataset_id": dataset_id,
+                            "schema_path": str(schemas_dir / f"{dataset_id}.schema.json"),
+                            "artifact_path": str(vocabulary_dir / f"{dataset_id}.json"),
+                            "table_count": 1,
+                        }
+                    ]
+                }
+                build_dictionary_mock.return_value = {
+                    "dataset_id": "cig-2025",
+                    "dictionary_name": "cig_2025_01",
+                    "json_path": str(dictionaries_dir / "cig_2025_01.dictionary.json"),
+                    "markdown_path": str(dictionaries_dir / "cig_2025_01.dictionary.md"),
+                    "entry_count": 3,
+                    "section_count": 2,
+                }
+
+                result = run_dataset_update(
+                    dataset_id,
+                    client,
+                    output_dir=raw_dir,
+                    schemas_dir=schemas_dir,
+                    dictionaries_dir=dictionaries_dir,
+                    warehouse_dir=project_root / "data" / "warehouse",
+                    vocabulary_index_path=vocabulary_index_path,
+                )
+
+        self.assertEqual(result.plan[0].action, "refresh")
+        self.assertEqual(len(result.applied), 2)
+        self.assertIsInstance(result.applied[0], VocabularyRefreshResult)
+        self.assertIsInstance(result.applied[1], DictionaryRefreshResult)
+        self.assertEqual(result.applied[0].to_dict()["artifact_type"], "vocabulary_refresh")
+        self.assertEqual(result.applied[1].to_dict()["artifact_type"], "dictionary_refresh")
+        self.assertEqual(result.applied[1].to_dict()["source_dataset"], dataset_id)
+        self.assertEqual(build_vocabulary_mock.call_args.kwargs["dataset_ids"], [dataset_id])
+        self.assertTrue(build_vocabulary_mock.call_args.kwargs["force_download"])
+        self.assertEqual(build_dictionary_mock.call_args.kwargs["output_dir"], dictionaries_dir)
+        self.assertEqual(build_dictionary_mock.call_args.kwargs["vocabulary_index_path"], vocabulary_index_path)
+
+    def test_run_global_update_includes_locally_present_vocabulary_families(self) -> None:
+        """@notice Global mode should pick up vocabulary families once they are locally present and update-capable."""
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            project_root = Path(temp_dir)
+            dataset_id = "bandi-cig-tipo-scelta-contraente"
+            self._write_manifest(
+                project_root,
+                DownloadManifest(
+                    dataset_id=dataset_id,
+                    resource_id="csv-01",
+                    resource_name="bandi-cig-tipo-scelta-contraente_csv",
+                    resource_format="csv",
+                    resource_url="https://example.invalid/bandi-cig-tipo-scelta-contraente.csv",
+                    transport="playwright",
+                    archive_path=None,
+                    materialized_path=f"data/raw/{dataset_id}/bandi-cig-tipo-scelta-contraente_csv/source.csv",
+                    materialized_kind="csv",
+                    cache_status="fresh",
+                    resume_supported=False,
+                    downloaded_at="2026-05-19T12:00:00",
+                ),
+            )
+
+            with patch("anac_explorator.catalog.run_dataset_update") as mock_run_dataset_update:
+                mock_run_dataset_update.return_value = UpdateCommandResult(
+                    scope={"dataset": dataset_id},
+                    latest_local_state={},
+                    plan=[],
+                )
+
+                result = run_global_update(
+                    Mock(),
+                    db_path=project_root / "data" / "warehouse" / "anac.duckdb",
+                    raw_dir=project_root / "data" / "raw",
+                    schemas_dir=project_root / "schemas",
+                    dictionaries_dir=project_root / "dictionaries",
+                    vocabulary_index_path=project_root / "vocabularies" / "index.json",
+                    warehouse_dir=project_root / "data" / "warehouse",
+                    dry_run=True,
+                )
+
+        self.assertEqual(result.scope["datasets"], [dataset_id])
+        self.assertEqual(mock_run_dataset_update.call_count, 1)
+        self.assertEqual(mock_run_dataset_update.call_args.args[0], dataset_id)
 
     @staticmethod
     def _build_cig_package(*, january_modified: str, february_modified: str) -> CkanPackage:

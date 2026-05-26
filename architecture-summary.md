@@ -28,7 +28,7 @@ What changed in the Phase 3 completion pass is not a new storage engine, but a n
 | Schema and semantic artifacts | Inspect schemas, compare history, build vocabulary crosswalks, and publish dictionaries | `src/anac_explorator/schema.py`, `src/anac_explorator/comparison.py`, `src/anac_explorator/vocabulary.py`, `src/anac_explorator/dictionary.py`, `src/anac_explorator/schema_service.py` |
 | Warehouse layer | Load manifest-backed resources into Parquet, maintain DuckDB catalog tables, and expose logical views | `src/anac_explorator/loader.py` |
 | Metadata discoverability layer | Rebuild the `anac_*` discoverability views from local artifacts and warehouse state | `src/anac_explorator/metadata_views.py` |
-| Stats/update/drop orchestration | Summarize local state, plan/apply CIG updates, and safely prune local storage | `src/anac_explorator/stats.py`, `src/anac_explorator/drop.py`, `src/anac_explorator/catalog.py` |
+| Stats/update/drop orchestration | Summarize local state, plan/apply CIG and vocabulary updates, and safely prune local storage | `src/anac_explorator/stats.py`, `src/anac_explorator/drop.py`, `src/anac_explorator/catalog.py` |
 | CLI and compatibility surface | Expose the Phase 3 commands plus retained legacy shims | `src/anac_explorator/cli.py`, `src/anac_explorator/__main__.py` |
 
 ## Canonical local state surfaces
@@ -63,7 +63,7 @@ In practice that means:
 - `schema` reads local schema artifacts and semantic overlays
 - `query` bootstraps the metadata views and runs safe SQL
 - `stats` summarizes local metadata or profiles live dataset values
-- `update` wraps the existing monthly CIG sync logic behind a normalized plan/apply contract
+- `update` wraps the monthly CIG sync flow plus snapshot vocabulary refreshes behind one normalized plan/apply contract
 - `drop` maps local scope selections to exact files, deletes them safely, and reconciles metadata immediately
 
 ## Stable command surface
@@ -90,12 +90,13 @@ The legacy executable name `anac-explorator` is also still shipped as a compatib
 - **The storage model remains efficient.** Durable payload lives in Parquet while DuckDB stores control-plane metadata and generated views.
 - **The mutation commands are guarded.** Destructive and write-enabled flows use explicit confirmation and stable error envelopes.
 - **The CIG family is production-ready by repo standards.** Download, schema inspection, querying, stats, update planning/execution, integrity validation, and drop workflows all exist for the current CIG baseline.
+- **Vocabulary refresh is now part of the stable update surface.** Locally present vocabulary families can be refreshed through `anacx update`, and relevant runs explicitly regenerate the current CIG dictionary artifacts.
 
 ## Known boundaries
 
 - The monthly **CIG family remains the most mature** dataset family.
-- `update` and `drop` are intentionally strongest for CIG; other families cleanly reject unsupported operations.
-- The broader warehouse and integrity strategy is still not generalized to every CKAN dataset family.
+- `drop` remains intentionally strongest for CIG; broader pruning support is still limited to that family.
+- `update` now covers CIG plus the wired vocabulary snapshot families, but broader warehouse and integrity workflows are still not generalized to every CKAN dataset family.
 - The project remains **CLI-first**. There is still no web UI and no broader Python API ergonomics layer.
 
 ## Publication-readiness summary

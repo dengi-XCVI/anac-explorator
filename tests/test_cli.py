@@ -20,12 +20,14 @@ from anac_explorator.cli import main
 from anac_explorator.models import (
     CkanPackage,
     CkanResource,
+    DictionaryRefreshResult,
     DownloadManifest,
     DropPlan,
     DropPlanTarget,
     SchemaColumn,
     SchemaMapping,
     UpdateCommandResult,
+    VocabularyRefreshResult,
 )
 from anac_explorator.paths import apply_effective_paths
 
@@ -280,6 +282,7 @@ class CliTests(unittest.TestCase):
         self.assertEqual(args.output_format, "table")
         self.assertEqual(args.output_dir, "data/raw")
         self.assertEqual(args.schemas_dir, "schemas")
+        self.assertEqual(args.dictionaries_dir, "dictionaries")
         self.assertEqual(args.warehouse_dir, "data/warehouse")
 
     def test_update_parser_accepts_global_mode_without_dataset(self) -> None:
@@ -294,6 +297,7 @@ class CliTests(unittest.TestCase):
         self.assertFalse(args.validate)
         self.assertEqual(args.output_dir, "data/raw")
         self.assertEqual(args.schemas_dir, "schemas")
+        self.assertEqual(args.dictionaries_dir, "dictionaries")
         self.assertEqual(args.warehouse_dir, "data/warehouse")
 
     def test_drop_parser_accepts_temporal_layer_and_dry_run_flags(self) -> None:
@@ -786,6 +790,64 @@ class CliTests(unittest.TestCase):
         update_mock.assert_called_once()
         self.assertEqual(update_mock.call_args.args[0], "cig")
         self.assertTrue(update_mock.call_args.kwargs["dry_run"])
+
+    def test_update_dataset_execution_surfaces_vocabulary_artifacts_and_uses_effective_dictionary_path(self) -> None:
+        """@notice Preserve the shared result envelope for vocabulary updates and forward the resolved dictionary path."""
+
+        output = io.StringIO()
+        with tempfile.TemporaryDirectory() as temp_dir:
+            dictionaries_dir = Path(temp_dir) / "custom-dictionaries"
+            with patch("anac_explorator.cli.CkanClient", return_value=Mock()):
+                with patch(
+                    "anac_explorator.cli.run_dataset_update",
+                    return_value=UpdateCommandResult(
+                        scope={"dataset": "bandi-cig-tipo-scelta-contraente", "selection_mode": "all"},
+                        latest_local_state={"artifact_present": True},
+                        plan=[],
+                        applied=[
+                            VocabularyRefreshResult(
+                                dataset="bandi-cig-tipo-scelta-contraente",
+                                dataset_id="bandi-cig-tipo-scelta-contraente",
+                                resource_name="bandi-cig-tipo-scelta-contraente_csv",
+                                manifest_path="data/raw/bandi-cig-tipo-scelta-contraente/bandi-cig-tipo-scelta-contraente_csv/manifest.json",
+                                download_cache_status="fresh",
+                                schema_path="schemas/bandi-cig-tipo-scelta-contraente.schema.json",
+                                artifact_path="vocabularies/bandi-cig-tipo-scelta-contraente.json",
+                                vocabulary_index_path="vocabularies/index.json",
+                                table_count=1,
+                            ),
+                            DictionaryRefreshResult(
+                                dataset="cig",
+                                dataset_id="cig-2025",
+                                dictionary_name="cig_2025_01",
+                                json_path=str(dictionaries_dir / "cig_2025_01.dictionary.json"),
+                                markdown_path=str(dictionaries_dir / "cig_2025_01.dictionary.md"),
+                                entry_count=3,
+                                section_count=2,
+                                reason="source_vocabulary_changed",
+                                source_dataset="bandi-cig-tipo-scelta-contraente",
+                            ),
+                        ],
+                    ),
+                ) as update_mock:
+                    with redirect_stdout(output):
+                        exit_code = main(
+                            [
+                                "update",
+                                "bandi-cig-tipo-scelta-contraente",
+                                "--dictionaries-dir",
+                                str(dictionaries_dir),
+                            ]
+                        )
+
+        payload = json.loads(output.getvalue())
+        self.assertEqual(exit_code, 0)
+        self.assertTrue(payload["ok"])
+        self.assertEqual(payload["command"], "update")
+        self.assertEqual(payload["data"]["applied"][0]["artifact_type"], "vocabulary_refresh")
+        self.assertEqual(payload["data"]["applied"][1]["artifact_type"], "dictionary_refresh")
+        self.assertEqual(payload["data"]["applied"][1]["source_dataset"], "bandi-cig-tipo-scelta-contraente")
+        self.assertEqual(update_mock.call_args.kwargs["dictionaries_dir"], dictionaries_dir)
 
     def test_update_temporal_force_full_routes_selection_to_dataset_runner(self) -> None:
         """@notice Normalize shared temporal flags for update and forward force-full to the dataset runner."""

@@ -301,10 +301,15 @@
   - the Step 8+ migration, testing, and definition-of-done checklist from `cli-implementation-plan.md` was reviewed against the implemented CLI and no blocking publication gaps were found
   - legacy low-level commands remain available through the same parser and executable, while `anacx` plus the eight Phase 3 commands are now documented as the canonical interface
   - `architecture-summary.md`, `specification.md`, and `README.md` were refreshed to reflect the completed Phase 3 architecture, compatibility path, config/env model, and recommended user workflows
+- Phase 4 update extension completed for vocabulary-backed semantic artifacts:
+  - `update` planning/execution now supports the wired snapshot vocabulary families in addition to monthly CIG
+  - vocabulary refreshes now rebuild the selected crosswalk artifacts and explicitly regenerate the current CIG dictionary when local schema/comparison prerequisites exist
+  - global `update` now includes locally present update-capable vocabulary families, and the update CLI now forwards the resolved dictionaries path for those derived artifacts
+  - tests now cover vocabulary update planning, execution, global discovery, CLI envelope rendering, and the full suite still passes at `204` tests
 
 ## Planned milestones
 1. Expand the local query surface carefully without over-materializing data
-2. Extend the incremental-update model beyond the monthly CIG family
+2. Extend the incremental-update model beyond CIG and the current vocabulary families
 3. Extend the integrity-validation model beyond the monthly CIG family
 4. Resolve the remaining coded fields through dedicated external vocabularies where available
 

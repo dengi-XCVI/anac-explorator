@@ -814,6 +814,7 @@ anacx update [DATASET] [OPTIONS]
 | `--validate` | run integrity validation after apply |
 | `--dry-run` | emit the resolved update plan only |
 | `--format table|json` | result format |
+| shared path flags | override raw/schema/dictionary/warehouse locations |
 | network options | shared network flags from Section 7.5 |
 
 #### Scope rules
@@ -832,7 +833,12 @@ anacx update [DATASET] [OPTIONS]
 
 #### Phase 3 initial support
 
-The initial implementation must support `update cig` end to end. Other families may return `DATASET_UPDATE_NOT_SUPPORTED` until an adapter exists.
+The current implementation supports:
+
+1. `update cig` end to end for the monthly CIG family
+2. `update <vocabulary-family>` for the wired snapshot vocabulary families, including explicit downstream CIG dictionary regeneration when the required local schema/comparison artifacts exist
+
+Other families may still return `DATASET_UPDATE_NOT_SUPPORTED` until an adapter exists.
 
 #### Examples
 
@@ -840,6 +846,7 @@ The initial implementation must support `update cig` end to end. Other families 
 anacx update cig
 anacx update cig --refresh-changed --dry-run --format json
 anacx update cig --year 2025 --validate
+anacx update bandi-cig-tipo-scelta-contraente --dry-run --format json
 anacx update --dry-run
 ```
 
